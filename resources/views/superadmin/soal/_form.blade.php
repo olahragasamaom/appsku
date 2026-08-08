@@ -39,10 +39,12 @@
             this.subJenisOptions = await res.json();
             
             if (preserve && this.initial_sub_jenis) { 
-                // Kembalikan nilai yang mungkin sempat di-reset x-model
-                this.sub_jenis_ujian_id = this.initial_sub_jenis;
-                this.applyMeta(); 
-                await this.loadSubIndikator(true); 
+                // Tunggu DOM selesai me-render opsi baru sebelum men-set nilai
+                this.$nextTick(async () => {
+                    this.sub_jenis_ujian_id = this.initial_sub_jenis;
+                    this.applyMeta(); 
+                    await this.loadSubIndikator(true); 
+                });
             }
         },
         async loadSubIndikator(preserve = false) {
@@ -58,8 +60,10 @@
             this.subIndikatorOptions = await res.json();
             
             if (preserve && this.initial_sub_indikator) {
-                // Kembalikan nilai
-                this.sub_indikator_id = this.initial_sub_indikator;
+                // Tunggu DOM selesai me-render opsi baru sebelum men-set nilai
+                this.$nextTick(() => {
+                    this.sub_indikator_id = this.initial_sub_indikator;
+                });
             }
         },
         applyMeta() {
