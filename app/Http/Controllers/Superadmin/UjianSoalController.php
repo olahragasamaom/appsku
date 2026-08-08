@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
+use App\Imports\SoalImport;
+use App\Models\JenisUjian;
 use App\Models\Soal;
+use App\Models\SubIndikator;
 use App\Models\Ujian;
 use App\Models\UjianSoal;
 use App\Services\Ujian\ExamAssemblyService;
@@ -11,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UjianSoalController extends Controller
 {
@@ -18,6 +22,14 @@ class UjianSoalController extends Controller
         private readonly ExamAssemblyService $assemblyService
     ) {}
 
+    /**
+     * Tampilkan halaman kelola soal untuk sebuah ujian.
+     *
+     * Menyiapkan tiga data utama untuk view:
+     * 1. Daftar tab jenis ujian.
+     * 2. Semua soal ujian pada jenis ujian aktif (untuk tampilan flat).
+     * 3. Daftar sub indikator beserta jumlah soal yang sudah masuk (untuk panel tombol & tampilan per grup).
+     */
     public function index(Request $request, Ujian $ujian): View
     {
         $ujian->load('ujianJenisUjians.jenisUjian');
@@ -30,12 +42,30 @@ class UjianSoalController extends Controller
 
         $activeJenisId = (int) $request->input('jenis_ujian_id', $jenisUjians->first()?->id);
 
+        // Semua soal yang sudah masuk ke ujian pada jenis ujian aktif
         $ujianSoals = $ujian->ujianSoals()
             ->with('soal.subIndikator.subJenisUjian')
             ->when($activeJenisId, fn ($query) => $query->where('jenis_ujian_id', $activeJenisId))
             ->orderBy('urutan')
             ->orderBy('id')
             ->get();
+
+        // Hitung berapa soal yang sudah masuk untuk tiap sub indikator (dipakai di badge tombol)
+        $jumlahSoalPerSubIndikator = $ujianSoals
+            ->groupBy(fn ($ujianSoal) => $ujianSoal->soal?->sub_indikator_id)
+            ->map(fn ($items) => $items->count());
+
+        // Ambil struktur sub jenis + sub indikator dari jenis ujian aktif
+        $subIndikatorGroups = collect();
+        if ($activeJenisId) {
+            $subIndikatorGroups = JenisUjian::with(['subJenisUjian.subIndikator'])
+                ->find($activeJenisId)
+                ?->subJenisUjian ?? collect();
+        }
+
+        // Kelompokkan soal ujian per sub indikator (untuk tampilan Tab 2)
+        $ujianSoalsPerSubIndikator = $ujianSoals
+            ->groupBy(fn ($ujianSoal) => $ujianSoal->soal?->subIndikator?->nama_sub_indikator ?? 'Tanpa Sub Indikator');
 
         $totalSoal = $ujian->ujianSoals()->count();
 
@@ -44,8 +74,51 @@ class UjianSoalController extends Controller
             'jenisUjians',
             'activeJenisId',
             'ujianSoals',
+            'ujianSoalsPerSubIndikator',
+            'subIndikatorGroups',
+            'jumlahSoalPerSubIndikator',
             'totalSoal',
         ));
+    }
+
+    /**
+     * Import soal dari file Excel ke sebuah sub indikator, lalu langsung
+     * lampirkan soal-soal baru itu ke ujian saat ini.
+     *
+     * Alur:
+     * 1. Validasi file & sub indikator tujuan.
+     * 2. Proses baris Excel jadi Soal baru via SoalImport (dikelompokkan ke sub indikator terpilih).
+     * 3. Lampirkan soal-soal yang baru dibuat ke ujian (hormati kapasitas ujian).
+     */
+    public function importExcel(Request $request, Ujian $ujian): RedirectResponse
+    {
+        $validated = $request->validate([
+            'sub_indikator_id' => ['required', 'integer', 'exists:panritta_sub_indikator,id'],
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
+        ]);
+
+        $subIndikator = SubIndikator::with('subJenisUjian')->findOrFail($validated['sub_indikator_id']);
+        $jenisUjianId = $subIndikator->subJenisUjian?->jenis_ujian_id;
+
+        abort_unless(
+            $jenisUjianId && $ujian->jenisUjians()->where('panritta_jenis_ujian.id', $jenisUjianId)->exists(),
+            404
+        );
+
+        $import = new SoalImport($subIndikator->id, $request->user()->id);
+        Excel::import($import, $request->file('file'));
+
+        $newSoalIds = $import->getCreatedSoalIds();
+
+        if ($newSoalIds !== []) {
+            $this->assemblyService->addQuestions($ujian, $jenisUjianId, $newSoalIds);
+        }
+
+        $message = "Import selesai: {$import->getSuccessCount()} soal ditambahkan, {$import->getSkipCount()} dilewati.";
+
+        return redirect()
+            ->route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $jenisUjianId])
+            ->with('success', $message);
     }
 
     public function bankSoalOptions(Request $request, Ujian $ujian): JsonResponse

@@ -650,6 +650,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('ujian/{ujian}/remaining', [UjianSoalController::class, 'remaining'])->name('ujian.soal.remaining');
         Route::get('ujian/{ujian}/bank-soal-options', [UjianSoalController::class, 'bankSoalOptions'])->name('ujian.soal.bank-options');
         Route::post('ujian/{ujian}/soal/attach', [UjianSoalController::class, 'attach'])->name('ujian.soal.attach');
+        Route::post('ujian/{ujian}/soal/import', [UjianSoalController::class, 'importExcel'])->name('ujian.soal.import');
         Route::delete('ujian/{ujian}/soal/{ujianSoal}/detach', [UjianSoalController::class, 'detach'])->name('ujian.soal.detach');
         Route::post('ujian/{ujian}/activate', [UjianController::class, 'activate'])->name('ujian.activate');
 

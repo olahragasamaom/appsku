@@ -7,6 +7,8 @@ use App\Models\SubJenisUjian;
 use App\Models\Ujian;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Maatwebsite\Excel\Facades\Excel;
 
 uses(RefreshDatabase::class);
 
@@ -60,6 +62,105 @@ describe('Kelola Soal Ujian Index', function () {
 
         $response->assertSuccessful();
         $response->assertSee(Str::limit(strip_tags($soalSkd->soal), 100));
+    });
+
+    it('shows sub indikator panel and per-sub-indikator grouping data', function () {
+        $jenis = JenisUjian::factory()->create(['nama_jenis_ujian' => 'SKD']);
+        $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $jenis->id]);
+        $subIndikator = SubIndikator::factory()->create([
+            'sub_jenis_ujian_id' => $subJenis->id,
+            'jenis_ujian_id' => $jenis->id,
+            'nama_sub_indikator' => 'Pancasila',
+        ]);
+
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id]);
+        $ujian->jenisUjians()->attach($jenis->id);
+
+        $soal = Soal::factory()->create(['sub_indikator_id' => $subIndikator->id]);
+        $ujian->ujianSoals()->create(['soal_id' => $soal->id, 'jenis_ujian_id' => $jenis->id, 'urutan' => 1]);
+
+        $response = $this->get(route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $jenis->id]));
+
+        $response->assertSuccessful();
+        $response->assertSee('Pancasila');
+        $response->assertViewHas('subIndikatorGroups');
+        $response->assertViewHas('ujianSoalsPerSubIndikator');
+        $response->assertViewHas('jumlahSoalPerSubIndikator');
+    });
+});
+
+describe('Import Soal Excel per Sub Indikator', function () {
+    it('imports soal from excel and attaches them to the ujian', function () {
+        Excel::fake();
+
+        $jenis = JenisUjian::factory()->create();
+        $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $jenis->id]);
+        $subIndikator = SubIndikator::factory()->create([
+            'sub_jenis_ujian_id' => $subJenis->id,
+            'jenis_ujian_id' => $jenis->id,
+        ]);
+
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id, 'jumlah_soal' => 50]);
+        $ujian->jenisUjians()->attach($jenis->id);
+
+        $file = UploadedFile::fake()->create('soal.xlsx', 10, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $response = $this->post(route('superadmin.ujian.soal.import', $ujian), [
+            'sub_indikator_id' => $subIndikator->id,
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect();
+        Excel::assertImported('soal.xlsx');
+    });
+
+    it('rejects import when sub indikator does not belong to the ujian jenis', function () {
+        $jenis = JenisUjian::factory()->create();
+        $otherJenis = JenisUjian::factory()->create();
+        $otherSubJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $otherJenis->id]);
+        $otherSubIndikator = SubIndikator::factory()->create([
+            'sub_jenis_ujian_id' => $otherSubJenis->id,
+            'jenis_ujian_id' => $otherJenis->id,
+        ]);
+
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id]);
+        $ujian->jenisUjians()->attach($jenis->id);
+
+        $file = UploadedFile::fake()->create('soal.xlsx', 10, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $response = $this->post(route('superadmin.ujian.soal.import', $ujian), [
+            'sub_indikator_id' => $otherSubIndikator->id,
+            'file' => $file,
+        ]);
+
+        $response->assertNotFound();
+    });
+});
+
+describe('SoalImport parsing', function () {
+    it('creates soal grouped under the given sub indikator', function () {
+        $jenis = JenisUjian::factory()->create();
+        $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $jenis->id]);
+        $subIndikator = SubIndikator::factory()->create([
+            'sub_jenis_ujian_id' => $subJenis->id,
+            'jenis_ujian_id' => $jenis->id,
+        ]);
+
+        $import = new \App\Imports\SoalImport($subIndikator->id, $this->superadmin->id);
+        $import->collection(collect([
+            collect(['soal' => 'Ibukota Indonesia?', 'opsi_a' => 'Jakarta', 'opsi_b' => 'Bandung', 'kunci_jawaban' => 'a', 'nilai_bobot_benar' => 5]),
+            collect(['soal' => '', 'opsi_a' => 'X', 'opsi_b' => 'Y']), // dilewati karena soal kosong
+        ]));
+
+        expect($import->getSuccessCount())->toBe(1);
+        expect($import->getSkipCount())->toBe(1);
+        expect($import->getCreatedSoalIds())->toHaveCount(1);
+
+        $this->assertDatabaseHas('panritta_soal', [
+            'sub_indikator_id' => $subIndikator->id,
+            'soal' => 'Ibukota Indonesia?',
+            'kunci_jawaban' => 'A',
+        ]);
     });
 });
 
