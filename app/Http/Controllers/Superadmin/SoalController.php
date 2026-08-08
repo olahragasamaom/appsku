@@ -89,11 +89,19 @@ class SoalController extends Controller
         $jenisUjians = JenisUjian::orderBy('nama_jenis_ujian')->get();
         $subIndikator = null;
 
+        // Jika datang dari halaman lain dengan membawa sub_indikator_id di URL,
+        // muat sub indikator beserta relasi ke atasnya (sub jenis & jenis ujian)
+        // agar ketiga dropdown kategori bisa langsung terisi otomatis.
         if ($request->filled('sub_indikator_id')) {
-            $subIndikator = SubIndikator::with('subJenisUjian')->find($request->sub_indikator_id);
+            $subIndikator = SubIndikator::with('subJenisUjian.jenisUjian')
+                ->find($request->sub_indikator_id);
         }
 
-        return view('superadmin.soal.create', compact('jenisUjians', 'subIndikator'));
+        // $locked = kategori dikunci (tidak bisa diubah) ketika sub indikator
+        // sudah ditentukan dari luar (mis. tombol "Tambah Soal" per sub indikator).
+        $locked = $subIndikator !== null;
+
+        return view('superadmin.soal.create', compact('jenisUjians', 'subIndikator', 'locked'));
     }
 
     /**

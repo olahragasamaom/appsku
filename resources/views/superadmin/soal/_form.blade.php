@@ -1,5 +1,7 @@
 @php
     $soal = $soal ?? null;
+    // $locked opsional: default false bila tidak dikirim controller (mis. saat edit)
+    $locked = $locked ?? false;
     $currentSubIndikator = $soal?->subIndikator ?? ($subIndikator ?? null);
     $currentSubJenis = $currentSubIndikator?->subJenisUjian;
     $currentJenisUjian = $currentSubJenis?->jenisUjian ?? $currentSubIndikator?->jenisUjian;
@@ -44,6 +46,7 @@
         resetMeta() { this.sistem_penilaian = ''; this.jumlah_opsi = 5; this.nilai_benar_default = ''; },
         init() { if (this.jenis_ujian_id) this.loadSubJenis(true); }
     }"
+    x-init="init()"
     class="space-y-6"
 >
     <input type="hidden" name="_sistem_penilaian" :value="sistem_penilaian">

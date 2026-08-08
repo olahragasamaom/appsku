@@ -35,6 +35,26 @@ describe('Soal Index & Create Pages', function () {
         $response->assertSuccessful();
         $response->assertViewIs('superadmin.soal.create');
     });
+
+    it('prefills category when opened with sub_indikator_id in url', function () {
+        $jenis = JenisUjian::factory()->create(['nama_jenis_ujian' => 'Ujian Kedinasan']);
+        $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $jenis->id]);
+        $subIndikator = SubIndikator::factory()->create([
+            'sub_jenis_ujian_id' => $subJenis->id,
+            'jenis_ujian_id' => $jenis->id,
+        ]);
+
+        $response = $this->get('/superadmin/soal/create?sub_indikator_id='.$subIndikator->id);
+
+        $response->assertSuccessful();
+        // Sub indikator harus terkirim ke view dengan relasi lengkap ke atasnya
+        $response->assertViewHas('subIndikator', fn ($si) => $si !== null
+            && $si->id === $subIndikator->id
+            && $si->subJenisUjian?->id === $subJenis->id
+            && $si->subJenisUjian?->jenisUjian?->id === $jenis->id);
+        // Kategori dikunci karena sudah ditentukan dari luar
+        $response->assertViewHas('locked', true);
+    });
 });
 
 describe('Soal Create - benar_salah', function () {
