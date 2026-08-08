@@ -7,9 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * MODEL: Paket
+ * =============
+ * Mewakili tabel 'panritta_paket' di database.
+ * Merupakan paket belajar/berlangganan yang bisa dibeli oleh peserta online.
+ * Menentukan hak akses peserta terhadap ujian, video pembahasan, dan analitik.
+ */
 class Paket extends Model
 {
-    /** @use HasFactory<\Database\Factories\PaketFactory> */
     use HasFactory;
 
     protected $table = 'panritta_paket';
@@ -43,17 +49,26 @@ class Paket extends Model
         ];
     }
 
+    /**
+     * RELASI (One-to-Many): Daftar user/peserta yang berlangganan paket ini.
+     */
     public function langganan(): HasMany
     {
         return $this->hasMany(PesertaLangganan::class, 'paket_id');
     }
 
+    /**
+     * RELASI (Many-to-Many): Daftar ujian online yang tergabung dalam paket ini.
+     */
     public function ujians(): BelongsToMany
     {
         return $this->belongsToMany(Ujian::class, 'panritta_paket_ujian', 'paket_id', 'ujian_id')
             ->withTimestamps();
     }
 
+    /**
+     * Cek apakah paket ini gratis (harga 0).
+     */
     public function isGratis(): bool
     {
         return (float) $this->harga <= 0;

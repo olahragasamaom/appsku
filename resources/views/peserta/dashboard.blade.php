@@ -6,42 +6,55 @@
     <h1 class="text-2xl font-bold text-slate-800 mb-6">Selamat datang, {{ auth()->user()->name }}</h1>
 
     <section class="mb-8">
-        <h2 class="text-lg font-semibold text-slate-700 mb-3">Ujian Tersedia</h2>
-        @php $adaUjian = $allocations->isNotEmpty() || $onlineUjians->isNotEmpty(); @endphp
+        <h2 class="text-lg font-semibold text-slate-700 mb-3">Ujian Dari Paket Anda</h2>
+        @php $adaUjian = $allocations->isNotEmpty() || $ujianDariPaket->isNotEmpty(); @endphp
 
         @if(! $adaUjian)
-            <div class="card"><div class="card-body text-center text-slate-500">Belum ada ujian aktif yang dapat diikuti.</div></div>
+            <div class="card">
+                <div class="card-body text-center text-slate-500 py-8">
+                    <p>Anda belum berlangganan paket apapun atau belum ada ujian yang aktif.</p>
+                    <a href="{{ route('peserta.langganan.index') }}" class="btn btn-primary mt-4">Lihat Daftar Paket</a>
+                </div>
+            </div>
         @else
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 @foreach($allocations as $allocation)
-                    <div class="card">
+                    <div class="card border-l-4 border-l-secondary-500">
                         <div class="card-body">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary-100 text-secondary-700 mb-2">Offline</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary-100 text-secondary-700 mb-2">Offline / Terjadwal</span>
                             <h3 class="font-semibold text-slate-800">{{ $allocation->ujian->nama_ujian }}</h3>
                             @if($allocation->ujian->tanggal_ujian)
                                 <p class="text-xs text-slate-500 mt-1">{{ $allocation->ujian->tanggal_ujian->format('d M Y H:i') }} &middot; {{ $allocation->ujian->durasi_ujian }} menit</p>
                             @endif
                             <div class="mt-4">
                                 @if($allocation->status === 'diblokir')
-                                    <span class="text-sm text-danger-600">Akun diblokir pengawas</span>
+                                    <span class="text-sm text-danger-600 font-medium">Akun diblokir pengawas</span>
                                 @elseif($allocation->status === 'selesai')
                                     <a href="{{ route('peserta.ujian.hasil', $allocation->ujian) }}" class="btn btn-secondary btn-sm w-full">Lihat Hasil</a>
                                 @else
-                                    <a href="{{ route('peserta.ujian.show', $allocation->ujian) }}" class="btn btn-primary btn-sm w-full">Mulai Ujian</a>
+                                    <a href="{{ route('peserta.ujian.show', $allocation->ujian) }}" class="btn btn-primary btn-sm w-full">Lanjutkan Ujian</a>
                                 @endif
                             </div>
                         </div>
                     </div>
                 @endforeach
 
-                @foreach($onlineUjians as $ujian)
+                @foreach($ujianDariPaket as $ujian)
+                    @php
+                        // Cek apakah user sudah punya attempt untuk ujian ini
+                        $attempt = $riwayat->firstWhere('ujian_id', $ujian->id);
+                    @endphp
                     <div class="card">
                         <div class="card-body">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700 mb-2">Online</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700 mb-2">Paket Online</span>
                             <h3 class="font-semibold text-slate-800">{{ $ujian->nama_ujian }}</h3>
-                            <p class="text-xs text-slate-500 mt-1">{{ $ujian->jumlah_soal }} soal</p>
+                            <p class="text-xs text-slate-500 mt-1">{{ $ujian->jumlah_soal }} soal &middot; {{ $ujian->durasi_ujian ?? 'Tanpa batas' }} menit</p>
                             <div class="mt-4">
-                                <a href="{{ route('peserta.ujian.show', $ujian) }}" class="btn btn-primary btn-sm w-full">Mulai Ujian</a>
+                                @if($attempt)
+                                    <a href="{{ route('peserta.ujian.hasil', $ujian) }}" class="btn btn-secondary btn-sm w-full">Lihat Hasil</a>
+                                @else
+                                    <a href="{{ route('peserta.ujian.show', $ujian) }}" class="btn btn-primary btn-sm w-full">Mulai Ujian</a>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -51,7 +64,7 @@
     </section>
 
     <section>
-        <h2 class="text-lg font-semibold text-slate-700 mb-3">Riwayat Ujian</h2>
+        <h2 class="text-lg font-semibold text-slate-700 mb-3">Riwayat Ujian & Pembahasan</h2>
         @if($riwayat->isEmpty())
             <div class="card"><div class="card-body text-center text-slate-500">Belum ada riwayat ujian.</div></div>
         @else
@@ -66,8 +79,11 @@
                         </x-slot>
                         @foreach($riwayat as $item)
                             <tr class="hover:bg-slate-50">
-                                <td class="px-6 py-4 font-medium text-slate-800">{{ $item->ujian->nama_ujian }}</td>
-                                <td class="px-6 py-4 text-center">{{ $item->total_nilai ?? '-' }}</td>
+                                <td class="px-6 py-4">
+                                    <span class="font-medium text-slate-800">{{ $item->ujian->nama_ujian }}</span>
+                                    <span class="block text-xs text-slate-500 mt-0.5">{{ $item->waktu_selesai?->format('d M Y H:i') }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-center font-semibold text-slate-700">{{ $item->total_nilai ?? '-' }}</td>
                                 <td class="px-6 py-4 text-center">
                                     @if($item->lulus === true)
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">Lulus</span>
@@ -77,11 +93,12 @@
                                         <span class="text-xs text-slate-400">-</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-center">
+                                <td class="px-6 py-4 text-center flex flex-col items-center gap-2">
                                     @if($item->ujian->tampilkan_hasil)
-                                        <a href="{{ route('peserta.ujian.hasil', $item->ujian) }}" class="text-primary-600 text-sm hover:underline">Detail</a>
+                                        <a href="{{ route('peserta.ujian.hasil', $item->ujian) }}" class="btn btn-secondary btn-sm w-full">Hasil</a>
+                                        <a href="{{ route('peserta.ujian.pembahasan', $item->ujian) }}" class="text-primary-600 text-xs font-medium hover:underline">Lihat Pembahasan</a>
                                     @else
-                                        <span class="text-xs text-slate-400">Tersembunyi</span>
+                                        <span class="text-xs text-slate-400">Hasil Disembunyikan</span>
                                     @endif
                                 </td>
                             </tr>

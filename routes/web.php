@@ -47,6 +47,7 @@ use App\Http\Controllers\Peserta\DashboardController as PesertaDashboardControll
 use App\Http\Controllers\Peserta\LanggananController as PesertaLanggananController;
 use App\Http\Controllers\Peserta\OAuthController as PesertaOAuthController;
 use App\Http\Controllers\Peserta\OfflineLoginController as PesertaOfflineLoginController;
+use App\Http\Controllers\Peserta\OfflinePortalController;
 use App\Http\Controllers\Peserta\UjianController as PesertaUjianController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\Pph21SettingController;
@@ -757,7 +758,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('peserta')->name('peserta.')->group(function () {
-    // Offline Participant Login (No Auth Required)
+    // Portal & Login Offline Participant (No Auth Required)
+    Route::get('ujian-offline', [OfflinePortalController::class, 'index'])->name('ujian.offline.portal');
     Route::get('ujian/{ujian}/offline/login', [PesertaOfflineLoginController::class, 'show'])->name('ujian.offline.login');
     Route::post('ujian/{ujian}/offline/login', [PesertaOfflineLoginController::class, 'login']);
 
