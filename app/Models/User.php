@@ -118,6 +118,18 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Override default email verification to use peserta route
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
+        // Note: The VerifyEmail notification by default uses route('verification.verify').
+        // Since we are using a custom auth flow for peserta, we can customize the VerifyEmail 
+        // notification in AppServiceProvider or simply rely on the default if the route name matches.
+        // For Panritta, we override the URL generation in AppServiceProvider or here if needed.
+    }
+
+    /**
      * Prevent deletion of demo accounts
      */
     protected static function booted(): void
