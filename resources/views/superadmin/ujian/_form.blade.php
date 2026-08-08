@@ -1,20 +1,19 @@
 @php
     $ujian = $ujian ?? null;
-    $selectedJenis = $selectedJenis ?? old('jenis_ujian_id', []);
+    $selectedJenisList = $selectedJenis ?? old('jenis_ujian_id', []);
+    $firstSelectedJenis = !empty($selectedJenisList) ? (int) (is_array($selectedJenisList) ? reset($selectedJenisList) : $selectedJenisList) : '';
     $passingGrades = $passingGrades ?? collect(old('passing_grade', []));
+    $firstPassingGrade = $firstSelectedJenis ? ($passingGrades[$firstSelectedJenis] ?? '') : '';
     $selectedAkses = old('akses_member', $ujian?->akses_member ?? []);
 @endphp
 
 <div x-data="{
         tipe: '{{ old('tipe_ujian', $ujian->tipe_ujian ?? 'offline_kelas') }}',
-        selectedJenis: {{ Js::from(array_map('intval', (array) $selectedJenis)) }},
-        toggleJenis(id) {
-            id = parseInt(id);
-            if (this.selectedJenis.includes(id)) {
-                this.selectedJenis = this.selectedJenis.filter(v => v !== id);
-            } else {
-                this.selectedJenis.push(id);
-            }
+        selectedJenis: '{{ $firstSelectedJenis }}',
+        jenisUjiansData: {{ Js::from($jenisUjians) }},
+        get activeJenis() {
+            if (!this.selectedJenis) return null;
+            return this.jenisUjiansData.find(j => j.id == this.selectedJenis);
         }
      }"
      class="space-y-6">
@@ -88,27 +87,66 @@
         <div class="card-header">
             <h3 class="text-lg font-semibold text-secondary-900">Jenis Ujian &amp; Passing Grade</h3>
         </div>
-        <div class="card-body space-y-3">
-            @error('jenis_ujian_id')<p class="text-sm text-danger-600">{{ $message }}</p>@enderror
-            @forelse($jenisUjians as $jenis)
-                @php $grade = $passingGrades[$jenis->id] ?? null; @endphp
-                <div class="flex flex-col sm:flex-row sm:items-center gap-3 py-2 border-b border-secondary-100 last:border-0">
-                    <label class="inline-flex items-center gap-2 sm:w-1/2">
-                        <input type="checkbox" name="jenis_ujian_id[]" value="{{ $jenis->id }}"
-                               class="rounded border-secondary-300 text-primary-600"
-                               :checked="selectedJenis.includes({{ $jenis->id }})"
-                               @change="toggleJenis({{ $jenis->id }})">
-                        <span class="text-sm font-medium text-secondary-800">{{ $jenis->nama_jenis_ujian }}</span>
-                    </label>
-                    <div class="sm:w-1/2" x-show="selectedJenis.includes({{ $jenis->id }})" x-cloak>
-                        <input type="number" step="0.01" min="0" name="passing_grade[{{ $jenis->id }}]"
-                               value="{{ $grade }}"
-                               class="input w-full" placeholder="Passing Grade {{ $jenis->nama_jenis_ujian }}">
-                    </div>
+        <div class="card-body space-y-4">
+            @error('jenis_ujian_id')<p class="text-sm text-danger-600 mb-2">{{ $message }}</p>@enderror
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Pilih Jenis Ujian <span class="text-danger-500">*</span></label>
+                    <select name="jenis_ujian_id[]" x-model="selectedJenis" class="input w-full" required>
+                        <option value="">-- Pilih Jenis Ujian --</option>
+                        <template x-for="jenis in jenisUjiansData" :key="jenis.id">
+                            <option :value="jenis.id" x-text="jenis.nama_jenis_ujian" :selected="selectedJenis == jenis.id"></option>
+                        </template>
+                    </select>
                 </div>
-            @empty
-                <p class="text-sm text-secondary-500">Belum ada data jenis ujian.</p>
-            @endforelse
+                <div x-show="selectedJenis" x-cloak>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Passing Grade (Opsional)</label>
+                    <input type="number" step="0.01" min="0" 
+                           :name="`passing_grade[${selectedJenis}]`"
+                           value="{{ $firstPassingGrade }}"
+                           class="input w-full" 
+                           placeholder="Contoh: 300">
+                </div>
+            </div>
+
+            {{-- Hierarki Sub Jenis & Sub Indikator --}}
+            <div x-show="activeJenis" x-cloak class="mt-6 border-t border-secondary-100 pt-4">
+                <h4 class="font-medium text-secondary-800 mb-3" x-text="`Struktur Soal: ${activeJenis?.nama_jenis_ujian}`"></h4>
+                
+                <template x-if="activeJenis && activeJenis.sub_jenis_ujian.length === 0">
+                    <p class="text-sm text-secondary-500 italic">Belum ada sub jenis ujian.</p>
+                </template>
+
+                <div class="space-y-4">
+                    <template x-for="subJenis in activeJenis?.sub_jenis_ujian" :key="subJenis.id">
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="font-bold text-slate-800" x-text="subJenis.nama_sub_jenis_ujian"></span>
+                                <span class="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-md" x-text="subJenis.sistem_penilaian === 'benar_salah' ? 'Benar-Salah' : 'Poin per Jawaban'"></span>
+                            </div>
+
+                            <template x-if="subJenis.sub_indikator.length === 0">
+                                <p class="text-xs text-slate-500 italic ml-2">Belum ada sub indikator.</p>
+                            </template>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <template x-for="indikator in subJenis.sub_indikator" :key="indikator.id">
+                                    <div class="bg-white border border-slate-200 rounded p-3 flex flex-col justify-between shadow-sm">
+                                        <p class="text-sm font-medium text-slate-700 mb-3" x-text="indikator.nama_sub_indikator"></p>
+                                        <a :href="`{{ route('superadmin.soal.create') }}?sub_indikator_id=${indikator.id}`" 
+                                           target="_blank"
+                                           class="btn btn-primary btn-sm w-full inline-flex justify-center text-xs">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                            Tambah Soal
+                                        </a>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
         </div>
     </div>
 
