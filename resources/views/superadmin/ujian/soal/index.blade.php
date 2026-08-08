@@ -69,8 +69,7 @@
                                             </span>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <a href="{{ route('superadmin.soal.create', ['sub_indikator_id' => $indikator->id]) }}"
-                                               target="_blank"
+                                            <a href="{{ route('superadmin.soal.create', ['sub_indikator_id' => $indikator->id, 'ujian_id' => $ujian->id]) }}"
                                                class="btn btn-secondary btn-sm flex-1 inline-flex justify-center text-xs">
                                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                                 Tambah

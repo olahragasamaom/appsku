@@ -80,6 +80,33 @@ describe('Soal Create - benar_salah', function () {
         ]);
     });
 
+    it('attaches to exam and redirects to exam page when ujian_id is provided', function () {
+        $jenis = JenisUjian::factory()->create();
+        $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $jenis->id, 'sistem_penilaian' => 'benar_salah']);
+        $subIndikator = SubIndikator::factory()->create(['sub_jenis_ujian_id' => $subJenis->id, 'jenis_ujian_id' => $jenis->id]);
+        
+        $ujian = \App\Models\Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id, 'jumlah_soal' => 50]);
+        $ujian->jenisUjians()->attach($jenis->id);
+
+        $response = $this->post('/superadmin/soal', [
+            'sub_indikator_id' => $subIndikator->id,
+            'ujian_id' => $ujian->id,
+            'soal' => 'Apa ibukota Indonesia?',
+            'opsi_a' => 'Jakarta',
+            'opsi_b' => 'Bandung',
+            'opsi_c' => 'Surabaya',
+            'opsi_d' => 'Medan',
+            'opsi_e' => 'Bali',
+            'kunci_jawaban' => 'A',
+        ]);
+
+        $response->assertRedirect(route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $jenis->id]));
+        $this->assertDatabaseHas('panritta_ujian_soal', [
+            'ujian_id' => $ujian->id,
+            'jenis_ujian_id' => $jenis->id,
+        ]);
+    });
+
     it('requires kunci jawaban for benar_salah system', function () {
         $subIndikator = SubIndikator::factory()->create();
 

@@ -8,6 +8,8 @@ use App\Models\JenisUjian;
 use App\Models\Soal;
 use App\Models\SubIndikator;
 use App\Models\SubJenisUjian;
+use App\Models\Ujian;
+use App\Services\Ujian\ExamAssemblyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -125,7 +127,24 @@ class SoalController extends Controller
             }
         }
 
-        Soal::create($data);
+        $soal = Soal::create($data);
+
+        // Jika dikirim dari halaman Kelola Soal Ujian, langsung attach ke ujian
+        // dan redirect kembali ke halaman ujian tersebut.
+        if ($request->filled('ujian_id')) {
+            $ujian = Ujian::find($request->ujian_id);
+            if ($ujian) {
+                $jenisUjianId = $request->resolveSubJenisUjian()?->jenis_ujian_id;
+                
+                if ($jenisUjianId) {
+                    app(ExamAssemblyService::class)->addQuestions($ujian, $jenisUjianId, [$soal->id]);
+                    
+                    return redirect()
+                        ->route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $jenisUjianId])
+                        ->with('success', 'Soal berhasil dibuat dan ditambahkan ke ujian.');
+                }
+            }
+        }
 
         return redirect()->route('superadmin.soal.index')
             ->with('success', 'Soal berhasil dibuat.');

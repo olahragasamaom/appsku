@@ -12,28 +12,55 @@
         jenis_ujian_id: {{ Js::from(old('jenis_ujian_id', $currentJenisUjian?->id ?? '')) }},
         sub_jenis_ujian_id: {{ Js::from(old('sub_jenis_ujian_id', $currentSubJenis?->id ?? '')) }},
         sub_indikator_id: {{ Js::from(old('sub_indikator_id', $currentSubIndikator?->id ?? '')) }},
+        
+        // Simpan state awal agar tidak ter-reset oleh x-model sebelum dropdown terisi
+        initial_sub_jenis: {{ Js::from(old('sub_jenis_ujian_id', $currentSubJenis?->id ?? '')) }},
+        initial_sub_indikator: {{ Js::from(old('sub_indikator_id', $currentSubIndikator?->id ?? '')) }},
+        
         sistem_penilaian: {{ Js::from(old('_sistem_penilaian', $currentSubJenis?->sistem_penilaian ?? '')) }},
         jumlah_opsi: {{ Js::from((int) old('_jumlah_opsi', $currentSubJenis?->jumlah_jawaban_pilihan_ganda ?? 5)) }},
         nilai_benar_default: {{ Js::from($currentSubJenis?->nilai_benar ?? '') }},
         subJenisOptions: [],
         subIndikatorOptions: [],
         locked: {{ $locked ? 'true' : 'false' }},
+        
         async loadSubJenis(preserve = false) {
-            if (!preserve) { this.sub_jenis_ujian_id = ''; this.sub_indikator_id = ''; this.resetMeta(); }
+            if (!preserve) { 
+                this.sub_jenis_ujian_id = ''; 
+                this.sub_indikator_id = ''; 
+                this.resetMeta(); 
+            }
             this.subJenisOptions = [];
             this.subIndikatorOptions = [];
+            
             if (!this.jenis_ujian_id) return;
+            
             const res = await fetch('{{ url('superadmin/soal/options/sub-jenis-ujian') }}/' + this.jenis_ujian_id);
             this.subJenisOptions = await res.json();
-            if (preserve && this.sub_jenis_ujian_id) { this.applyMeta(); await this.loadSubIndikator(true); }
+            
+            if (preserve && this.initial_sub_jenis) { 
+                // Kembalikan nilai yang mungkin sempat di-reset x-model
+                this.sub_jenis_ujian_id = this.initial_sub_jenis;
+                this.applyMeta(); 
+                await this.loadSubIndikator(true); 
+            }
         },
         async loadSubIndikator(preserve = false) {
-            if (!preserve) this.sub_indikator_id = '';
+            if (!preserve) {
+                this.sub_indikator_id = '';
+            }
             this.applyMeta();
             this.subIndikatorOptions = [];
+            
             if (!this.sub_jenis_ujian_id) return;
+            
             const res = await fetch('{{ url('superadmin/soal/options/sub-indikator') }}/' + this.sub_jenis_ujian_id);
             this.subIndikatorOptions = await res.json();
+            
+            if (preserve && this.initial_sub_indikator) {
+                // Kembalikan nilai
+                this.sub_indikator_id = this.initial_sub_indikator;
+            }
         },
         applyMeta() {
             const opt = this.subJenisOptions.find(o => String(o.id) === String(this.sub_jenis_ujian_id));
@@ -44,13 +71,20 @@
             }
         },
         resetMeta() { this.sistem_penilaian = ''; this.jumlah_opsi = 5; this.nilai_benar_default = ''; },
-        init() { if (this.jenis_ujian_id) this.loadSubJenis(true); }
+        init() { 
+            if (this.jenis_ujian_id) {
+                this.loadSubJenis(true); 
+            }
+        }
     }"
     x-init="init()"
     class="space-y-6"
 >
     <input type="hidden" name="_sistem_penilaian" :value="sistem_penilaian">
     <input type="hidden" name="_jumlah_opsi" :value="jumlah_opsi">
+    @if(request()->has('ujian_id'))
+        <input type="hidden" name="ujian_id" value="{{ request('ujian_id') }}">
+    @endif
 
     <div class="card">
         <div class="card-header">
