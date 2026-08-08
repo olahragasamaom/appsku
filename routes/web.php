@@ -106,20 +106,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    $plans = \App\Models\SubscriptionPlan::where('is_active', true)
-        ->orderBy('sort_order')
+    $pakets = \App\Models\Paket::where('is_active', true)
+        ->orderBy('urutan')
+        ->orderBy('harga')
         ->get();
 
-    return view('pages.landing', compact('plans'));
+    return view('pages.landing', compact('pakets'));
 })->name('home');
-
-Route::get('/pricing', function () {
-    $plans = \App\Models\SubscriptionPlan::where('is_active', true)
-        ->orderBy('sort_order')
-        ->get();
-
-    return view('pages.pricing', compact('plans'));
-})->name('pricing');
 
 Route::get('/terms', function () {
     return view('pages.terms');
