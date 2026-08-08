@@ -74,8 +74,26 @@
                                 @endforeach
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-center text-sm text-secondary-600">{{ $ujian->ujian_soals_count }}/{{ $ujian->jumlah_soal }}</td>
-                        <td class="px-6 py-4 text-center text-sm text-secondary-600">{{ $ujian->peserta_count }}</td>
+                        <td class="px-6 py-4 text-center">
+                            <a href="{{ route('superadmin.ujian.soal.index', $ujian) }}" class="inline-flex items-center justify-center font-semibold text-primary-600 hover:text-primary-700 hover:bg-primary-50 px-3 py-1.5 rounded-lg transition-colors group">
+                                <span class="{{ $ujian->ujian_soals_count < $ujian->jumlah_soal ? 'text-danger-600 group-hover:text-danger-700' : '' }}">
+                                    {{ $ujian->ujian_soals_count }}
+                                </span>
+                                <span class="mx-1 text-slate-400">/</span>
+                                <span class="text-slate-600">{{ $ujian->jumlah_soal }}</span>
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            @if($ujian->tipe_ujian === 'offline_kelas')
+                                <a href="{{ route('superadmin.ujian.peserta-offline.index', $ujian) }}" class="inline-flex items-center justify-center font-semibold text-primary-600 hover:text-primary-700 hover:bg-primary-50 px-3 py-1.5 rounded-lg transition-colors">
+                                    {{ $ujian->peserta_offline_count ?? 0 }}
+                                </a>
+                            @else
+                                <a href="{{ route('superadmin.ujian.peserta.index', $ujian) }}" class="inline-flex items-center justify-center font-semibold text-primary-600 hover:text-primary-700 hover:bg-primary-50 px-3 py-1.5 rounded-lg transition-colors">
+                                    {{ $ujian->peserta_count ?? 0 }}
+                                </a>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 text-center">
                             @php
                                 $badge = match($ujian->status) {
@@ -88,16 +106,6 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('superadmin.ujian.soal.index', $ujian) }}" class="btn btn-ghost btn-sm" title="Kelola Soal">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                                    </svg>
-                                </a>
-                                <a href="{{ route('superadmin.ujian.peserta.index', $ujian) }}" class="btn btn-ghost btn-sm" title="Peserta">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"/>
-                                    </svg>
-                                </a>
                                 <a href="{{ route('superadmin.ujian.monitoring.live', $ujian) }}" class="btn btn-ghost btn-sm" title="Live Scoring">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>

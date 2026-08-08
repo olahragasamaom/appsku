@@ -23,7 +23,7 @@ class UjianController extends Controller
 
     public function index(Request $request): View
     {
-        $query = Ujian::with('jenisUjians')->withCount('peserta', 'ujianSoals');
+        $query = Ujian::with('jenisUjians')->withCount(['peserta', 'pesertaOffline', 'ujianSoals']);
 
         if ($request->filled('search')) {
             $query->where('nama_ujian', 'like', '%'.$request->search.'%');
