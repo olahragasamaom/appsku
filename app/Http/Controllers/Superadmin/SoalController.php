@@ -203,6 +203,18 @@ class SoalController extends Controller
 
         $soal->update($data);
 
+        // Jika dikirim dari halaman Kelola Soal Ujian, redirect kembali ke halaman ujian tersebut.
+        if ($request->filled('ujian_id')) {
+            $ujian = Ujian::find($request->ujian_id);
+            $jenisUjianId = $request->resolveSubJenisUjian()?->jenis_ujian_id;
+            
+            if ($ujian && $jenisUjianId) {
+                return redirect()
+                    ->route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $jenisUjianId])
+                    ->with('success', 'Soal berhasil diupdate.');
+            }
+        }
+
         return redirect()->route('superadmin.soal.index')
             ->with('success', 'Soal berhasil diupdate.');
     }
@@ -223,6 +235,15 @@ class SoalController extends Controller
 
         return redirect()->route('superadmin.soal.index')
             ->with('success', 'Soal berhasil dihapus.');
+    }
+
+    /**
+     * PREVIEW: Mensimulasikan tampilan soal persis seperti di halaman ujian peserta.
+     */
+    public function preview(Soal $soal): View
+    {
+        $soal->load('subIndikator.subJenisUjian');
+        return view('superadmin.soal.preview', compact('soal'));
     }
 
     /**

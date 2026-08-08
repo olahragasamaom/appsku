@@ -9,13 +9,13 @@
 
 <div
     x-data="{
-        jenis_ujian_id: {{ Js::from(old('jenis_ujian_id', $currentJenisUjian?->id ?? '')) }},
-        sub_jenis_ujian_id: {{ Js::from(old('sub_jenis_ujian_id', $currentSubJenis?->id ?? '')) }},
-        sub_indikator_id: {{ Js::from(old('sub_indikator_id', $currentSubIndikator?->id ?? '')) }},
+        jenis_ujian_id: String({{ Js::from(old('jenis_ujian_id', $currentJenisUjian?->id ?? '')) }}),
+        sub_jenis_ujian_id: '',
+        sub_indikator_id: '',
         
-        // Simpan state awal agar tidak ter-reset oleh x-model sebelum dropdown terisi
-        initial_sub_jenis: {{ Js::from(old('sub_jenis_ujian_id', $currentSubJenis?->id ?? '')) }},
-        initial_sub_indikator: {{ Js::from(old('sub_indikator_id', $currentSubIndikator?->id ?? '')) }},
+        // Simpan state awal sebagai String agar aman dari strict equality
+        initial_sub_jenis: String({{ Js::from(old('sub_jenis_ujian_id', $currentSubJenis?->id ?? '')) }}),
+        initial_sub_indikator: String({{ Js::from(old('sub_indikator_id', $currentSubIndikator?->id ?? '')) }}),
         
         sistem_penilaian: {{ Js::from(old('_sistem_penilaian', $currentSubJenis?->sistem_penilaian ?? '')) }},
         jumlah_opsi: {{ Js::from((int) old('_jumlah_opsi', $currentSubJenis?->jumlah_jawaban_pilihan_ganda ?? 5)) }},
@@ -39,12 +39,12 @@
             this.subJenisOptions = await res.json();
             
             if (preserve && this.initial_sub_jenis) { 
-                // Tunggu DOM selesai me-render opsi baru sebelum men-set nilai
-                this.$nextTick(async () => {
+                // Gunakan setTimeout 50ms untuk menjamin x-for selesai merender DOM
+                setTimeout(async () => {
                     this.sub_jenis_ujian_id = this.initial_sub_jenis;
                     this.applyMeta(); 
                     await this.loadSubIndikator(true); 
-                });
+                }, 50);
             }
         },
         async loadSubIndikator(preserve = false) {
@@ -60,10 +60,9 @@
             this.subIndikatorOptions = await res.json();
             
             if (preserve && this.initial_sub_indikator) {
-                // Tunggu DOM selesai me-render opsi baru sebelum men-set nilai
-                this.$nextTick(() => {
+                setTimeout(() => {
                     this.sub_indikator_id = this.initial_sub_indikator;
-                });
+                }, 50);
             }
         },
         applyMeta() {
@@ -100,7 +99,7 @@
                 <select x-model="jenis_ujian_id" @change="loadSubJenis()" :disabled="locked" class="input w-full">
                     <option value="">-- Pilih --</option>
                     @foreach($jenisUjians as $jenisUjian)
-                        <option value="{{ $jenisUjian->id }}">{{ $jenisUjian->nama_jenis_ujian }}</option>
+                        <option value="{{ (string) $jenisUjian->id }}">{{ $jenisUjian->nama_jenis_ujian }}</option>
                     @endforeach
                 </select>
             </div>
@@ -109,7 +108,7 @@
                 <select x-model="sub_jenis_ujian_id" @change="loadSubIndikator()" :disabled="locked" class="input w-full">
                     <option value="">-- Pilih --</option>
                     <template x-for="opt in subJenisOptions" :key="opt.id">
-                        <option :value="opt.id" x-text="opt.nama_sub_jenis_ujian"></option>
+                        <option :value="String(opt.id)" x-text="opt.nama_sub_jenis_ujian"></option>
                     </template>
                 </select>
             </div>
@@ -118,7 +117,7 @@
                 <select name="sub_indikator_id" x-model="sub_indikator_id" :disabled="locked" class="input w-full @error('sub_indikator_id') border-danger-500 @enderror" required>
                     <option value="">-- Pilih --</option>
                     <template x-for="opt in subIndikatorOptions" :key="opt.id">
-                        <option :value="opt.id" x-text="opt.nama_sub_indikator"></option>
+                        <option :value="String(opt.id)" x-text="opt.nama_sub_indikator"></option>
                     </template>
                 </select>
                 <template x-if="locked">

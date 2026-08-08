@@ -137,7 +137,10 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-center gap-2">
-                                    <a href="{{ route('superadmin.soal.edit', $ujianSoal->soal) }}" class="btn btn-ghost btn-sm">
+                                    <a href="{{ route('superadmin.soal.preview', $ujianSoal->soal) }}" target="_blank" class="btn btn-ghost btn-sm text-primary-600" title="Simulasi Tampilan Soal">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </a>
+                                    <a href="{{ route('superadmin.soal.edit', $ujianSoal->soal) }}?ujian_id={{ $ujian->id }}" class="btn btn-ghost btn-sm" title="Edit Soal">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
@@ -184,7 +187,10 @@
                                 <div class="flex items-start gap-3 p-3 border border-secondary-100 rounded-lg hover:bg-secondary-50">
                                     <span class="flex-shrink-0 w-6 h-6 rounded-full bg-secondary-100 text-secondary-600 text-xs font-semibold flex items-center justify-center">{{ $index + 1 }}</span>
                                     <p class="flex-1 text-sm text-secondary-800 line-clamp-2">{{ \Illuminate\Support\Str::limit(strip_tags($ujianSoal->soal->soal ?? ''), 120) }}</p>
-                                    <a href="{{ route('superadmin.soal.edit', $ujianSoal->soal) }}" class="btn btn-ghost btn-sm flex-shrink-0">
+                                    <a href="{{ route('superadmin.soal.preview', $ujianSoal->soal) }}" target="_blank" class="btn btn-ghost btn-sm flex-shrink-0 text-primary-600" title="Simulasi Tampilan Soal">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </a>
+                                    <a href="{{ route('superadmin.soal.edit', $ujianSoal->soal) }}?ujian_id={{ $ujian->id }}" class="btn btn-ghost btn-sm flex-shrink-0" title="Edit Soal">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>

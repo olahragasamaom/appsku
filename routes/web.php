@@ -636,6 +636,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         // bank soal management
         Route::get('soal/options/sub-jenis-ujian/{jenisUjian}', [SoalController::class, 'subJenisUjianOptions'])->name('soal.options.sub-jenis-ujian');
         Route::get('soal/options/sub-indikator/{subJenisUjian}', [SoalController::class, 'subIndikatorOptions'])->name('soal.options.sub-indikator');
+        Route::get('soal/{soal}/preview', [SoalController::class, 'preview'])->name('soal.preview');
         Route::resource('soal', SoalController::class)
             ->except(['show'])
             ->parameters(['soal' => 'soal']);
