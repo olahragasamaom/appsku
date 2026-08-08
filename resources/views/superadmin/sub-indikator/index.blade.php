@@ -10,116 +10,129 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-secondary-900">Kelola Sub Indikator</h1>
-            <p class="text-secondary-500 mt-1">Klik nama sub jenis ujian untuk menambah sub indikator</p>
+            <p class="text-secondary-500 mt-1">Daftar sub indikator (materi) yang dikelompokkan per sub jenis ujian</p>
         </div>
+        <button type="button"
+                @click="$dispatch('sub-indikator-form', { mode: 'create' })"
+                class="btn btn-primary">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Tambah Sub Indikator
+        </button>
     </div>
 @endsection
 
 @section('content')
-    <div class="card">
-        <div class="card-body-sm">
-            <x-table>
-                <x-slot name="header">
-                    <th class="px-6 py-3 text-left">Jenis Ujian</th>
-                    <th class="px-6 py-3 text-left">Sub Jenis Ujian</th>
-                    <th class="px-6 py-3 text-left">Sub Indikator</th>
-                </x-slot>
+    <div class="space-y-6">
+        @forelse($groupedSubIndikators as $namaJenisUjian => $subJenisGroups)
+            <div class="card">
+                <div class="card-header bg-slate-50 border-b border-slate-200">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        Jenis Ujian: {{ $namaJenisUjian }}
+                    </h2>
+                </div>
 
-                @forelse($groupedSubIndikators as $namaJenisUjian => $subJenisGroups)
+                <div class="card-body-sm p-0">
                     @foreach($subJenisGroups as $namaSubJenis => $subIndikators)
-                        <tr class="hover:bg-secondary-50 align-top">
-                            @if($loop->first)
-                                <td class="px-6 py-4 font-medium text-secondary-900" rowspan="{{ $subJenisGroups->count() }}">
-                                    {{ $namaJenisUjian }}
-                                </td>
-                            @endif
-                            <td class="px-6 py-4">
+                        @php $firstItem = $subIndikators->first(); @endphp
+                        <div class="border-b border-slate-100 last:border-0 p-5">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                                <div>
+                                    <h3 class="text-base font-semibold text-slate-800">{{ $namaSubJenis }}</h3>
+                                    <p class="text-sm text-slate-500">{{ $subIndikators->count() }} sub indikator (materi)</p>
+                                </div>
                                 <button type="button"
                                         @click="$dispatch('sub-indikator-form', {
                                             mode: 'create',
-                                            data: { sub_jenis_ujian_id: '{{ $subIndikators->first()->sub_jenis_ujian_id }}' }
+                                            data: { sub_jenis_ujian_id: '{{ $firstItem ? $firstItem->sub_jenis_ujian_id : '' }}' }
                                         })"
-                                        class="text-secondary-700 hover:text-primary-600 font-medium underline decoration-dotted underline-offset-2 cursor-pointer">
-                                    {{ $namaSubJenis }}
+                                        class="btn btn-secondary btn-sm">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    Tambah Sub Indikator
                                 </button>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($subIndikators as $subIndikator)
-                                        <div x-data="{
-                                                menuOpen: false,
-                                                menuX: 0,
-                                                menuY: 0,
-                                                toggle() {
-                                                    if (this.menuOpen) { this.menuOpen = false; return; }
-                                                    const rect = this.$refs.badge.getBoundingClientRect();
-                                                    this.menuX = rect.left;
-                                                    this.menuY = rect.bottom + 4;
-                                                    this.menuOpen = true;
-                                                }
-                                             }"
-                                             @keydown.escape.window="menuOpen = false"
-                                             @scroll.window="menuOpen = false"
-                                             @resize.window="menuOpen = false">
-                                            <button type="button"
-                                                    x-ref="badge"
-                                                    @click="toggle()"
-                                                    class="badge badge-primary hover:brightness-95 cursor-pointer inline-flex items-center gap-1">
-                                                {{ $subIndikator->nama_sub_indikator }}
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                                </svg>
-                                            </button>
-                                            <template x-teleport="body">
-                                                <div x-show="menuOpen"
-                                                     x-cloak
-                                                     @click.outside="menuOpen = false"
-                                                     x-transition
-                                                     :style="`position: fixed; left: ${menuX}px; top: ${menuY}px;`"
-                                                     class="z-50 w-32 bg-white rounded-lg shadow-lg border border-secondary-100 py-1">
-                                                    <button type="button"
-                                                            @click="menuOpen = false; $dispatch('sub-indikator-form', {
-                                                                mode: 'edit',
-                                                                action: '{{ route('superadmin.sub-indikator.update', $subIndikator) }}',
-                                                                data: {{ Js::from($subIndikator->only(['sub_jenis_ujian_id', 'nama_sub_indikator'])) }}
-                                                            })"
-                                                            class="flex items-center gap-2 w-full px-3 py-2 text-sm text-secondary-700 hover:bg-secondary-50">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                                        </svg>
-                                                        Edit
-                                                    </button>
-                                                    <button type="button"
-                                                            @click="menuOpen = false; $dispatch('confirm-dialog', {
-                                                                title: 'Hapus Sub Indikator',
-                                                                message: 'Apakah Anda yakin ingin menghapus {{ $subIndikator->nama_sub_indikator }}?',
-                                                                confirmText: 'Ya, Hapus',
-                                                                type: 'danger',
-                                                                formAction: '{{ route('superadmin.sub-indikator.destroy', $subIndikator) }}'
-                                                            })"
-                                                            class="flex items-center gap-2 w-full px-3 py-2 text-sm text-danger-600 hover:bg-danger-50">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                        </svg>
-                                                        Hapus
-                                                    </button>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </td>
-                        </tr>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($subIndikators as $subIndikator)
+                                    <div x-data="{
+                                            menuOpen: false,
+                                            menuX: 0,
+                                            menuY: 0,
+                                            toggle() {
+                                                if (this.menuOpen) { this.menuOpen = false; return; }
+                                                const rect = this.$refs.badge.getBoundingClientRect();
+                                                this.menuX = rect.left;
+                                                this.menuY = rect.bottom + 4;
+                                                this.menuOpen = true;
+                                            }
+                                         }"
+                                         @keydown.escape.window="menuOpen = false"
+                                         @scroll.window="menuOpen = false"
+                                         @resize.window="menuOpen = false">
+                                        <button type="button"
+                                                x-ref="badge"
+                                                @click="toggle()"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-50 hover:bg-primary-100 text-primary-700 font-medium text-sm transition-colors cursor-pointer border border-primary-100">
+                                            {{ $subIndikator->nama_sub_indikator }}
+                                            <svg class="w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                        </button>
+                                        <template x-teleport="body">
+                                            <div x-show="menuOpen"
+                                                 x-cloak
+                                                 @click.outside="menuOpen = false"
+                                                 x-transition
+                                                 :style="`position: fixed; left: ${menuX}px; top: ${menuY}px;`"
+                                                 class="z-50 w-36 bg-white rounded-lg shadow-lg shadow-slate-200/50 border border-slate-200 py-1 overflow-hidden">
+                                                <button type="button"
+                                                        @click="menuOpen = false; $dispatch('sub-indikator-form', {
+                                                            mode: 'edit',
+                                                            action: '{{ route('superadmin.sub-indikator.update', $subIndikator) }}',
+                                                            data: {{ Js::from($subIndikator->only(['sub_jenis_ujian_id', 'nama_sub_indikator'])) }}
+                                                        })"
+                                                        class="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                    </svg>
+                                                    Edit
+                                                </button>
+                                                <button type="button"
+                                                        @click="menuOpen = false; $dispatch('confirm-dialog', {
+                                                            title: 'Hapus Sub Indikator',
+                                                            message: 'Apakah Anda yakin ingin menghapus {{ $subIndikator->nama_sub_indikator }}?',
+                                                            confirmText: 'Ya, Hapus',
+                                                            type: 'danger',
+                                                            formAction: '{{ route('superadmin.sub-indikator.destroy', $subIndikator) }}'
+                                                        })"
+                                                        class="flex items-center gap-2 w-full px-4 py-2 text-sm text-danger-600 hover:bg-danger-50 transition-colors">
+                                                    <svg class="w-4 h-4 text-danger-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    </svg>
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
                     @endforeach
-                @empty
-                    <tr>
-                        <td colspan="3" class="px-6 py-12 text-center text-secondary-500">
-                            Belum ada sub indikator yang dibuat
-                        </td>
-                    </tr>
-                @endforelse
-            </x-table>
-        </div>
+                </div>
+            </div>
+        @empty
+            <div class="card">
+                <div class="card-body py-12 text-center text-slate-500">
+                    Belum ada sub indikator yang dibuat.
+                </div>
+            </div>
+        @endforelse
     </div>
 
     <div
@@ -144,6 +157,7 @@
         }"
         x-on:sub-indikator-form.window="show($event.detail)"
         x-on:keydown.escape.window="open = false"
+        x-effect="document.body.style.overflow = open ? 'hidden' : ''"
         x-show="open"
         x-cloak
         class="modal-backdrop"
@@ -156,7 +170,7 @@
                 </button>
             </div>
 
-            <form :action="action" method="POST">
+            <form :action="action" method="POST" class="flex flex-col flex-1 min-h-0">
                 @csrf
                 <template x-if="mode === 'edit'">
                     <input type="hidden" name="_method" value="PUT">
@@ -166,7 +180,7 @@
 
                 <div class="modal-body space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-secondary-700 mb-1">Sub Jenis Ujian <span class="text-danger-500">*</span></label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Sub Jenis Ujian <span class="text-danger-500">*</span></label>
                         <select name="sub_jenis_ujian_id" x-model="form.sub_jenis_ujian_id"
                                 class="input w-full @error('sub_jenis_ujian_id') border-danger-500 @enderror" required>
                             <option value="">-- Pilih Sub Jenis Ujian --</option>
@@ -178,7 +192,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-secondary-700 mb-1">Nama Sub Indikator <span class="text-danger-500">*</span></label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Sub Indikator <span class="text-danger-500">*</span></label>
                         <input type="text" name="nama_sub_indikator" x-model="form.nama_sub_indikator"
                                class="input w-full @error('nama_sub_indikator') border-danger-500 @enderror"
                                placeholder="Hukum Perdata" required>
