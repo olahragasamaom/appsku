@@ -102,3 +102,78 @@ describe('finalize', function () {
         expect($up->fresh()->lulus)->toBeFalse();
     });
 });
+
+describe('aggregateCategories', function () {
+    it('persists a category row per jenis ujian', function () {
+        $twk = JenisUjian::factory()->create();
+        $tiu = JenisUjian::factory()->create();
+        $superadmin = User::factory()->create(['is_superadmin' => true, 'company_id' => null]);
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $superadmin->id]);
+        $ujian->jenisUjians()->attach($twk->id, ['passing_grade' => 5]);
+        $ujian->jenisUjians()->attach($tiu->id, ['passing_grade' => 5]);
+
+        $soalTwk = makeSoal($twk, 'benar_salah', ['kunci_jawaban' => 'A', 'nilai_bobot_benar' => 5]);
+        $soalTiu = makeSoal($tiu, 'benar_salah', ['kunci_jawaban' => 'B', 'nilai_bobot_benar' => 5]);
+        $usTwk = $ujian->ujianSoals()->create(['soal_id' => $soalTwk->id, 'jenis_ujian_id' => $twk->id, 'urutan' => 1]);
+        $usTiu = $ujian->ujianSoals()->create(['soal_id' => $soalTiu->id, 'jenis_ujian_id' => $tiu->id, 'urutan' => 2]);
+
+        $peserta = User::factory()->create(['is_peserta' => true]);
+        $up = $ujian->peserta()->create(['user_id' => $peserta->id, 'status' => 'sedang_ujian']);
+        $up->jawaban()->create(['ujian_soal_id' => $usTwk->id, 'soal_id' => $soalTwk->id, 'jenis_ujian_id' => $twk->id, 'jawaban' => 'A', 'nilai' => 5, 'benar' => true]);
+        $up->jawaban()->create(['ujian_soal_id' => $usTiu->id, 'soal_id' => $soalTiu->id, 'jenis_ujian_id' => $tiu->id, 'jawaban' => 'B', 'nilai' => 5, 'benar' => true]);
+
+        app(UjianScoringService::class)->aggregateCategories($up);
+
+        expect($up->kategori()->count())->toBe(2);
+        expect((float) $up->kategori()->where('jenis_ujian_id', $twk->id)->value('nilai_kategori'))->toBe(5.0);
+    });
+
+    it('is idempotent when re-scoring the same attempt', function () {
+        $skd = JenisUjian::factory()->create();
+        $superadmin = User::factory()->create(['is_superadmin' => true, 'company_id' => null]);
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $superadmin->id]);
+        $ujian->jenisUjians()->attach($skd->id, ['passing_grade' => 5]);
+
+        $soal = makeSoal($skd, 'benar_salah', ['kunci_jawaban' => 'A', 'nilai_bobot_benar' => 5]);
+        $us = $ujian->ujianSoals()->create(['soal_id' => $soal->id, 'jenis_ujian_id' => $skd->id, 'urutan' => 1]);
+
+        $peserta = User::factory()->create(['is_peserta' => true]);
+        $up = $ujian->peserta()->create(['user_id' => $peserta->id, 'status' => 'sedang_ujian']);
+        $up->jawaban()->create(['ujian_soal_id' => $us->id, 'soal_id' => $soal->id, 'jenis_ujian_id' => $skd->id, 'jawaban' => 'A', 'nilai' => 5, 'benar' => true]);
+
+        $service = app(UjianScoringService::class);
+        $service->aggregateCategories($up);
+        $service->aggregateCategories($up);
+
+        expect($up->kategori()->count())->toBe(1);
+    });
+});
+
+describe('evaluatePass', function () {
+    it('passes only when every category meets its passing grade (AD-4)', function () {
+        $twk = JenisUjian::factory()->create();
+        $tiu = JenisUjian::factory()->create();
+        $superadmin = User::factory()->create(['is_superadmin' => true, 'company_id' => null]);
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $superadmin->id]);
+        $ujian->jenisUjians()->attach($twk->id, ['passing_grade' => 5]);
+        $ujian->jenisUjians()->attach($tiu->id, ['passing_grade' => 5]);
+
+        $soalTwk = makeSoal($twk, 'benar_salah', ['kunci_jawaban' => 'A', 'nilai_bobot_benar' => 5]);
+        $soalTiu = makeSoal($tiu, 'benar_salah', ['kunci_jawaban' => 'B', 'nilai_bobot_benar' => 5]);
+        $usTwk = $ujian->ujianSoals()->create(['soal_id' => $soalTwk->id, 'jenis_ujian_id' => $twk->id, 'urutan' => 1]);
+        $usTiu = $ujian->ujianSoals()->create(['soal_id' => $soalTiu->id, 'jenis_ujian_id' => $tiu->id, 'urutan' => 2]);
+
+        $peserta = User::factory()->create(['is_peserta' => true]);
+        $up = $ujian->peserta()->create(['user_id' => $peserta->id, 'status' => 'sedang_ujian']);
+        $up->jawaban()->create(['ujian_soal_id' => $usTwk->id, 'soal_id' => $soalTwk->id, 'jenis_ujian_id' => $twk->id, 'jawaban' => 'A', 'nilai' => 5, 'benar' => true]);
+        $up->jawaban()->create(['ujian_soal_id' => $usTiu->id, 'soal_id' => $soalTiu->id, 'jenis_ujian_id' => $tiu->id, 'jawaban' => 'C', 'nilai' => 0, 'benar' => false]);
+
+        $service = app(UjianScoringService::class);
+        $service->aggregateCategories($up);
+        $service->evaluatePass($up);
+
+        expect($up->fresh()->lulus)->toBeFalse();
+        expect($up->kategori()->where('jenis_ujian_id', $twk->id)->first()->lulus_kategori)->toBeTrue();
+        expect($up->kategori()->where('jenis_ujian_id', $tiu->id)->first()->lulus_kategori)->toBeFalse();
+    });
+});

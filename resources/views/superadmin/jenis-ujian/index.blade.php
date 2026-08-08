@@ -29,6 +29,7 @@
             <x-table>
                 <x-slot name="header">
                     <th class="px-6 py-3 text-left">Jenis Ujian</th>
+                    <th class="px-6 py-3 text-left">Keterangan</th>
                     <th class="px-6 py-3 text-center">Aksi</th>
                 </x-slot>
 
@@ -38,12 +39,16 @@
                             <p class="font-medium text-secondary-900">{{ $jenisUjian->nama_jenis_ujian }}</p>
                         </td>
                         <td class="px-6 py-4">
+                            <p class="text-secondary-600">{{ $jenisUjian->keterangan ?: '-' }}</p>
+                        </td>
+                        <td class="px-6 py-4">
                             <div class="flex items-center justify-center gap-2">
                                 <button type="button"
                                         @click="$dispatch('jenis-ujian-form', {
                                             mode: 'edit',
                                             action: '{{ route('superadmin.jenis-ujian.update', $jenisUjian) }}',
-                                            nama: {{ Js::from($jenisUjian->nama_jenis_ujian) }}
+                                            nama: {{ Js::from($jenisUjian->nama_jenis_ujian) }},
+                                            keterangan: {{ Js::from($jenisUjian->keterangan ?? '') }}
                                         })"
                                         class="btn btn-ghost btn-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,7 +73,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="2" class="px-6 py-12 text-center text-secondary-500">
+                        <td colspan="3" class="px-6 py-12 text-center text-secondary-500">
                             Belum ada jenis ujian yang dibuat
                         </td>
                     </tr>
@@ -89,10 +94,12 @@
             mode: '{{ old('_form_mode', 'create') }}',
             action: '{{ old('_form_action', route('superadmin.jenis-ujian.store')) }}',
             nama: {{ Js::from(old('nama_jenis_ujian', '')) }},
+            keterangan: {{ Js::from(old('keterangan', '')) }},
             show(detail) {
                 this.mode = detail.mode;
                 this.action = detail.mode === 'edit' ? detail.action : '{{ route('superadmin.jenis-ujian.store') }}';
                 this.nama = detail.mode === 'edit' ? detail.nama : '';
+                this.keterangan = detail.mode === 'edit' ? detail.keterangan : '';
                 this.open = true;
                 this.$nextTick(() => this.$refs.namaInput.focus());
             }
@@ -145,6 +152,19 @@
                                class="input w-full @error('nama_jenis_ujian') border-danger-500 @enderror"
                                placeholder="Ujian Tengah Semester" required>
                         @error('nama_jenis_ujian')
+                            <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="mt-4">
+                        <label for="keterangan" class="block text-sm font-medium text-secondary-700 mb-1">
+                            Keterangan
+                        </label>
+                        <textarea name="keterangan" id="keterangan" rows="3"
+                                  x-model="keterangan"
+                                  class="input w-full @error('keterangan') border-danger-500 @enderror"
+                                  placeholder="Keterangan ujian (opsional)"></textarea>
+                        @error('keterangan')
                             <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
                         @enderror
                     </div>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Exports\UjianRankingExport;
 use App\Models\JenisUjian;
 use App\Models\Soal;
 use App\Models\SubIndikator;
@@ -7,6 +8,7 @@ use App\Models\SubJenisUjian;
 use App\Models\Ujian;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Maatwebsite\Excel\Facades\Excel;
 
 uses(RefreshDatabase::class);
 
@@ -86,5 +88,46 @@ describe('Review Jawaban', function () {
         $response->assertSee('Peserta Review');
         $response->assertSee('Kunci Jawaban');
         $response->assertSee('Jawaban Peserta');
+    });
+});
+
+describe('Export Ranking', function () {
+    it('downloads the ranking as an excel file', function () {
+        Excel::fake();
+
+        $peserta = User::factory()->create(['name' => 'Juara Excel', 'is_peserta' => true]);
+        $this->ujian->peserta()->create(['user_id' => $peserta->id, 'status' => 'selesai', 'total_nilai' => 88, 'lulus' => true]);
+
+        $response = $this->get(route('superadmin.ujian.monitoring.ranking.export.excel', $this->ujian));
+
+        $response->assertSuccessful();
+        Excel::assertDownloaded('ranking-'.str($this->ujian->nama_ujian)->slug().'.xlsx', function (UjianRankingExport $export) {
+            return $export->collection()->contains(fn ($row) => $row->user?->name === 'Juara Excel');
+        });
+    });
+
+    it('downloads the ranking as a pdf file', function () {
+        $peserta = User::factory()->create(['name' => 'Juara PDF', 'is_peserta' => true]);
+        $this->ujian->peserta()->create(['user_id' => $peserta->id, 'status' => 'selesai', 'total_nilai' => 77, 'lulus' => true]);
+
+        $response = $this->get(route('superadmin.ujian.monitoring.ranking.export.pdf', $this->ujian));
+
+        $response->assertSuccessful();
+        expect($response->headers->get('content-type'))->toContain('application/pdf');
+    });
+
+    it('maps ranking rows with rank, name, score and pass status', function () {
+        $p1 = User::factory()->create(['name' => 'Rank Satu', 'is_peserta' => true]);
+        $p2 = User::factory()->create(['name' => 'Rank Dua', 'is_peserta' => true]);
+        $this->ujian->peserta()->create(['user_id' => $p1->id, 'status' => 'selesai', 'total_nilai' => 90, 'lulus' => true]);
+        $this->ujian->peserta()->create(['user_id' => $p2->id, 'status' => 'selesai', 'total_nilai' => 50, 'lulus' => false]);
+
+        $export = new UjianRankingExport($this->ujian);
+
+        $first = $export->map($export->collection()->first());
+
+        expect($first[0])->toBe('1');
+        expect($first[1])->toBe('Rank Satu');
+        expect($first)->toContain('Lulus');
     });
 });

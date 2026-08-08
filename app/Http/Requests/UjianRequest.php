@@ -20,6 +20,7 @@ class UjianRequest extends FormRequest
         return [
             'nama_ujian' => ['required', 'string', 'max:255'],
             'tipe_ujian' => ['required', Rule::in(['offline_kelas', 'online_paket'])],
+            'sub_jenis_ujian_id' => ['nullable', 'required_if:tipe_ujian,online_paket', 'prohibited_if:tipe_ujian,offline_kelas', Rule::exists('panritta_sub_jenis_ujian', 'id')],
             'jumlah_soal' => ['required', 'integer', 'min:0', 'max:65535'],
             'acak_soal' => ['sometimes', 'boolean'],
             'tampilkan_hasil' => ['sometimes', 'boolean'],
@@ -53,6 +54,8 @@ class UjianRequest extends FormRequest
             'durasi_ujian.required_if' => 'Durasi ujian wajib diisi untuk ujian offline.',
             'batas_keterlambatan.after_or_equal' => 'Batas keterlambatan tidak boleh sebelum tanggal ujian.',
             'akses_member.required_if' => 'Pilih minimal satu akses member untuk ujian online.',
+            'sub_jenis_ujian_id.required_if' => 'Sub jenis ujian wajib dipilih untuk ujian online.',
+            'sub_jenis_ujian_id.prohibited_if' => 'Sub jenis ujian tidak boleh diisi untuk ujian offline.',
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services\Ujian;
 use App\Models\Soal;
 use App\Models\Ujian;
 use App\Models\UjianPeserta;
+use App\Models\UjianPesertaKategori;
 
 class UjianScoringService
 {
@@ -41,41 +42,80 @@ class UjianScoringService
     }
 
     /**
-     * Finalize a peserta's attempt: recompute totals and pass/fail per jenis ujian.
+     * Finalize a peserta's attempt: persist per-category scores then evaluate pass/fail.
      */
     public function finalize(UjianPeserta $peserta): void
     {
-        $peserta->loadMissing('ujian.ujianJenisUjians', 'jawaban');
+        $this->aggregateCategories($peserta);
+        $this->evaluatePass($peserta);
 
-        $ujian = $peserta->ujian;
-        $totalNilai = (float) $peserta->jawaban->sum('nilai');
+        $peserta->forceFill([
+            'status' => 'selesai',
+            'waktu_selesai' => $peserta->waktu_selesai ?? now(),
+        ])->save();
+    }
+
+    /**
+     * Upsert per-category scores summed from the peserta's answers (AD-4). Idempotent.
+     */
+    public function aggregateCategories(UjianPeserta $peserta): void
+    {
+        $peserta->loadMissing('ujian.ujianJenisUjians', 'jawaban');
 
         $nilaiPerJenis = $peserta->jawaban
             ->groupBy('jenis_ujian_id')
             ->map(fn ($rows) => (float) $rows->sum('nilai'));
 
-        $lulus = true;
-
-        foreach ($ujian->ujianJenisUjians as $ujianJenis) {
-            $passingGrade = $ujianJenis->passing_grade;
-
-            if ($passingGrade === null) {
-                continue;
-            }
-
+        foreach ($peserta->ujian->ujianJenisUjians as $ujianJenis) {
             $nilai = $nilaiPerJenis->get($ujianJenis->jenis_ujian_id, 0.0);
 
-            if ($nilai < (float) $passingGrade) {
-                $lulus = false;
-                break;
+            UjianPesertaKategori::updateOrCreate(
+                [
+                    'ujian_peserta_id' => $peserta->id,
+                    'jenis_ujian_id' => $ujianJenis->jenis_ujian_id,
+                ],
+                [
+                    'nilai_kategori' => $nilai,
+                    'passing_grade' => $ujianJenis->passing_grade,
+                ],
+            );
+        }
+
+        $peserta->load('kategori');
+    }
+
+    /**
+     * Evaluate pass/fail per category and set the overall lulus flag (AD-4).
+     */
+    public function evaluatePass(UjianPeserta $peserta): void
+    {
+        $peserta->loadMissing('kategori');
+
+        $lulus = true;
+        $totalNilai = 0.0;
+
+        foreach ($peserta->kategori as $kategori) {
+            $nilai = (float) $kategori->nilai_kategori;
+            $totalNilai += $nilai;
+
+            $passingGrade = $kategori->passing_grade;
+
+            if ($passingGrade === null) {
+                $lulusKategori = null;
+            } else {
+                $lulusKategori = $nilai >= (float) $passingGrade;
+
+                if (! $lulusKategori) {
+                    $lulus = false;
+                }
             }
+
+            $kategori->forceFill(['lulus_kategori' => $lulusKategori])->save();
         }
 
         $peserta->forceFill([
             'total_nilai' => $totalNilai,
             'lulus' => $lulus,
-            'status' => 'selesai',
-            'waktu_selesai' => $peserta->waktu_selesai ?? now(),
         ])->save();
     }
 

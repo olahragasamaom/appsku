@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UjianRequest;
 use App\Models\JenisUjian;
 use App\Models\Ujian;
+use App\Services\Ujian\ExamAssemblyService;
+use App\Services\Ujian\TokenService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +16,11 @@ use Illuminate\View\View;
 
 class UjianController extends Controller
 {
+    public function __construct(
+        private readonly ExamAssemblyService $assemblyService,
+        private readonly TokenService $tokenService
+    ) {}
+
     public function index(Request $request): View
     {
         $query = Ujian::with('jenisUjians')->withCount('peserta', 'ujianSoals');
@@ -90,6 +97,19 @@ class UjianController extends Controller
 
         return redirect()->route('superadmin.ujian.index')
             ->with('success', 'Ujian berhasil dihapus.');
+    }
+
+    public function activate(Ujian $ujian): RedirectResponse
+    {
+        $this->assemblyService->assertFinalizable($ujian);
+
+        if ($ujian->isOffline()) {
+            $this->tokenService->ensureToken($ujian);
+        }
+
+        $ujian->update(['status' => 'aktif']);
+
+        return back()->with('success', 'Ujian berhasil diaktifkan.');
     }
 
     /**

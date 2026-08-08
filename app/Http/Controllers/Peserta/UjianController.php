@@ -119,7 +119,11 @@ class UjianController extends Controller
 
     public function saveAnswer(Request $request, Ujian $ujian): JsonResponse
     {
-        $peserta = $ujian->peserta()->where('user_id', $request->user()->id)->firstOrFail();
+        $peserta = $this->resolvePeserta($request, $ujian);
+
+        if ($peserta instanceof RedirectResponse || ! $peserta) {
+            abort(401);
+        }
 
         abort_unless($peserta->status === 'sedang_ujian', 403);
 
@@ -148,7 +152,15 @@ class UjianController extends Controller
 
     public function submit(Request $request, Ujian $ujian): RedirectResponse
     {
-        $peserta = $ujian->peserta()->where('user_id', $request->user()->id)->firstOrFail();
+        $peserta = $this->resolvePeserta($request, $ujian);
+
+        if ($peserta instanceof RedirectResponse) {
+            return $peserta;
+        }
+
+        if (! $peserta) {
+            abort(404);
+        }
 
         if ($peserta->status !== 'selesai') {
             $this->scoring->finalize($peserta);
@@ -173,18 +185,63 @@ class UjianController extends Controller
         return view('peserta.ujian.hasil', compact('ujian', 'peserta', 'breakdown'));
     }
 
-    private function resolvePeserta(Request $request, Ujian $ujian): ?UjianPeserta
+    public function pembahasan(Request $request, Ujian $ujian): View|RedirectResponse
     {
+        $peserta = $this->resolvePeserta($request, $ujian);
+
+        if ($peserta instanceof RedirectResponse) {
+            return $peserta;
+        }
+
+        abort_unless($peserta && $peserta->status === 'selesai', 404);
+
+        if (! $ujian->tampilkan_hasil) {
+            return redirect()->route('peserta.ujian.hasil', $ujian);
+        }
+
+        $ujianSoals = $ujian->ujianSoals()
+            ->with('soal.subIndikator.subJenisUjian', 'jenisUjian')
+            ->orderBy('urutan')
+            ->orderBy('id')
+            ->get();
+
+        $jawabanMap = $peserta->jawaban()->get()->keyBy('ujian_soal_id');
+        $breakdown = $this->scoring->breakdownPerJenis($peserta);
+
+        return view('peserta.ujian.pembahasan', compact('ujian', 'peserta', 'ujianSoals', 'jawabanMap', 'breakdown'));
+    }
+
+    private function resolvePeserta(Request $request, Ujian $ujian): UjianPeserta|RedirectResponse|null
+    {
+        if ($request->session()->has('offline_attempt_id')) {
+            $attemptId = $request->session()->get('offline_attempt_id');
+            $sessionUjianId = $request->session()->get('offline_ujian_id');
+
+            if ($sessionUjianId !== $ujian->id) {
+                return redirect()->route('peserta.dashboard');
+            }
+
+            return $ujian->peserta()->where('id', $attemptId)->first();
+        }
+
+        if (! $request->user()) {
+            return redirect()->route('peserta.login');
+        }
+
         return $ujian->peserta()->where('user_id', $request->user()->id)->first();
     }
 
     private function sisaDetik(Ujian $ujian, UjianPeserta $peserta): ?int
     {
-        if (! $ujian->durasi_ujian || ! $peserta->waktu_mulai) {
-            return null;
-        }
+        $deadline = $peserta->batas_waktu;
 
-        $deadline = $peserta->waktu_mulai->copy()->addMinutes($ujian->durasi_ujian);
+        if (! $deadline) {
+            if (! $ujian->durasi_ujian || ! $peserta->waktu_mulai) {
+                return null;
+            }
+
+            $deadline = $peserta->waktu_mulai->copy()->addMinutes($ujian->durasi_ujian);
+        }
 
         return max(0, now()->diffInSeconds($deadline, false));
     }

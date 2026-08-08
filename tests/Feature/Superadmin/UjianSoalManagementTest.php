@@ -153,3 +153,21 @@ describe('Detach Soal', function () {
         $this->assertDatabaseMissing('panritta_ujian_soal', ['id' => $ujianSoal->id]);
     });
 });
+
+describe('Remaining Slots', function () {
+    it('returns the remaining slots JSON', function () {
+        $skd = \App\Models\JenisUjian::factory()->create();
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id, 'jumlah_soal' => 5]);
+        $ujian->jenisUjians()->attach($skd->id);
+        $soal = makeSoalForJenis($skd);
+        $ujian->ujianSoals()->create(['soal_id' => $soal->id, 'jenis_ujian_id' => $skd->id, 'urutan' => 1]);
+
+        $response = $this->getJson(route('superadmin.ujian.soal.remaining', $ujian));
+
+        $response->assertSuccessful();
+        $response->assertJson([
+            'remaining' => 4, // 5 minus 1
+            'jumlah_soal' => 5,
+        ]);
+    });
+});

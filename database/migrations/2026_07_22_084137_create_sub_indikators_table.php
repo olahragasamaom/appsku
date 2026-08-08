@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('panritta_sub_indikator', function (Blueprint $table) {
             $table->id();
-            $table->integer('jenis_ujian_id');
+            $table->unsignedInteger('jenis_ujian_id');
             $table->unsignedBigInteger('sub_jenis_ujian_id');
             $table->string('nama_sub_indikator', 255);
             $table->timestamps();

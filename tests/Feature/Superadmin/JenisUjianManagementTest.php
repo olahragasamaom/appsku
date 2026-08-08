@@ -57,6 +57,7 @@ describe('Jenis Ujian Create', function () {
 
         $response = $this->post('/superadmin/jenis-ujian', [
             'nama_jenis_ujian' => 'Ujian Praktik',
+            'keterangan' => 'Keterangan ujian praktik',
         ]);
 
         $response->assertRedirect('/superadmin/jenis-ujian');
@@ -64,6 +65,7 @@ describe('Jenis Ujian Create', function () {
 
         $this->assertDatabaseHas('panritta_jenis_ujian', [
             'nama_jenis_ujian' => 'Ujian Praktik',
+            'keterangan' => 'Keterangan ujian praktik',
         ]);
     });
 
@@ -114,6 +116,7 @@ describe('Jenis Ujian Edit', function () {
 
         $response = $this->put("/superadmin/jenis-ujian/{$jenisUjian->id}", [
             'nama_jenis_ujian' => 'Ujian Baru',
+            'keterangan' => 'Keterangan baru',
         ]);
 
         $response->assertRedirect('/superadmin/jenis-ujian');
@@ -122,6 +125,7 @@ describe('Jenis Ujian Edit', function () {
         $this->assertDatabaseHas('panritta_jenis_ujian', [
             'id' => $jenisUjian->id,
             'nama_jenis_ujian' => 'Ujian Baru',
+            'keterangan' => 'Keterangan baru',
         ]);
     });
 });

@@ -6,14 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Soal;
 use App\Models\Ujian;
 use App\Models\UjianSoal;
+use App\Services\Ujian\ExamAssemblyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class UjianSoalController extends Controller
 {
+    public function __construct(
+        private readonly ExamAssemblyService $assemblyService
+    ) {}
+
     public function index(Request $request, Ujian $ujian): View
     {
         $ujian->load('ujianJenisUjians.jenisUjian');
@@ -70,6 +74,14 @@ class UjianSoalController extends Controller
         return response()->json($soals);
     }
 
+    public function remaining(Ujian $ujian): JsonResponse
+    {
+        return response()->json([
+            'remaining' => $this->assemblyService->remainingSlots($ujian),
+            'jumlah_soal' => $ujian->jumlah_soal,
+        ]);
+    }
+
     public function attach(Request $request, Ujian $ujian): RedirectResponse
     {
         $validated = $request->validate([
@@ -82,22 +94,7 @@ class UjianSoalController extends Controller
 
         abort_unless($ujian->jenisUjians()->where('panritta_jenis_ujian.id', $jenisUjianId)->exists(), 404);
 
-        DB::transaction(function () use ($ujian, $jenisUjianId, $validated) {
-            $existing = $ujian->ujianSoals()->pluck('soal_id')->all();
-            $urutan = (int) $ujian->ujianSoals()->max('urutan');
-
-            foreach ($validated['soal_id'] as $soalId) {
-                if (in_array((int) $soalId, $existing, true)) {
-                    continue;
-                }
-
-                $ujian->ujianSoals()->create([
-                    'soal_id' => $soalId,
-                    'jenis_ujian_id' => $jenisUjianId,
-                    'urutan' => ++$urutan,
-                ]);
-            }
-        });
+        $this->assemblyService->addQuestions($ujian, $jenisUjianId, $validated['soal_id']);
 
         return redirect()
             ->route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $jenisUjianId])
@@ -109,7 +106,7 @@ class UjianSoalController extends Controller
         abort_unless($ujianSoal->ujian_id === $ujian->id, 404);
 
         $jenisUjianId = $ujianSoal->jenis_ujian_id;
-        $ujianSoal->delete();
+        $this->assemblyService->removeQuestion($ujian, $ujianSoal->soal_id);
 
         return redirect()
             ->route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $jenisUjianId])

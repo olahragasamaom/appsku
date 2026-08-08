@@ -18,6 +18,7 @@ class Ujian extends Model
     protected $fillable = [
         'nama_ujian',
         'tipe_ujian',
+        'sub_jenis_ujian_id',
         'jumlah_soal',
         'acak_soal',
         'tampilkan_hasil',
@@ -34,6 +35,7 @@ class Ujian extends Model
     {
         return [
             'id' => 'integer',
+            'sub_jenis_ujian_id' => 'integer',
             'jumlah_soal' => 'integer',
             'acak_soal' => 'boolean',
             'tampilkan_hasil' => 'boolean',
@@ -48,6 +50,11 @@ class Ujian extends Model
     public function pembuat(): BelongsTo
     {
         return $this->belongsTo(User::class, 'dibuat_oleh');
+    }
+
+    public function subJenisUjian(): BelongsTo
+    {
+        return $this->belongsTo(SubJenisUjian::class, 'sub_jenis_ujian_id');
     }
 
     public function jenisUjians(): BelongsToMany
@@ -77,6 +84,17 @@ class Ujian extends Model
     public function peserta(): HasMany
     {
         return $this->hasMany(UjianPeserta::class, 'ujian_id');
+    }
+
+    public function pakets(): BelongsToMany
+    {
+        return $this->belongsToMany(Paket::class, 'panritta_paket_ujian', 'ujian_id', 'paket_id')
+            ->withTimestamps();
+    }
+
+    public function pesertaOffline(): HasMany
+    {
+        return $this->hasMany(PesertaOffline::class, 'ujian_id');
     }
 
     public function isOffline(): bool

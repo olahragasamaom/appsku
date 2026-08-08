@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Paket extends Model
@@ -45,6 +46,12 @@ class Paket extends Model
     public function langganan(): HasMany
     {
         return $this->hasMany(PesertaLangganan::class, 'paket_id');
+    }
+
+    public function ujians(): BelongsToMany
+    {
+        return $this->belongsToMany(Ujian::class, 'panritta_paket_ujian', 'paket_id', 'ujian_id')
+            ->withTimestamps();
     }
 
     public function isGratis(): bool

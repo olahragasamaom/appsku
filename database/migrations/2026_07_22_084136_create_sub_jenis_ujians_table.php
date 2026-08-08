@@ -21,7 +21,7 @@ return new class extends Migration
 
         Schema::create('panritta_sub_jenis_ujian', function (Blueprint $table) {
             $table->id();
-            $table->integer('jenis_ujian_id');
+            $table->unsignedInteger('jenis_ujian_id');
             $table->string('nama_sub_jenis_ujian', 255);
             $table->enum('sistem_penilaian', ['benar_salah', 'tiap_jawaban_ada_poin'])->default('benar_salah');
             $table->smallInteger('jumlah_jawaban_pilihan_ganda')->default(5);

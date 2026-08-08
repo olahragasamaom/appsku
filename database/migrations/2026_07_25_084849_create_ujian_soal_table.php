@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('ujian_id');
             $table->unsignedBigInteger('soal_id');
-            $table->integer('jenis_ujian_id');
+            $table->unsignedInteger('jenis_ujian_id');
             $table->unsignedInteger('urutan')->default(0);
             $table->timestamps();
 

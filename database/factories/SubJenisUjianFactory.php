@@ -28,6 +28,8 @@ class SubJenisUjianFactory extends Factory
                 'TKP',
                 'Wawasan Kebangsaan',
             ]),
+            'keterangan' => $this->faker->optional()->sentence(),
+            'urutan' => $this->faker->numberBetween(0, 10),
             'sistem_penilaian' => 'benar_salah',
             'jumlah_jawaban_pilihan_ganda' => 5,
             'nilai_benar' => 5.00,

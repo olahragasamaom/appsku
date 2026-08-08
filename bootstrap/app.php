@@ -2,10 +2,12 @@
 
 use App\Http\Middleware\CheckBlockedIp;
 use App\Http\Middleware\DetectAttack;
+use App\Http\Middleware\EnsureExamAccess;
 use App\Http\Middleware\EnsurePeserta;
 use App\Http\Middleware\EnsureSuperadmin;
 use App\Http\Middleware\EnsureUserIsEmployee;
 use App\Http\Middleware\LogRateLimitHit;
+use App\Http\Middleware\OfflineParticipantAuth;
 use App\Http\Middleware\RedirectEmployeeToPortal;
 use App\Http\Middleware\SetTenant;
 use Illuminate\Foundation\Application;
@@ -30,6 +32,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'peserta' => EnsurePeserta::class,
             'employee' => EnsureUserIsEmployee::class,
             'admin' => RedirectEmployeeToPortal::class,
+            'offline.auth' => OfflineParticipantAuth::class,
+            'exam.access' => EnsureExamAccess::class,
             // Spatie Permission middleware
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,

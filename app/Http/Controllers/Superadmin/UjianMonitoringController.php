@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers\Superadmin;
 
+use App\Exports\UjianRankingExport;
 use App\Http\Controllers\Controller;
 use App\Models\Ujian;
 use App\Services\Ujian\UjianScoringService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class UjianMonitoringController extends Controller
 {
@@ -46,6 +51,23 @@ class UjianMonitoringController extends Controller
         $ranking = $this->scoring->rank($ujian);
 
         return view('superadmin.ujian.monitoring.ranking', compact('ujian', 'ranking'));
+    }
+
+    public function exportRankingExcel(Ujian $ujian): BinaryFileResponse
+    {
+        return Excel::download(
+            new UjianRankingExport($ujian),
+            'ranking-'.str($ujian->nama_ujian)->slug().'.xlsx'
+        );
+    }
+
+    public function exportRankingPdf(Ujian $ujian): Response
+    {
+        $ranking = $this->scoring->rank($ujian);
+
+        $pdf = Pdf::loadView('superadmin.ujian.monitoring.ranking-pdf', compact('ujian', 'ranking'));
+
+        return $pdf->download('ranking-'.str($ujian->nama_ujian)->slug().'.pdf');
     }
 
     public function review(Ujian $ujian, int $peserta): View

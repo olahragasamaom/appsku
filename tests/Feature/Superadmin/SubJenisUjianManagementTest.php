@@ -26,6 +26,27 @@ describe('Sub Jenis Ujian Index', function () {
         $response->assertViewIs('superadmin.sub-jenis-ujian.index');
         $response->assertSee('Kelola Sub Jenis Ujian');
     });
+
+    it('groups sub jenis ujian under their jenis ujian ordered by urutan', function () {
+        $jenisUjian = JenisUjian::factory()->create(['nama_jenis_ujian' => 'Ujian Kedinasan']);
+
+        SubJenisUjian::factory()->create([
+            'jenis_ujian_id' => $jenisUjian->id,
+            'nama_sub_jenis_ujian' => 'TKP',
+            'urutan' => 2,
+        ]);
+        SubJenisUjian::factory()->create([
+            'jenis_ujian_id' => $jenisUjian->id,
+            'nama_sub_jenis_ujian' => 'TIU',
+            'urutan' => 1,
+        ]);
+
+        $response = $this->get('/superadmin/sub-jenis-ujian');
+
+        $response->assertSuccessful();
+        $response->assertSee('Ujian Kedinasan');
+        $response->assertSeeInOrder(['Ujian Kedinasan', 'TIU', 'TKP']);
+    });
 });
 
 describe('Sub Jenis Ujian Create', function () {
@@ -35,6 +56,8 @@ describe('Sub Jenis Ujian Create', function () {
         $response = $this->post('/superadmin/sub-jenis-ujian', [
             'jenis_ujian_id' => $jenisUjian->id,
             'nama_sub_jenis_ujian' => 'Psikotes',
+            'keterangan' => 'Tes psikologi calon peserta',
+            'urutan' => 2,
             'sistem_penilaian' => 'tiap_jawaban_ada_poin',
             'jumlah_jawaban_pilihan_ganda' => 5,
             'nilai_benar' => 5,
@@ -45,6 +68,8 @@ describe('Sub Jenis Ujian Create', function () {
 
         $this->assertDatabaseHas('panritta_sub_jenis_ujian', [
             'nama_sub_jenis_ujian' => 'Psikotes',
+            'keterangan' => 'Tes psikologi calon peserta',
+            'urutan' => 2,
             'sistem_penilaian' => 'tiap_jawaban_ada_poin',
         ]);
     });

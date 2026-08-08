@@ -765,6 +765,15 @@ input[type="radio"]:focus {
     animation: modalIn 0.3s ease-out;
 }
 
+/* Ensure a <form> wrapping the header/body/footer still allows the body to scroll */
+.modal > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
 .modal-sm {
     max-width: 400px;
 }
@@ -826,7 +835,8 @@ input[type="radio"]:focus {
 .modal-body {
     padding: 24px;
     overflow-y: auto;
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .modal-footer {

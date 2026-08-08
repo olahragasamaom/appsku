@@ -56,6 +56,12 @@
                     </x-table>
                 </div>
             </div>
+
+            <div class="mt-6 text-center">
+                <a href="{{ route('peserta.ujian.pembahasan', $ujian) }}" class="btn btn-primary">
+                    Lihat Pembahasan Jawaban
+                </a>
+            </div>
         @endif
     </div>
 @endsection

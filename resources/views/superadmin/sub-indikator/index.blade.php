@@ -10,16 +10,8 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-secondary-900">Kelola Sub Indikator</h1>
-            <p class="text-secondary-500 mt-1">Daftar indikator soal per sub jenis ujian</p>
+            <p class="text-secondary-500 mt-1">Klik nama sub jenis ujian untuk menambah sub indikator</p>
         </div>
-        <button type="button"
-                @click="$dispatch('sub-indikator-form', { mode: 'create' })"
-                class="btn btn-primary">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Tambah Sub Indikator
-        </button>
     </div>
 @endsection
 
@@ -31,60 +23,103 @@
                     <th class="px-6 py-3 text-left">Jenis Ujian</th>
                     <th class="px-6 py-3 text-left">Sub Jenis Ujian</th>
                     <th class="px-6 py-3 text-left">Sub Indikator</th>
-                    <th class="px-6 py-3 text-center">Aksi</th>
                 </x-slot>
 
-                @forelse($subIndikators as $subIndikator)
-                    <tr class="hover:bg-secondary-50">
-                        <td class="px-6 py-4 text-secondary-700">{{ $subIndikator->subJenisUjian?->jenisUjian?->nama_jenis_ujian ?? '-' }}</td>
-                        <td class="px-6 py-4 text-secondary-700">{{ $subIndikator->subJenisUjian?->nama_sub_jenis_ujian ?? '-' }}</td>
-                        <td class="px-6 py-4">
-                            <p class="font-medium text-secondary-900">{{ $subIndikator->nama_sub_indikator }}</p>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center justify-center gap-2">
+                @forelse($groupedSubIndikators as $namaJenisUjian => $subJenisGroups)
+                    @foreach($subJenisGroups as $namaSubJenis => $subIndikators)
+                        <tr class="hover:bg-secondary-50 align-top">
+                            @if($loop->first)
+                                <td class="px-6 py-4 font-medium text-secondary-900" rowspan="{{ $subJenisGroups->count() }}">
+                                    {{ $namaJenisUjian }}
+                                </td>
+                            @endif
+                            <td class="px-6 py-4">
                                 <button type="button"
                                         @click="$dispatch('sub-indikator-form', {
-                                            mode: 'edit',
-                                            action: '{{ route('superadmin.sub-indikator.update', $subIndikator) }}',
-                                            data: {{ Js::from($subIndikator->only(['sub_jenis_ujian_id', 'nama_sub_indikator'])) }}
+                                            mode: 'create',
+                                            data: { sub_jenis_ujian_id: '{{ $subIndikators->first()->sub_jenis_ujian_id }}' }
                                         })"
-                                        class="btn btn-ghost btn-sm">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                    </svg>
+                                        class="text-secondary-700 hover:text-primary-600 font-medium underline decoration-dotted underline-offset-2 cursor-pointer">
+                                    {{ $namaSubJenis }}
                                 </button>
-                                <button type="button"
-                                        @click="$dispatch('confirm-dialog', {
-                                            title: 'Hapus Sub Indikator',
-                                            message: 'Apakah Anda yakin ingin menghapus {{ $subIndikator->nama_sub_indikator }}?',
-                                            confirmText: 'Ya, Hapus',
-                                            type: 'danger',
-                                            formAction: '{{ route('superadmin.sub-indikator.destroy', $subIndikator) }}'
-                                        })"
-                                        class="btn btn-ghost btn-sm text-danger-600">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($subIndikators as $subIndikator)
+                                        <div x-data="{
+                                                menuOpen: false,
+                                                menuX: 0,
+                                                menuY: 0,
+                                                toggle() {
+                                                    if (this.menuOpen) { this.menuOpen = false; return; }
+                                                    const rect = this.$refs.badge.getBoundingClientRect();
+                                                    this.menuX = rect.left;
+                                                    this.menuY = rect.bottom + 4;
+                                                    this.menuOpen = true;
+                                                }
+                                             }"
+                                             @keydown.escape.window="menuOpen = false"
+                                             @scroll.window="menuOpen = false"
+                                             @resize.window="menuOpen = false">
+                                            <button type="button"
+                                                    x-ref="badge"
+                                                    @click="toggle()"
+                                                    class="badge badge-primary hover:brightness-95 cursor-pointer inline-flex items-center gap-1">
+                                                {{ $subIndikator->nama_sub_indikator }}
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>
+                                            </button>
+                                            <template x-teleport="body">
+                                                <div x-show="menuOpen"
+                                                     x-cloak
+                                                     @click.outside="menuOpen = false"
+                                                     x-transition
+                                                     :style="`position: fixed; left: ${menuX}px; top: ${menuY}px;`"
+                                                     class="z-50 w-32 bg-white rounded-lg shadow-lg border border-secondary-100 py-1">
+                                                    <button type="button"
+                                                            @click="menuOpen = false; $dispatch('sub-indikator-form', {
+                                                                mode: 'edit',
+                                                                action: '{{ route('superadmin.sub-indikator.update', $subIndikator) }}',
+                                                                data: {{ Js::from($subIndikator->only(['sub_jenis_ujian_id', 'nama_sub_indikator'])) }}
+                                                            })"
+                                                            class="flex items-center gap-2 w-full px-3 py-2 text-sm text-secondary-700 hover:bg-secondary-50">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                        </svg>
+                                                        Edit
+                                                    </button>
+                                                    <button type="button"
+                                                            @click="menuOpen = false; $dispatch('confirm-dialog', {
+                                                                title: 'Hapus Sub Indikator',
+                                                                message: 'Apakah Anda yakin ingin menghapus {{ $subIndikator->nama_sub_indikator }}?',
+                                                                confirmText: 'Ya, Hapus',
+                                                                type: 'danger',
+                                                                formAction: '{{ route('superadmin.sub-indikator.destroy', $subIndikator) }}'
+                                                            })"
+                                                            class="flex items-center gap-2 w-full px-3 py-2 text-sm text-danger-600 hover:bg-danger-50">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                        </svg>
+                                                        Hapus
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
                 @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-secondary-500">
+                        <td colspan="3" class="px-6 py-12 text-center text-secondary-500">
                             Belum ada sub indikator yang dibuat
                         </td>
                     </tr>
                 @endforelse
             </x-table>
         </div>
-
-        @if($subIndikators->hasPages())
-            <div class="card-footer">
-                {{ $subIndikators->links() }}
-            </div>
-        @endif
     </div>
 
     <div
@@ -102,7 +137,7 @@
                 if (detail.mode === 'edit') {
                     this.form = { sub_jenis_ujian_id: detail.data.sub_jenis_ujian_id, nama_sub_indikator: detail.data.nama_sub_indikator };
                 } else {
-                    this.form = { sub_jenis_ujian_id: '', nama_sub_indikator: '' };
+                    this.form = { sub_jenis_ujian_id: detail.data?.sub_jenis_ujian_id ?? '', nama_sub_indikator: '' };
                 }
                 this.open = true;
             }

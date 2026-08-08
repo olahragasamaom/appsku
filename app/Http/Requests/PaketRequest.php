@@ -33,7 +33,7 @@ class PaketRequest extends FormRequest
             'deskripsi' => ['nullable', 'string'],
             'harga' => ['required', 'numeric', 'min:0'],
             'durasi_hari' => ['required', 'integer', 'min:1'],
-            'kuota_ujian' => ['nullable', 'integer', 'min:0'],
+            'kuota_ujian' => ['nullable', 'integer', 'min:1'],
             'video_pembahasan' => ['sometimes', 'boolean'],
             'analitik' => ['sometimes', 'boolean'],
             'sertifikat' => ['sometimes', 'boolean'],
@@ -51,6 +51,7 @@ class PaketRequest extends FormRequest
             'nama_paket.required' => 'Nama paket wajib diisi.',
             'harga.required' => 'Harga wajib diisi.',
             'durasi_hari.required' => 'Durasi paket wajib diisi.',
+            'kuota_ujian.min' => 'Kuota ujian minimal 1, atau kosongkan untuk unlimited.',
         ];
     }
 }

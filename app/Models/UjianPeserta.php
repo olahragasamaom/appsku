@@ -13,9 +13,12 @@ class UjianPeserta extends Model
     protected $fillable = [
         'ujian_id',
         'user_id',
+        'langganan_id',
         'status',
         'waktu_mulai',
         'waktu_selesai',
+        'batas_waktu',
+        'auto_submitted',
         'total_nilai',
         'lulus',
     ];
@@ -26,8 +29,11 @@ class UjianPeserta extends Model
             'id' => 'integer',
             'ujian_id' => 'integer',
             'user_id' => 'integer',
+            'langganan_id' => 'integer',
             'waktu_mulai' => 'datetime',
             'waktu_selesai' => 'datetime',
+            'batas_waktu' => 'datetime',
+            'auto_submitted' => 'boolean',
             'total_nilai' => 'decimal:2',
             'lulus' => 'boolean',
         ];
@@ -46,5 +52,15 @@ class UjianPeserta extends Model
     public function jawaban(): HasMany
     {
         return $this->hasMany(UjianJawaban::class, 'ujian_peserta_id');
+    }
+
+    public function kategori(): HasMany
+    {
+        return $this->hasMany(UjianPesertaKategori::class, 'ujian_peserta_id');
+    }
+
+    public function langganan(): BelongsTo
+    {
+        return $this->belongsTo(PesertaLangganan::class, 'langganan_id');
     }
 }

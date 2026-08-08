@@ -42,6 +42,12 @@ use App\Http\Controllers\OvertimeSettingController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayrollItemController;
 use App\Http\Controllers\PayrollSettingController;
+use App\Http\Controllers\Peserta\AuthController as PesertaAuthController;
+use App\Http\Controllers\Peserta\DashboardController as PesertaDashboardController;
+use App\Http\Controllers\Peserta\LanggananController as PesertaLanggananController;
+use App\Http\Controllers\Peserta\OAuthController as PesertaOAuthController;
+use App\Http\Controllers\Peserta\OfflineLoginController as PesertaOfflineLoginController;
+use App\Http\Controllers\Peserta\UjianController as PesertaUjianController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\Pph21SettingController;
 use App\Http\Controllers\ProfileController;
@@ -64,8 +70,12 @@ use App\Http\Controllers\Superadmin\BlockedIpController;
 use App\Http\Controllers\Superadmin\EmailLogController;
 use App\Http\Controllers\Superadmin\JenisUjianController;
 use App\Http\Controllers\Superadmin\NotificationLogController;
+use App\Http\Controllers\Superadmin\PaketController;
+use App\Http\Controllers\Superadmin\PaketUjianController;
 use App\Http\Controllers\Superadmin\PaymentController;
 use App\Http\Controllers\Superadmin\PaymentGatewayController;
+use App\Http\Controllers\Superadmin\PesertaController;
+use App\Http\Controllers\Superadmin\PesertaOfflineController;
 use App\Http\Controllers\Superadmin\PlanController;
 use App\Http\Controllers\Superadmin\QueueMonitorController;
 use App\Http\Controllers\Superadmin\RateLimitLogController;
@@ -75,20 +85,13 @@ use App\Http\Controllers\Superadmin\SoalController;
 use App\Http\Controllers\Superadmin\SubIndikatorController;
 use App\Http\Controllers\Superadmin\SubJenisUjianController;
 use App\Http\Controllers\Superadmin\SubscriptionController;
-use App\Http\Controllers\Superadmin\PesertaController;
-use App\Http\Controllers\Peserta\AuthController as PesertaAuthController;
-use App\Http\Controllers\Peserta\DashboardController as PesertaDashboardController;
-use App\Http\Controllers\Peserta\LanggananController as PesertaLanggananController;
-use App\Http\Controllers\Peserta\OAuthController as PesertaOAuthController;
-use App\Http\Controllers\Peserta\UjianController as PesertaUjianController;
-use App\Http\Controllers\Superadmin\PaketController;
+use App\Http\Controllers\Superadmin\SuperadminAuthController;
+use App\Http\Controllers\Superadmin\SuperadminDashboardController;
+use App\Http\Controllers\Superadmin\SystemHealthController;
 use App\Http\Controllers\Superadmin\UjianController;
 use App\Http\Controllers\Superadmin\UjianMonitoringController;
 use App\Http\Controllers\Superadmin\UjianPesertaController;
 use App\Http\Controllers\Superadmin\UjianSoalController;
-use App\Http\Controllers\Superadmin\SuperadminAuthController;
-use App\Http\Controllers\Superadmin\SuperadminDashboardController;
-use App\Http\Controllers\Superadmin\SystemHealthController;
 use App\Http\Controllers\TaxForm1721A1Controller;
 use App\Http\Controllers\ThrController;
 use App\Http\Controllers\ThrSettingController;
@@ -593,10 +596,6 @@ Route::prefix('portal')->name('portal.')->middleware(['auth', 'employee'])->grou
 |--------------------------------------------------------------------------
 */
 
-
-
-
-
 // Superadmin Auth (Guest)
 Route::prefix('superadmin')->name('superadmin.')->group(function () {
     Route::middleware('guest')->group(function () {
@@ -647,14 +646,25 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 
         // kelola soal di ujian
         Route::get('ujian/{ujian}/soal', [UjianSoalController::class, 'index'])->name('ujian.soal.index');
-        Route::get('ujian/{ujian}/soal/bank-options', [UjianSoalController::class, 'bankSoalOptions'])->name('ujian.soal.bank-options');
+        Route::get('ujian/{ujian}/remaining', [UjianSoalController::class, 'remaining'])->name('ujian.soal.remaining');
+        Route::get('ujian/{ujian}/bank-soal-options', [UjianSoalController::class, 'bankSoalOptions'])->name('ujian.soal.bank-options');
         Route::post('ujian/{ujian}/soal/attach', [UjianSoalController::class, 'attach'])->name('ujian.soal.attach');
         Route::delete('ujian/{ujian}/soal/{ujianSoal}/detach', [UjianSoalController::class, 'detach'])->name('ujian.soal.detach');
+        Route::post('ujian/{ujian}/activate', [UjianController::class, 'activate'])->name('ujian.activate');
+
+        // peserta offline management
+        Route::get('ujian/{ujian}/peserta-offline/export', [PesertaOfflineController::class, 'export'])->name('ujian.peserta-offline.export');
+        Route::resource('ujian.peserta-offline', PesertaOfflineController::class)
+            ->only(['index', 'store', 'destroy'])
+            ->parameters(['peserta-offline' => 'pesertaOffline']);
 
         // paket member management
         Route::resource('paket', PaketController::class)
             ->except(['show'])
             ->parameters(['paket' => 'paket']);
+
+        Route::put('paket/{paket}/ujian', [PaketUjianController::class, 'sync'])
+            ->name('paket.ujian.sync');
 
         // master peserta
         Route::post('peserta/import', [PesertaController::class, 'import'])->name('peserta.import');
@@ -675,6 +685,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('ujian/{ujian}/live', [UjianMonitoringController::class, 'liveScoring'])->name('ujian.monitoring.live');
         Route::get('ujian/{ujian}/live/data', [UjianMonitoringController::class, 'liveData'])->name('ujian.monitoring.live-data');
         Route::get('ujian/{ujian}/ranking', [UjianMonitoringController::class, 'ranking'])->name('ujian.monitoring.ranking');
+        Route::get('ujian/{ujian}/ranking/export/excel', [UjianMonitoringController::class, 'exportRankingExcel'])->name('ujian.monitoring.ranking.export.excel');
+        Route::get('ujian/{ujian}/ranking/export/pdf', [UjianMonitoringController::class, 'exportRankingPdf'])->name('ujian.monitoring.ranking.export.pdf');
         Route::get('ujian/{ujian}/review/{peserta}', [UjianMonitoringController::class, 'review'])->name('ujian.monitoring.review');
 
         // Subscription Management
@@ -745,6 +757,10 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('peserta')->name('peserta.')->group(function () {
+    // Offline Participant Login (No Auth Required)
+    Route::get('ujian/{ujian}/offline/login', [PesertaOfflineLoginController::class, 'show'])->name('ujian.offline.login');
+    Route::post('ujian/{ujian}/offline/login', [PesertaOfflineLoginController::class, 'login']);
+
     Route::middleware('guest')->group(function () {
         Route::get('login', [PesertaAuthController::class, 'showLoginForm'])->name('login');
         Route::post('login', [PesertaAuthController::class, 'login']);
@@ -768,9 +784,14 @@ Route::prefix('peserta')->name('peserta.')->group(function () {
 
         Route::get('ujian/{ujian}', [PesertaUjianController::class, 'show'])->name('ujian.show');
         Route::post('ujian/{ujian}/start', [PesertaUjianController::class, 'start'])->name('ujian.start');
+    });
+
+    // Exam execution: accessible by authenticated peserta OR offline participant session (C-4/§8.3)
+    Route::middleware('exam.access')->group(function () {
         Route::get('ujian/{ujian}/kerjakan', [PesertaUjianController::class, 'kerjakan'])->name('ujian.kerjakan');
         Route::post('ujian/{ujian}/jawaban', [PesertaUjianController::class, 'saveAnswer'])->name('ujian.jawaban');
         Route::post('ujian/{ujian}/submit', [PesertaUjianController::class, 'submit'])->name('ujian.submit');
         Route::get('ujian/{ujian}/hasil', [PesertaUjianController::class, 'hasil'])->name('ujian.hasil');
+        Route::get('ujian/{ujian}/pembahasan', [PesertaUjianController::class, 'pembahasan'])->name('ujian.pembahasan');
     });
 });

@@ -14,7 +14,11 @@
             <h1 class="text-2xl font-bold text-secondary-900">Perankingan — {{ $ujian->nama_ujian }}</h1>
             <p class="text-secondary-500 mt-1">Diurutkan berdasarkan nilai kumulatif tertinggi</p>
         </div>
-        <a href="{{ route('superadmin.ujian.monitoring.live', $ujian) }}" class="btn btn-secondary btn-sm">Live Scoring</a>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('superadmin.ujian.monitoring.ranking.export.excel', $ujian) }}" class="btn btn-secondary btn-sm">Export Excel</a>
+            <a href="{{ route('superadmin.ujian.monitoring.ranking.export.pdf', $ujian) }}" class="btn btn-secondary btn-sm">Export PDF</a>
+            <a href="{{ route('superadmin.ujian.monitoring.live', $ujian) }}" class="btn btn-secondary btn-sm">Live Scoring</a>
+        </div>
     </div>
 @endsection
 

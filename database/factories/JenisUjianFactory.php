@@ -26,6 +26,7 @@ class JenisUjianFactory extends Factory
                 'Ujian Akhir Semester',
                 'Ujian Praktik',
             ]),
+            'keterangan' => $this->faker->optional()->sentence(),
         ];
     }
 }

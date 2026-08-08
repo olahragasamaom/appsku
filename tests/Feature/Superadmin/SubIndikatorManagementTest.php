@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\JenisUjian;
 use App\Models\SubIndikator;
 use App\Models\SubJenisUjian;
 use App\Models\User;
@@ -25,6 +26,25 @@ describe('Sub Indikator Index', function () {
         $response->assertSuccessful();
         $response->assertViewIs('superadmin.sub-indikator.index');
         $response->assertSee('Kelola Sub Indikator');
+    });
+
+    it('groups sub indikator badges under jenis ujian and sub jenis ujian', function () {
+        $jenisUjian = JenisUjian::factory()->create(['nama_jenis_ujian' => 'Ujian Kedinasan']);
+        $subJenis = SubJenisUjian::factory()->create([
+            'jenis_ujian_id' => $jenisUjian->id,
+            'nama_sub_jenis_ujian' => 'TIU',
+        ]);
+
+        SubIndikator::factory()->create([
+            'sub_jenis_ujian_id' => $subJenis->id,
+            'jenis_ujian_id' => $jenisUjian->id,
+            'nama_sub_indikator' => 'Figural',
+        ]);
+
+        $response = $this->get('/superadmin/sub-indikator');
+
+        $response->assertSuccessful();
+        $response->assertSeeInOrder(['Ujian Kedinasan', 'TIU', 'Figural']);
     });
 });
 

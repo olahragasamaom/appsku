@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\JenisUjian;
+use App\Models\SubJenisUjian;
 use App\Models\Ujian;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -84,11 +85,13 @@ describe('Ujian Create', function () {
 
     it('can create an online ujian with akses member', function () {
         $skd = JenisUjian::factory()->create(['nama_jenis_ujian' => 'SKD']);
+        $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $skd->id]);
 
         $response = $this->post('/superadmin/ujian', [
             'nama_ujian' => 'Paket Online Premium',
             'tipe_ujian' => 'online_paket',
             'jumlah_soal' => 50,
+            'sub_jenis_ujian_id' => $subJenis->id,
             'jenis_ujian_id' => [$skd->id],
             'akses_member' => ['Free', 'Basic'],
         ]);
@@ -124,6 +127,37 @@ describe('Ujian Create', function () {
         ]);
 
         $response->assertSessionHasErrors(['tanggal_ujian', 'durasi_ujian']);
+    });
+
+    it('requires sub_jenis_ujian_id for online ujian (C-AU-2)', function () {
+        $skd = JenisUjian::factory()->create();
+
+        $response = $this->post('/superadmin/ujian', [
+            'nama_ujian' => 'Ujian Online Tanpa Sub Jenis',
+            'tipe_ujian' => 'online_paket',
+            'jumlah_soal' => 50,
+            'jenis_ujian_id' => [$skd->id],
+            'akses_member' => ['Free'],
+        ]);
+
+        $response->assertSessionHasErrors('sub_jenis_ujian_id');
+    });
+
+    it('prohibits sub_jenis_ujian_id for offline ujian (C-AU-2)', function () {
+        $skd = JenisUjian::factory()->create();
+        $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $skd->id]);
+
+        $response = $this->post('/superadmin/ujian', [
+            'nama_ujian' => 'Ujian Offline Dengan Sub Jenis',
+            'tipe_ujian' => 'offline_kelas',
+            'jumlah_soal' => 50,
+            'sub_jenis_ujian_id' => $subJenis->id,
+            'jenis_ujian_id' => [$skd->id],
+            'tanggal_ujian' => now()->addDay()->format('Y-m-d\TH:i'),
+            'durasi_ujian' => 90,
+        ]);
+
+        $response->assertSessionHasErrors('sub_jenis_ujian_id');
     });
 });
 
@@ -175,5 +209,36 @@ describe('Ujian Delete', function () {
         $response->assertSessionHas('success');
 
         $this->assertDatabaseMissing('panritta_ujian', ['id' => $ujian->id]);
+    });
+});
+
+describe('Ujian Activate', function () {
+    it('activates a complete offline ujian and generates a token', function () {
+        $skd = JenisUjian::factory()->create();
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id, 'jumlah_soal' => 1, 'tipe_ujian' => 'offline_kelas', 'token_ujian' => null]);
+        $ujian->jenisUjians()->attach($skd->id);
+
+        $subJenis = \App\Models\SubJenisUjian::factory()->create(['jenis_ujian_id' => $skd->id]);
+        $subIndikator = \App\Models\SubIndikator::factory()->create(['sub_jenis_ujian_id' => $subJenis->id, 'jenis_ujian_id' => $skd->id]);
+        $soal = \App\Models\Soal::factory()->create(['sub_indikator_id' => $subIndikator->id]);
+
+        $ujian->ujianSoals()->create(['soal_id' => $soal->id, 'jenis_ujian_id' => $skd->id, 'urutan' => 1]);
+
+        $response = $this->post(route('superadmin.ujian.activate', $ujian));
+
+        $response->assertRedirect();
+
+        $fresh = $ujian->fresh();
+        expect($fresh->status)->toBe('aktif');
+        expect($fresh->token_ujian)->not->toBeNull();
+    });
+
+    it('blocks activation when capacity is unmet', function () {
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id, 'jumlah_soal' => 10, 'status' => 'draft']);
+
+        $response = $this->post(route('superadmin.ujian.activate', $ujian));
+
+        $response->assertSessionHasErrors('status');
+        expect($ujian->fresh()->status)->toBe('draft');
     });
 });

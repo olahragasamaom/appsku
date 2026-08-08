@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('panritta_ujian_jenis_ujian', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('ujian_id');
-            $table->integer('jenis_ujian_id');
+            $table->unsignedInteger('jenis_ujian_id');
             $table->decimal('passing_grade', 6, 2)->nullable();
             $table->timestamps();
 
