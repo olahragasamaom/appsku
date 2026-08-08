@@ -39,6 +39,17 @@
                             <p class="text-sm text-secondary-500">{{ $jenisUjian->subJenisUjian->count() }} sub jenis ujian</p>
                         </div>
                     </div>
+                    <button type="button"
+                            @click="$dispatch('sub-jenis-ujian-form', {
+                                mode: 'create',
+                                data: { jenis_ujian_id: '{{ $jenisUjian->id }}' }
+                            })"
+                            class="btn btn-secondary btn-sm">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Tambah Sub Jenis
+                    </button>
                 </div>
 
                 <div class="card-body-sm">
@@ -141,7 +152,15 @@
                         nilai_benar: detail.data.nilai_benar,
                     };
                 } else {
-                    this.form = { jenis_ujian_id: '', nama_sub_jenis_ujian: '', keterangan: '', urutan: '0', sistem_penilaian: 'benar_salah', jumlah_jawaban_pilihan_ganda: '5', nilai_benar: '5' };
+                    this.form = { 
+                        jenis_ujian_id: detail.data?.jenis_ujian_id ?? '', 
+                        nama_sub_jenis_ujian: '', 
+                        keterangan: '', 
+                        urutan: '0', 
+                        sistem_penilaian: 'benar_salah', 
+                        jumlah_jawaban_pilihan_ganda: '5', 
+                        nilai_benar: '5' 
+                    };
                 }
                 this.open = true;
             }
