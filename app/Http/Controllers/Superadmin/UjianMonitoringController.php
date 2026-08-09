@@ -73,7 +73,7 @@ class UjianMonitoringController extends Controller
     public function review(Ujian $ujian, int $peserta): View
     {
         $ujianPeserta = $ujian->peserta()
-            ->with('user', 'jawaban')
+            ->with('user', 'jawaban', 'pesertaOffline')
             ->findOrFail($peserta);
 
         $ujianSoals = $ujian->ujianSoals()
@@ -92,5 +92,25 @@ class UjianMonitoringController extends Controller
             'jawabanMap',
             'breakdown',
         ));
+    }
+
+    /**
+     * SIMULASI UJIAN FULL (Khusus Superadmin)
+     * Mensimulasikan halaman pengerjaan ujian secara penuh di memori browser.
+     */
+    public function simulasi(Ujian $ujian): View
+    {
+        $ujianSoals = $ujian->ujianSoals()
+            ->with('soal.subIndikator.subJenisUjian')
+            ->orderBy('urutan')
+            ->orderBy('id')
+            ->get();
+
+        // Acak soal jika ujian diset acak
+        if ($ujian->acak_soal) {
+            $ujianSoals = $ujianSoals->shuffle();
+        }
+
+        return view('superadmin.ujian.monitoring.simulasi', compact('ujian', 'ujianSoals'));
     }
 }

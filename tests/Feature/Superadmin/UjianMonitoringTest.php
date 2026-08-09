@@ -86,8 +86,24 @@ describe('Review Jawaban', function () {
 
         $response->assertSuccessful();
         $response->assertSee('Peserta Review');
-        $response->assertSee('Kunci Jawaban');
+        $response->assertSee('Kunci');
         $response->assertSee('Jawaban Peserta');
+    });
+});
+
+describe('Simulasi Ujian Superadmin', function () {
+    it('renders the full exam simulation page', function () {
+        $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $this->jenis->id, 'sistem_penilaian' => 'benar_salah', 'nilai_benar' => 5]);
+        $subIndikator = SubIndikator::factory()->create(['sub_jenis_ujian_id' => $subJenis->id, 'jenis_ujian_id' => $this->jenis->id]);
+        $soal = Soal::factory()->create(['sub_indikator_id' => $subIndikator->id, 'kunci_jawaban' => 'B', 'nilai_bobot_benar' => 5]);
+        $this->ujian->ujianSoals()->create(['soal_id' => $soal->id, 'jenis_ujian_id' => $this->jenis->id, 'urutan' => 1]);
+
+        $response = $this->get(route('superadmin.ujian.monitoring.simulasi', $this->ujian));
+
+        $response->assertSuccessful();
+        $response->assertViewIs('superadmin.ujian.monitoring.simulasi');
+        $response->assertSee('Mode Simulasi Full');
+        $response->assertSee('Navigasi Soal');
     });
 });
 

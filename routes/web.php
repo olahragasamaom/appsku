@@ -685,6 +685,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('ujian/{ujian}/ranking/export/excel', [UjianMonitoringController::class, 'exportRankingExcel'])->name('ujian.monitoring.ranking.export.excel');
         Route::get('ujian/{ujian}/ranking/export/pdf', [UjianMonitoringController::class, 'exportRankingPdf'])->name('ujian.monitoring.ranking.export.pdf');
         Route::get('ujian/{ujian}/review/{peserta}', [UjianMonitoringController::class, 'review'])->name('ujian.monitoring.review');
+        Route::get('ujian/{ujian}/simulasi', [UjianMonitoringController::class, 'simulasi'])->name('ujian.monitoring.simulasi');
 
         // Subscription Management
         Route::patch('subscriptions/{subscription}/activate', [SubscriptionController::class, 'activate'])->name('subscriptions.activate');

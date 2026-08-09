@@ -49,6 +49,14 @@ class UjianPeserta extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * Relasi ke data peserta offline (jika attempt ini dari peserta offline).
+     */
+    public function pesertaOffline(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(PesertaOffline::class, 'ujian_peserta_id');
+    }
+
     public function jawaban(): HasMany
     {
         return $this->hasMany(UjianJawaban::class, 'ujian_peserta_id');
