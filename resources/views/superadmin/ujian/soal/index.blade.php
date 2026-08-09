@@ -58,30 +58,31 @@
                         @if($subJenis->subIndikator->isEmpty())
                             <p class="text-sm text-secondary-400 italic ml-1">Belum ada sub indikator.</p>
                         @else
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                                 @foreach($subJenis->subIndikator as $indikator)
                                     @php $jumlahDiSubIndikator = $jumlahSoalPerSubIndikator[$indikator->id] ?? 0; @endphp
-                                    <div class="border border-secondary-200 rounded-lg p-4 bg-white">
-                                        <div class="flex items-start justify-between gap-2 mb-3">
-                                            <p class="text-sm font-medium text-secondary-800">{{ $indikator->nama_sub_indikator }}</p>
-                                            <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-50 text-primary-700">
+                                    <div class="border border-secondary-200 rounded-lg py-2.5 px-4 bg-white flex items-center justify-between gap-3 shadow-sm hover:border-primary-300 transition-colors group">
+                                        <p class="text-sm font-medium text-secondary-800 flex-1 truncate" title="{{ $indikator->nama_sub_indikator }}">{{ $indikator->nama_sub_indikator }}</p>
+                                        
+                                        <div class="flex items-center gap-1 flex-shrink-0">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-50 text-primary-700 mr-2">
                                                 {{ $jumlahDiSubIndikator }} soal
                                             </span>
-                                        </div>
-                                        <div class="flex items-center gap-2">
+                                            
                                             <a href="{{ route('superadmin.soal.create', ['sub_indikator_id' => $indikator->id, 'ujian_id' => $ujian->id]) }}"
-                                               class="btn btn-secondary btn-sm flex-1 inline-flex justify-center text-xs">
-                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                                Tambah
+                                               class="p-1.5 text-secondary-400 hover:text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
+                                               title="Tambah Soal Manual">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                             </a>
+                                            
                                             <button type="button"
                                                     @click="$dispatch('open-import-soal', {
                                                         subIndikatorId: {{ $indikator->id }},
                                                         subIndikatorNama: '{{ addslashes($indikator->nama_sub_indikator) }}'
                                                     })"
-                                                    class="btn btn-primary btn-sm flex-1 inline-flex justify-center text-xs">
-                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                                Import
+                                                    class="p-1.5 text-secondary-400 hover:text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
+                                                    title="Import Soal dari Excel">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                                             </button>
                                         </div>
                                     </div>
@@ -233,8 +234,14 @@
                             @error('file')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                         </div>
                         <div class="text-xs text-secondary-500 bg-secondary-50 rounded-lg p-3">
-                            <p class="font-medium mb-1">Format kolom header (baris pertama):</p>
-                            <code>soal, opsi_a, opsi_b, opsi_c, opsi_d, opsi_e, kunci_jawaban, nilai_bobot_benar, pembahasan</code>
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="font-medium text-secondary-700">Format kolom header (baris pertama):</p>
+                                <a href="{{ route('superadmin.soal.template') }}" class="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 font-medium">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    Download Template
+                                </a>
+                            </div>
+                            <code class="block overflow-x-auto whitespace-nowrap pb-1">soal, opsi_a, opsi_b, opsi_c, opsi_d, opsi_e, kunci_jawaban, nilai_bobot_benar, pembahasan</code>
                         </div>
                     </div>
                     <div class="modal-footer flex items-center justify-end gap-3">

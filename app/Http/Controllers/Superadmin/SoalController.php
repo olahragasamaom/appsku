@@ -36,6 +36,8 @@ use Illuminate\View\View;
  *   GET    .../soal/options/sub-jenis-ujian/{jenisUjian}   -> subJenisUjianOptions() [JSON]
  *   GET    .../soal/options/sub-indikator/{subJenisUjian}  -> subIndikatorOptions()  [JSON]
  */
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
 class SoalController extends Controller
 {
     /**
@@ -247,7 +249,39 @@ class SoalController extends Controller
     }
 
     /**
+     * Download format Excel/CSV kosong untuk template import soal.
+     */
+    public function downloadTemplate(): StreamedResponse
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="template_import_soal.csv"',
+        ];
+
+        $columns = [
+            'soal', 'opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'opsi_e', 
+            'kunci_jawaban', 'nilai_bobot_benar', 
+            'nilai_bobot_a', 'nilai_bobot_b', 'nilai_bobot_c', 'nilai_bobot_d', 'nilai_bobot_e', 
+            'pembahasan'
+        ];
+
+        return response()->stream(function () use ($columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            
+            // Baris contoh untuk sistem Benar-Salah
+            fputcsv($file, ['Apa ibukota Indonesia?', 'Jakarta', 'Bandung', 'Surabaya', 'Semarang', '', 'A', '5', '', '', '', '', '', 'Jakarta adalah ibukota negara RI.']);
+            
+            // Baris contoh untuk sistem Poin per Jawaban (opsional)
+            fputcsv($file, ['Menurut Anda, seberapa penting disiplin?', 'Sangat penting', 'Penting', 'Biasa saja', 'Kurang penting', 'Tidak penting', '', '', '5', '4', '3', '2', '1', 'Disiplin menentukan integritas.']);
+            
+            fclose($file);
+        }, 200, $headers);
+    }
+
+    /**
      * ENDPOINT JSON (AJAX): opsi Sub Jenis Ujian untuk sebuah Jenis Ujian.
+
      *
      * Ini BUKAN halaman HTML, melainkan mengembalikan data JSON. Dipanggil oleh
      * JavaScript di form soal: saat user memilih Jenis Ujian, JS memanggil URL
