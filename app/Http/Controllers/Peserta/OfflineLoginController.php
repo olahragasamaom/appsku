@@ -17,14 +17,27 @@ class OfflineLoginController extends Controller
 
     public function show(Ujian $ujian): View
     {
-        abort_unless($ujian->isOffline() && $ujian->status === 'aktif', 404);
+        // Sembunyikan ujian non-offline (mis. ujian online) dengan 404.
+        abort_unless($ujian->isOffline(), 404);
+
+        // Jika ujian offline tapi belum aktif, tampilkan halaman info yang jelas
+        // (bukan 404 yang membingungkan).
+        if ($ujian->status !== 'aktif') {
+            return view('peserta.ujian.offline.belum-aktif', compact('ujian'));
+        }
 
         return view('peserta.ujian.offline.login', compact('ujian'));
     }
 
     public function login(LoginPesertaOfflineRequest $request, Ujian $ujian): RedirectResponse
     {
-        abort_unless($ujian->isOffline() && $ujian->status === 'aktif', 404);
+        abort_unless($ujian->isOffline(), 404);
+
+        if ($ujian->status !== 'aktif') {
+            return redirect()
+                ->route('peserta.ujian.offline.login', $ujian)
+                ->withErrors(['kode_akses' => 'Ujian ini belum dimulai atau belum diaktifkan oleh penyelenggara.']);
+        }
 
         $attempt = $this->attemptService->startOffline(
             $request->input('nomor_peserta'),

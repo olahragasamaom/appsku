@@ -135,7 +135,7 @@
         <div class="card-body space-y-4">
             <div>
                 <label class="block text-sm font-medium text-secondary-700 mb-1">Teks Soal <span class="text-danger-500">*</span></label>
-                <textarea name="soal" rows="4" class="input w-full @error('soal') border-danger-500 @enderror" required>{{ old('soal', $soal?->soal) }}</textarea>
+                <x-wysiwyg name="soal" :value="old('soal', $soal?->soal)" :required="true" rows="6" :error="$errors->has('soal')" />
                 @error('soal')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
             </div>
             <div>
@@ -159,9 +159,10 @@
                             </label>
                         </template>
                     </div>
-                    <textarea name="opsi_{{ $opt }}" rows="2" class="input w-full @error('opsi_'.$opt) border-danger-500 @enderror"
-                              :required="'{{ $opt }}' !== 'e' || jumlah_opsi === 5">{{ old('opsi_'.$opt, $soal?->{'opsi_'.$opt}) }}</textarea>
-                    @error('opsi_'.$opt)<p class="text-sm text-danger-600">{{ $message }}</p>@enderror
+                    <div class="mb-2">
+                        <x-wysiwyg name="opsi_{{ $opt }}" :value="old('opsi_'.$opt, $soal?->{'opsi_'.$opt})" rows="2" :error="$errors->has('opsi_'.$opt)" />
+                    </div>
+                    @error('opsi_'.$opt)<p class="text-sm text-danger-600 mb-2">{{ $message }}</p>@enderror
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -203,7 +204,7 @@
         <div class="card-body space-y-4">
             <div>
                 <label class="block text-sm font-medium text-secondary-700 mb-1">Pembahasan</label>
-                <textarea name="pembahasan" rows="3" class="input w-full">{{ old('pembahasan', $soal?->pembahasan) }}</textarea>
+                <x-wysiwyg name="pembahasan" :value="old('pembahasan', $soal?->pembahasan)" rows="4" :error="$errors->has('pembahasan')" />
             </div>
             <div>
                 <label class="block text-sm font-medium text-secondary-700 mb-1">Gambar Pembahasan</label>

@@ -17,12 +17,14 @@ describe('Offline Login', function () {
         $response->assertViewIs('peserta.ujian.offline.login');
     });
 
-    it('returns 404 for an inactive offline exam', function () {
+    it('shows a "belum aktif" page for an inactive offline exam', function () {
         $ujian = Ujian::factory()->create(['tipe_ujian' => 'offline_kelas', 'status' => 'draft']);
 
         $response = $this->get(route('peserta.ujian.offline.login', $ujian));
 
-        $response->assertNotFound();
+        $response->assertSuccessful();
+        $response->assertViewIs('peserta.ujian.offline.belum-aktif');
+        $response->assertSee('Ujian Belum Dimulai');
     });
 
     it('returns 404 for an online exam', function () {
