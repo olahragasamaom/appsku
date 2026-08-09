@@ -26,6 +26,23 @@ describe('Peserta Offline Index', function () {
         $response->assertSuccessful();
         $response->assertViewIs('superadmin.ujian.peserta-offline.index');
     });
+
+    it('displays the plaintext kode akses in the participant list', function () {
+        $ujian = Ujian::factory()->create(['tipe_ujian' => 'offline_kelas']);
+
+        // Tambah peserta lewat controller agar kode_akses_plain terisi
+        $this->post(route('superadmin.ujian.peserta-offline.store', $ujian), [
+            'nomor_peserta' => 'P-010',
+            'nama_peserta' => 'Dewi',
+        ]);
+
+        $kodeAkses = $ujian->pesertaOffline()->where('nomor_peserta', 'P-010')->first()->kode_akses_plain;
+
+        $response = $this->get(route('superadmin.ujian.peserta-offline.index', $ujian));
+
+        $response->assertSuccessful();
+        $response->assertSee($kodeAkses);
+    });
 });
 
 describe('Peserta Offline Store', function () {
@@ -56,10 +73,12 @@ describe('Peserta Offline Store', function () {
         ]);
 
         $plaintext = session('kode_akses');
-        $stored = $ujian->pesertaOffline()->where('nomor_peserta', 'P-002')->first()->kode_akses;
+        $peserta = $ujian->pesertaOffline()->where('nomor_peserta', 'P-002')->first();
 
-        expect($stored)->not->toBe($plaintext);
-        expect(Hash::check($plaintext, $stored))->toBeTrue();
+        expect($peserta->kode_akses)->not->toBe($plaintext);
+        expect(Hash::check($plaintext, $peserta->kode_akses))->toBeTrue();
+        // Versi teks harus tersimpan & sama dengan yang di-flash
+        expect($peserta->kode_akses_plain)->toBe($plaintext);
     });
 
     it('rejects a duplicate nomor peserta within the same ujian', function () {

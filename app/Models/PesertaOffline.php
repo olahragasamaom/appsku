@@ -18,9 +18,12 @@ class PesertaOffline extends Model
         'nomor_peserta',
         'nama_peserta',
         'kode_akses',
+        'kode_akses_plain',
         'ujian_peserta_id',
     ];
 
+    // Hanya sembunyikan hash bcrypt-nya. kode_akses_plain sengaja ditampilkan
+    // agar admin bisa melihat & mencetak ulang kartu peserta.
     protected $hidden = [
         'kode_akses',
     ];

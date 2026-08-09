@@ -29,6 +29,8 @@ class OfflineParticipantService
             'nomor_peserta' => $data['nomor_peserta'],
             'nama_peserta' => $data['nama_peserta'],
             'kode_akses' => Hash::make($plaintext),
+            // Simpan versi teks agar bisa ditampilkan & dicetak ulang oleh admin
+            'kode_akses_plain' => $plaintext,
         ]);
 
         return ['peserta' => $peserta, 'kode_akses' => $plaintext];

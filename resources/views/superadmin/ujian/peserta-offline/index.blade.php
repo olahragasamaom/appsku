@@ -68,12 +68,18 @@
                     <x-slot name="header">
                         <th>Nomor Peserta</th>
                         <th>Nama Peserta</th>
+                        <th>Kode Akses</th>
                         <th class="text-right">Aksi</th>
                     </x-slot>
                     @forelse($peserta as $item)
                         <tr>
                             <td>{{ $item->nomor_peserta }}</td>
                             <td>{{ $item->nama_peserta }}</td>
+                            <td>
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-primary-50 text-primary-700 font-mono font-bold text-sm tracking-wider border border-primary-100">
+                                    {{ $item->kode_akses_plain ?? '—' }}
+                                </span>
+                            </td>
                             <td class="text-right">
                                 <button type="button"
                                         @click="$dispatch('confirm-dialog', {
@@ -90,7 +96,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="text-center text-secondary-500 py-6">Belum ada peserta offline.</td>
+                            <td colspan="4" class="text-center text-secondary-500 py-6">Belum ada peserta offline.</td>
                         </tr>
                     @endforelse
                 </x-table>

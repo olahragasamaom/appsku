@@ -23,6 +23,7 @@
                 <th>No.</th>
                 <th>Nomor Peserta</th>
                 <th>Nama Peserta</th>
+                <th>Kode Akses</th>
             </tr>
         </thead>
         <tbody>
@@ -31,13 +32,14 @@
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $item->nomor_peserta }}</td>
                     <td>{{ $item->nama_peserta }}</td>
+                    <td style="font-family: monospace; font-weight: bold; letter-spacing: 1px;">{{ $item->kode_akses_plain ?? '-' }}</td>
                 </tr>
             @endforeach
         </tbody>
     </table>
 
     <p class="note">
-        Kode akses dibagikan secara terpisah saat peserta didaftarkan dan tidak ditampilkan kembali di kartu ini demi keamanan.
+        Kode akses di atas digunakan peserta untuk login ke ujian offline. Mohon dibagikan kepada peserta yang bersangkutan dan dijaga kerahasiaannya.
     </p>
 </body>
 </html>
