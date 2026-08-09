@@ -13,38 +13,38 @@
         {{-- Total Soal --}}
         <div class="card overflow-hidden">
             <div class="card-body p-6 relative">
-                <div class="absolute right-0 top-0 opacity-5 -mt-4 -mr-4">
+                <div class="absolute right-0 top-0 opacity-[0.04] text-primary-500 -mt-6 -mr-4 pointer-events-none">
                     <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
                 </div>
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-4 relative z-10">
                     <h3 class="text-sm font-semibold text-secondary-500 uppercase tracking-wider">Bank Soal</h3>
-                    <div class="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-600">
+                    <div class="w-10 h-10 rounded-xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 shadow-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                     </div>
                 </div>
-                <div class="flex items-baseline gap-2">
+                <div class="flex items-baseline gap-2 relative z-10">
                     <span class="text-3xl font-bold text-secondary-900">{{ number_format($stats['total_soal']) }}</span>
-                    <span class="text-sm text-secondary-500">butir</span>
+                    <span class="text-sm text-secondary-500 font-medium">butir</span>
                 </div>
             </div>
-            <div class="bg-primary-600 h-1 w-full"></div>
+            <div class="bg-primary-500 h-1 w-full"></div>
         </div>
 
         {{-- Ujian Aktif --}}
         <div class="card overflow-hidden">
             <div class="card-body p-6 relative">
-                <div class="absolute right-0 top-0 opacity-5 -mt-4 -mr-4">
+                <div class="absolute right-0 top-0 opacity-[0.04] text-success-500 -mt-6 -mr-4 pointer-events-none">
                     <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
                 </div>
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-4 relative z-10">
                     <h3 class="text-sm font-semibold text-secondary-500 uppercase tracking-wider">Ujian Aktif</h3>
-                    <div class="w-10 h-10 rounded-full bg-success-50 flex items-center justify-center text-success-600">
+                    <div class="w-10 h-10 rounded-xl bg-success-50 border border-success-100 flex items-center justify-center text-success-600 shadow-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                 </div>
-                <div class="flex items-baseline gap-2">
+                <div class="flex items-baseline gap-2 relative z-10">
                     <span class="text-3xl font-bold text-secondary-900">{{ number_format($stats['ujian_aktif']) }}</span>
-                    <span class="text-sm text-secondary-500">sesi</span>
+                    <span class="text-sm text-secondary-500 font-medium">sesi</span>
                 </div>
             </div>
             <div class="bg-success-500 h-1 w-full"></div>
@@ -53,38 +53,38 @@
         {{-- Ujian Selesai --}}
         <div class="card overflow-hidden">
             <div class="card-body p-6 relative">
-                <div class="absolute right-0 top-0 opacity-5 -mt-4 -mr-4">
+                <div class="absolute right-0 top-0 opacity-[0.04] text-amber-500 -mt-6 -mr-4 pointer-events-none">
                     <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                 </div>
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-4 relative z-10">
                     <h3 class="text-sm font-semibold text-secondary-500 uppercase tracking-wider">Telah Selesai</h3>
-                    <div class="w-10 h-10 rounded-full bg-secondary-100 flex items-center justify-center text-secondary-600">
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shadow-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                 </div>
-                <div class="flex items-baseline gap-2">
+                <div class="flex items-baseline gap-2 relative z-10">
                     <span class="text-3xl font-bold text-secondary-900">{{ number_format($stats['ujian_selesai']) }}</span>
-                    <span class="text-sm text-secondary-500">sesi</span>
+                    <span class="text-sm text-secondary-500 font-medium">sesi</span>
                 </div>
             </div>
-            <div class="bg-secondary-400 h-1 w-full"></div>
+            <div class="bg-amber-500 h-1 w-full"></div>
         </div>
 
         {{-- Total Peserta --}}
         <div class="card overflow-hidden">
             <div class="card-body p-6 relative">
-                <div class="absolute right-0 top-0 opacity-5 -mt-4 -mr-4">
+                <div class="absolute right-0 top-0 opacity-[0.04] text-blue-500 -mt-6 -mr-4 pointer-events-none">
                     <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/></svg>
                 </div>
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-4 relative z-10">
                     <h3 class="text-sm font-semibold text-secondary-500 uppercase tracking-wider">Member Terdaftar</h3>
-                    <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"/></svg>
                     </div>
                 </div>
-                <div class="flex items-baseline gap-2">
+                <div class="flex items-baseline gap-2 relative z-10">
                     <span class="text-3xl font-bold text-secondary-900">{{ number_format($stats['total_peserta']) }}</span>
-                    <span class="text-sm text-secondary-500">orang</span>
+                    <span class="text-sm text-secondary-500 font-medium">orang</span>
                 </div>
             </div>
             <div class="bg-blue-500 h-1 w-full"></div>
