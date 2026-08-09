@@ -6,7 +6,7 @@
     <title>Simulasi Ujian - {{ $ujian->nama_ujian }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    @vite(['resources/css/app.css'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-slate-50 min-h-screen">
     @php
@@ -38,7 +38,10 @@
         $navGroups = collect($soalData)->groupBy('sub_jenis');
     @endphp
 
-    <div x-data="simulasiEngine({{ Js::from($soalData) }})">
+    {{-- Data soal disimpan di script JSON terpisah agar aman dari konflik kutip/HTML --}}
+    <script type="application/json" id="data-soal">{!! json_encode($soalData, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
+
+    <div x-data="simulasiEngine()">
         {{-- Header Tiruan --}}
         <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
             <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -172,8 +175,8 @@
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('simulasiEngine', (soalList) => ({
-                soalList: soalList,
+            Alpine.data('simulasiEngine', () => ({
+                soalList: JSON.parse(document.getElementById('data-soal').textContent),
                 indexAktif: 0,
                 jawaban: {},
                 raguRagu: {},
