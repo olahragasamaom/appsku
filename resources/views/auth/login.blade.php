@@ -1,7 +1,7 @@
 @extends('layouts.guest')
 
-@section('title', 'Masuk - GajiPro')
-@section('description', 'Masuk ke akun GajiPro Anda untuk mengelola payroll dan HR.')
+@section('title', 'Masuk - Panritta')
+@section('description', 'Masuk ke akun Panritta Anda untuk mengelola payroll dan HR.')
 
 @section('content')
 <div class="min-h-screen flex">
@@ -26,7 +26,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <span class="text-2xl font-bold text-white">GajiPro</span>
+                    <span class="text-2xl font-bold text-white">Panritta</span>
                 </a>
             </div>
 
@@ -99,7 +99,7 @@
             <!-- Footer -->
             <div class="flex items-center justify-between">
                 <div class="text-primary-300 text-sm">
-                    &copy; {{ date('Y') }} GajiPro. All rights reserved.
+                    &copy; {{ date('Y') }} Panritta. All rights reserved.
                 </div>
                 <a href="https://jagoflutter.com" target="_blank" class="text-white/60 hover:text-white/80 text-sm transition-colors">
                     Powered by jagoflutter.com
@@ -119,7 +119,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <span class="text-xl font-bold text-secondary-900">GajiPro</span>
+                    <span class="text-xl font-bold text-secondary-900">Panritta</span>
                 </a>
             </div>
 
@@ -317,23 +317,23 @@
                     <template x-if="activePortal === 'company'">
                         <div class="space-y-2">
                             <button type="button"
-                                    @click="document.getElementById('email').value = 'admin@demo.gajipro.com'; document.getElementById('password').value = 'password';"
+                                    @click="document.getElementById('email').value = 'admin@demo.Panritta.com'; document.getElementById('password').value = 'password';"
                                     class="w-full text-left px-3 py-2 rounded-lg border border-secondary-200 hover:border-primary-300 hover:bg-primary-50 transition-colors">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <span class="text-sm font-medium text-secondary-900">Admin Demo</span>
-                                        <p class="text-xs text-secondary-500">admin@demo.gajipro.com</p>
+                                        <p class="text-xs text-secondary-500">admin@demo.Panritta.com</p>
                                     </div>
                                     <span class="text-xs bg-primary-100 text-primary-700 px-2 py-1 rounded-full">Admin</span>
                                 </div>
                             </button>
                             <button type="button"
-                                    @click="document.getElementById('email').value = 'hr@demo.gajipro.com'; document.getElementById('password').value = 'password';"
+                                    @click="document.getElementById('email').value = 'hr@demo.Panritta.com'; document.getElementById('password').value = 'password';"
                                     class="w-full text-left px-3 py-2 rounded-lg border border-secondary-200 hover:border-success-300 hover:bg-success-50 transition-colors">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <span class="text-sm font-medium text-secondary-900">HR Manager Demo</span>
-                                        <p class="text-xs text-secondary-500">hr@demo.gajipro.com</p>
+                                        <p class="text-xs text-secondary-500">hr@demo.Panritta.com</p>
                                     </div>
                                     <span class="text-xs bg-success-100 text-success-700 px-2 py-1 rounded-full">HR Manager</span>
                                 </div>
@@ -345,12 +345,12 @@
                     <template x-if="activePortal === 'employee'">
                         <div class="space-y-2">
                             <button type="button"
-                                    @click="document.getElementById('email').value = 'karyawan@demo.gajipro.com'; document.getElementById('password').value = 'password';"
+                                    @click="document.getElementById('email').value = 'karyawan@demo.Panritta.com'; document.getElementById('password').value = 'password';"
                                     class="w-full text-left px-3 py-2 rounded-lg border border-secondary-200 hover:border-success-300 hover:bg-success-50 transition-colors">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <span class="text-sm font-medium text-secondary-900">Karyawan Demo</span>
-                                        <p class="text-xs text-secondary-500">karyawan@demo.gajipro.com</p>
+                                        <p class="text-xs text-secondary-500">karyawan@demo.Panritta.com</p>
                                     </div>
                                     <span class="text-xs bg-success-100 text-success-700 px-2 py-1 rounded-full">Employee</span>
                                 </div>

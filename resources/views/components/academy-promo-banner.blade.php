@@ -10,12 +10,12 @@
                     <span class="text-amber-400 font-bold">Mau Full Source Code?</span>
                     <span class="text-white/90 ml-1">Dashboard Web + Mobile App Flutter — Join</span>
                     <a
-                        href="https://jagoflutter.com/academy/gajipro"
+                        href="https://jagoflutter.com/academy/Panritta"
                         target="_blank"
                         rel="noopener"
                         class="text-amber-400 hover:text-amber-300 underline underline-offset-2 font-bold ml-1"
                     >
-                        jagoflutter.com/academy/gajipro
+                        jagoflutter.com/academy/Panritta
                     </a>
                 </p>
             </div>
@@ -24,7 +24,7 @@
             <div class="flex items-center gap-2">
                 {{-- Join Academy --}}
                 <a
-                    href="https://jagoflutter.com/academy/gajipro"
+                    href="https://jagoflutter.com/academy/Panritta"
                     target="_blank"
                     rel="noopener"
                     class="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-secondary-900 text-xs font-bold px-3 py-1.5 rounded-full transition-colors shadow-sm"
@@ -37,7 +37,7 @@
 
                 {{-- Download App --}}
                 <a
-                    href="https://play.google.com/store/apps/details?id=com.jagoflutter.gajipro"
+                    href="https://play.google.com/store/apps/details?id=com.jagoflutter.Panritta"
                     target="_blank"
                     rel="noopener"
                     class="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-medium px-3 py-1.5 rounded-full transition-colors"

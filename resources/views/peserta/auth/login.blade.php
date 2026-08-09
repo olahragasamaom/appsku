@@ -116,11 +116,11 @@
                 <div>
                     <label for="username" class="block text-sm font-medium text-secondary-700 mb-2">Username</label>
                     <div class="relative">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
+                        <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                         </div>
                         <input type="text" id="username" name="username" value="{{ old('username') }}" required autofocus
-                               class="input w-full" style="padding-left: 3rem;"
+                               class="input w-full" style="padding-left: 2.75rem !important;"
                                placeholder="Masukkan username Anda">
                     </div>
                 </div>
@@ -132,11 +132,11 @@
                         <a href="#" class="text-sm text-primary-600 hover:text-primary-700 font-medium">Lupa password?</a>
                     </div>
                     <div class="relative">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
+                        <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         </div>
                         <input :type="show ? 'text' : 'password'" id="password" name="password" required
-                               class="input w-full" style="padding-left: 3rem; padding-right: 3rem;"
+                               class="input w-full" style="padding-left: 2.75rem !important; padding-right: 2.75rem !important;"
                                placeholder="Masukkan password">
                         <button type="button" @click="show = !show"
                                 class="absolute right-4 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600">

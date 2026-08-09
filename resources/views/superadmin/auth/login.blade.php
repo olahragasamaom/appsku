@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Superadmin Login - GajiPro</title>
-    <meta name="description" content="Masuk ke panel Superadmin GajiPro.">
+    <title>Superadmin Login - Panritta</title>
+    <meta name="description" content="Masuk ke panel Superadmin Panritta.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +21,7 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased" x-data="{ demoEmail: 'superadmin@gajipro.com', demoPassword: 'password' }">
+<body class="font-sans antialiased" x-data="{ demoEmail: 'superadmin@Panritta.com', demoPassword: 'password' }">
     <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative;">
         {{-- Background Decorations --}}
         <div style="position: absolute; inset: 0; overflow: hidden; pointer-events: none;">
@@ -57,7 +57,7 @@
                         <label for="email" style="display: block; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Email</label>
                         <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus
                                class="input w-full @error('email') border-danger-500 @enderror"
-                               placeholder="superadmin@gajipro.com">
+                               placeholder="superadmin@Panritta.com">
                         @error('email')
                             <p style="margin-top: 4px; font-size: 14px; color: #ef4444;">{{ $message }}</p>
                         @enderror
@@ -108,7 +108,7 @@
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div>
                                 <span style="font-size: 14px; font-weight: 600; color: #92400e;">Super Admin</span>
-                                <p style="font-size: 12px; color: #b45309; margin-top: 2px;">superadmin@gajipro.com</p>
+                                <p style="font-size: 12px; color: #b45309; margin-top: 2px;">superadmin@Panritta.com</p>
                             </div>
                             <span style="font-size: 11px; background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: white; padding: 4px 10px; border-radius: 9999px; font-weight: 500;">
                                 Klik untuk isi

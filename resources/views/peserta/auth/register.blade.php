@@ -103,11 +103,11 @@
                 <div>
                     <label for="name" class="block text-sm font-medium text-secondary-700 mb-2">Nama Lengkap</label>
                     <div class="relative">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
+                        <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                         </div>
                         <input type="text" id="name" name="name" value="{{ old('name') }}" required autofocus
-                               class="input w-full" style="padding-left: 3rem;"
+                               class="input w-full" style="padding-left: 2.75rem !important;"
                                placeholder="Masukkan nama lengkap Anda">
                     </div>
                 </div>
@@ -116,11 +116,11 @@
                 <div>
                     <label for="username" class="block text-sm font-medium text-secondary-700 mb-2">Username</label>
                     <div class="relative">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
+                        <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                         </div>
                         <input type="text" id="username" name="username" value="{{ old('username') }}" required
-                               class="input w-full" style="padding-left: 3rem;"
+                               class="input w-full" style="padding-left: 2.75rem !important;"
                                placeholder="Pilih username unik">
                     </div>
                 </div>
@@ -129,11 +129,11 @@
                 <div>
                     <label for="email" class="block text-sm font-medium text-secondary-700 mb-2">Email</label>
                     <div class="relative">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
+                        <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         </div>
                         <input type="email" id="email" name="email" value="{{ old('email') }}" required
-                               class="input w-full" style="padding-left: 3rem;"
+                               class="input w-full" style="padding-left: 2.75rem !important;"
                                placeholder="nama@email.com">
                     </div>
                 </div>
@@ -142,11 +142,11 @@
                 <div>
                     <label for="phone" class="block text-sm font-medium text-secondary-700 mb-2">Nomor WhatsApp <span class="text-secondary-400 font-normal">(Opsional)</span></label>
                     <div class="relative">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
+                        <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                         </div>
                         <input type="text" id="phone" name="phone" value="{{ old('phone') }}"
-                               class="input w-full" style="padding-left: 3rem;"
+                               class="input w-full" style="padding-left: 2.75rem !important;"
                                placeholder="081234567890">
                     </div>
                 </div>
@@ -155,11 +155,11 @@
                 <div x-data="{ show: false }">
                     <label for="password" class="block text-sm font-medium text-secondary-700 mb-2">Password</label>
                     <div class="relative">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
+                        <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         </div>
                         <input :type="show ? 'text' : 'password'" id="password" name="password" required
-                               class="input w-full" style="padding-left: 3rem; padding-right: 3rem;"
+                               class="input w-full" style="padding-left: 2.75rem !important; padding-right: 2.75rem !important;"
                                placeholder="Minimal 8 karakter">
                         <button type="button" @click="show = !show"
                                 class="absolute right-4 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600">
@@ -173,11 +173,11 @@
                 <div x-data="{ show: false }">
                     <label for="password_confirmation" class="block text-sm font-medium text-secondary-700 mb-2">Ulangi Password</label>
                     <div class="relative">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
+                        <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
                         <input :type="show ? 'text' : 'password'" id="password_confirmation" name="password_confirmation" required
-                               class="input w-full" style="padding-left: 3rem; padding-right: 3rem;"
+                               class="input w-full" style="padding-left: 2.75rem !important; padding-right: 2.75rem !important;"
                                placeholder="Ketik ulang password">
                         <button type="button" @click="show = !show"
                                 class="absolute right-4 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600">

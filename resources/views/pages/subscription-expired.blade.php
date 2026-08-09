@@ -16,7 +16,7 @@
             {{-- Title --}}
             <h1 class="text-2xl font-bold text-secondary-900 mb-2">Langganan Anda Telah Berakhir</h1>
             <p class="text-secondary-600 mb-6">
-                Masa langganan perusahaan Anda telah habis. Silakan perpanjang langganan untuk melanjutkan menggunakan GajiPro.
+                Masa langganan perusahaan Anda telah habis. Silakan perpanjang langganan untuk melanjutkan menggunakan Panritta.
             </p>
 
             {{-- Actions --}}
@@ -37,7 +37,7 @@
 
             {{-- Contact --}}
             <p class="mt-6 text-sm text-secondary-500">
-                Butuh bantuan? <a href="mailto:support@gajipro.com" class="text-primary-600 hover:text-primary-700 font-medium">Hubungi kami</a>
+                Butuh bantuan? <a href="mailto:support@Panritta.com" class="text-primary-600 hover:text-primary-700 font-medium">Hubungi kami</a>
             </p>
         </div>
     </div>
