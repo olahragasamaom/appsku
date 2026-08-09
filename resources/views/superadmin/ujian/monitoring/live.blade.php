@@ -67,8 +67,8 @@
 
 @push('scripts')
 <script>
-    function liveScoring(config) {
-        return {
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('liveScoring', (config) => ({
             url: config.url,
             peserta: [],
             updatedAt: null,
@@ -78,13 +78,17 @@
                 this.interval = setInterval(() => this.load(), 5000);
             },
             async load() {
-                const res = await fetch(this.url, { headers: { 'Accept': 'application/json' } });
-                if (!res.ok) return;
-                const data = await res.json();
-                this.peserta = data.peserta;
-                this.updatedAt = data.updated_at;
+                try {
+                    const res = await fetch(this.url, { headers: { 'Accept': 'application/json' } });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    this.peserta = data.peserta;
+                    this.updatedAt = data.updated_at;
+                } catch (e) {
+                    console.error('Gagal memuat live scoring:', e);
+                }
             }
-        };
-    }
+        }));
+    });
 </script>
 @endpush
