@@ -84,7 +84,7 @@ describe('Soal Create - benar_salah', function () {
         $jenis = JenisUjian::factory()->create();
         $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $jenis->id, 'sistem_penilaian' => 'benar_salah']);
         $subIndikator = SubIndikator::factory()->create(['sub_jenis_ujian_id' => $subJenis->id, 'jenis_ujian_id' => $jenis->id]);
-        
+
         $ujian = \App\Models\Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id, 'jumlah_soal' => 50]);
         $ujian->jenisUjians()->attach($jenis->id);
 
@@ -249,5 +249,31 @@ describe('Soal Update & Delete', function () {
         $soal = Soal::first();
         expect($soal->gambar_soal)->not->toBeNull();
         Storage::disk('public')->assertExists($soal->gambar_soal);
+    });
+});
+
+describe('WYSIWYG Editor Image Upload', function () {
+    it('uploads an inline image and returns its public url', function () {
+        Storage::fake('public');
+        $file = UploadedFile::fake()->image('inline.jpg');
+
+        $response = $this->postJson(route('superadmin.soal.upload-editor'), [
+            'gambar' => $file,
+        ]);
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure(['url']);
+        expect($response->json('url'))->toContain('/storage/panritta/soal/editor');
+    });
+
+    it('rejects a non-image file', function () {
+        Storage::fake('public');
+        $file = UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf');
+
+        $response = $this->postJson(route('superadmin.soal.upload-editor'), [
+            'gambar' => $file,
+        ]);
+
+        $response->assertStatus(422);
     });
 });

@@ -15,7 +15,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-
 /**
  * CONTROLLER: SoalController
  * ===========================
@@ -137,10 +136,10 @@ class SoalController extends Controller
             $ujian = Ujian::find($request->ujian_id);
             if ($ujian) {
                 $jenisUjianId = $request->resolveSubJenisUjian()?->jenis_ujian_id;
-                
+
                 if ($jenisUjianId) {
                     app(ExamAssemblyService::class)->addQuestions($ujian, $jenisUjianId, [$soal->id]);
-                    
+
                     return redirect()
                         ->route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $jenisUjianId])
                         ->with('success', 'Soal berhasil dibuat dan ditambahkan ke ujian.');
@@ -209,7 +208,7 @@ class SoalController extends Controller
         if ($request->filled('ujian_id')) {
             $ujian = Ujian::find($request->ujian_id);
             $jenisUjianId = $request->resolveSubJenisUjian()?->jenis_ujian_id;
-            
+
             if ($ujian && $jenisUjianId) {
                 return redirect()
                     ->route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $jenisUjianId])
@@ -245,7 +244,25 @@ class SoalController extends Controller
     public function preview(Soal $soal): View
     {
         $soal->load('subIndikator.subJenisUjian');
+
         return view('superadmin.soal.preview', compact('soal'));
+    }
+
+    /**
+     * Upload gambar dari editor WYSIWYG (disisipkan inline di teks soal).
+     * Mengembalikan URL publik gambar untuk disematkan sebagai tag <img>.
+     */
+    public function uploadGambarEditor(Request $request): JsonResponse
+    {
+        $request->validate([
+            'gambar' => ['required', 'image', 'max:2048'],
+        ]);
+
+        $path = $request->file('gambar')->store('panritta/soal/editor', 'public');
+
+        return response()->json([
+            'url' => \Illuminate\Support\Facades\Storage::url($path),
+        ]);
     }
 
     /**
@@ -259,22 +276,22 @@ class SoalController extends Controller
         ];
 
         $columns = [
-            'soal', 'opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'opsi_e', 
-            'kunci_jawaban', 'nilai_bobot_benar', 
-            'nilai_bobot_a', 'nilai_bobot_b', 'nilai_bobot_c', 'nilai_bobot_d', 'nilai_bobot_e', 
-            'pembahasan'
+            'soal', 'opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'opsi_e',
+            'kunci_jawaban', 'nilai_bobot_benar',
+            'nilai_bobot_a', 'nilai_bobot_b', 'nilai_bobot_c', 'nilai_bobot_d', 'nilai_bobot_e',
+            'pembahasan',
         ];
 
         return response()->stream(function () use ($columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
-            
+
             // Baris contoh untuk sistem Benar-Salah
             fputcsv($file, ['Apa ibukota Indonesia?', 'Jakarta', 'Bandung', 'Surabaya', 'Semarang', '', 'A', '5', '', '', '', '', '', 'Jakarta adalah ibukota negara RI.']);
-            
+
             // Baris contoh untuk sistem Poin per Jawaban (opsional)
             fputcsv($file, ['Menurut Anda, seberapa penting disiplin?', 'Sangat penting', 'Penting', 'Biasa saja', 'Kurang penting', 'Tidak penting', '', '', '5', '4', '3', '2', '1', 'Disiplin menentukan integritas.']);
-            
+
             fclose($file);
         }, 200, $headers);
     }

@@ -630,6 +630,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('soal/options/sub-jenis-ujian/{jenisUjian}', [SoalController::class, 'subJenisUjianOptions'])->name('soal.options.sub-jenis-ujian');
         Route::get('soal/options/sub-indikator/{subJenisUjian}', [SoalController::class, 'subIndikatorOptions'])->name('soal.options.sub-indikator');
         Route::get('soal/template-import', [SoalController::class, 'downloadTemplate'])->name('soal.template');
+        Route::post('soal/upload-gambar-editor', [SoalController::class, 'uploadGambarEditor'])->name('soal.upload-editor');
         Route::get('soal/{soal}/preview', [SoalController::class, 'preview'])->name('soal.preview');
         Route::resource('soal', SoalController::class)
             ->except(['show'])
