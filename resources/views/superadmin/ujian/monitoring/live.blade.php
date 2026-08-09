@@ -38,7 +38,7 @@
                     <th class="px-6 py-3 text-center">Nilai</th>
                     <th class="px-6 py-3 text-center">Kelulusan</th>
                 </x-slot>
-                <template x-for="row in peserta" :key="row.username">
+                <template x-for="row in peserta" :key="row.id">
                     <tr class="hover:bg-secondary-50">
                         <td class="px-6 py-4 font-semibold text-secondary-700" x-text="row.rank"></td>
                         <td class="px-6 py-4">

@@ -32,9 +32,10 @@ class UjianMonitoringController extends Controller
             ->orderBy('waktu_selesai')
             ->get()
             ->map(fn ($item, $index) => [
+                'id' => $item->id, // key unik untuk x-for
                 'rank' => $index + 1,
                 // Nama diambil dari user (online) atau peserta offline
-                'nama' => $item->user?->name ?? $item->pesertaOffline?->nama_peserta ?? '-',
+                'nama' => $item->user?->name ?? $item->pesertaOffline?->nama_peserta ?? 'Peserta #'.$item->id,
                 'username' => $item->user?->username ?? $item->pesertaOffline?->nomor_peserta ?? '-',
                 'status' => $item->status,
                 'total_nilai' => $item->total_nilai !== null ? (float) $item->total_nilai : null,
