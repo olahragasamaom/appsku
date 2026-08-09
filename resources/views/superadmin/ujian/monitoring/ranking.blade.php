@@ -37,8 +37,8 @@
                     <tr class="hover:bg-secondary-50">
                         <td class="px-6 py-4 font-semibold text-secondary-700">{{ $index + 1 }}</td>
                         <td class="px-6 py-4">
-                            <span class="font-medium text-secondary-900">{{ $item->user?->name ?? '-' }}</span>
-                            <span class="block text-xs text-secondary-400">{{ $item->user?->username }}</span>
+                            <span class="font-medium text-secondary-900">{{ $item->user?->name ?? $item->pesertaOffline?->nama_peserta ?? '-' }}</span>
+                            <span class="block text-xs text-secondary-400">{{ $item->user?->username ?? $item->pesertaOffline?->nomor_peserta ?? '' }}</span>
                         </td>
                         <td class="px-6 py-4 text-center">{{ $item->total_nilai ?? '-' }}</td>
                         <td class="px-6 py-4 text-center">

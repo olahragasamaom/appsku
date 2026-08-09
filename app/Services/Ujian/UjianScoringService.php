@@ -150,7 +150,7 @@ class UjianScoringService
     public function rank(Ujian $ujian): \Illuminate\Support\Collection
     {
         return $ujian->peserta()
-            ->with('user')
+            ->with('user', 'pesertaOffline')
             ->orderByDesc('total_nilai')
             ->get()
             ->values();

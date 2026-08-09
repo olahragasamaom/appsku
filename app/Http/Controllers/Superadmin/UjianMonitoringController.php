@@ -27,14 +27,15 @@ class UjianMonitoringController extends Controller
     public function liveData(Ujian $ujian): JsonResponse
     {
         $peserta = $ujian->peserta()
-            ->with('user')
+            ->with('user', 'pesertaOffline')
             ->orderByDesc('total_nilai')
             ->orderBy('waktu_selesai')
             ->get()
             ->map(fn ($item, $index) => [
                 'rank' => $index + 1,
-                'nama' => $item->user?->name ?? '-',
-                'username' => $item->user?->username ?? '-',
+                // Nama diambil dari user (online) atau peserta offline
+                'nama' => $item->user?->name ?? $item->pesertaOffline?->nama_peserta ?? '-',
+                'username' => $item->user?->username ?? $item->pesertaOffline?->nomor_peserta ?? '-',
                 'status' => $item->status,
                 'total_nilai' => $item->total_nilai !== null ? (float) $item->total_nilai : null,
                 'lulus' => $item->lulus,

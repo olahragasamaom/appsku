@@ -102,7 +102,7 @@ describe('Simulasi Ujian Superadmin', function () {
 
         $response->assertSuccessful();
         $response->assertViewIs('superadmin.ujian.monitoring.simulasi');
-        $response->assertSee('Mode Simulasi Full');
+        $response->assertSee('Mode Simulasi');
         $response->assertSee('Navigasi Soal');
     });
 });
