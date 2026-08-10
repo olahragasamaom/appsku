@@ -602,6 +602,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 
         // Dashboard
         Route::get('/', [SuperadminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard2', [\App\Http\Controllers\Superadmin\Dashboard2Controller::class, 'index'])->name('dashboard2');
 
         // Company Management (View Only)
         Route::get('companies', [\App\Http\Controllers\Superadmin\CompanyController::class, 'index'])->name('companies.index');
@@ -687,6 +688,17 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('ujian/{ujian}/ranking/export/pdf', [UjianMonitoringController::class, 'exportRankingPdf'])->name('ujian.monitoring.ranking.export.pdf');
         Route::get('ujian/{ujian}/review/{peserta}', [UjianMonitoringController::class, 'review'])->name('ujian.monitoring.review');
         Route::get('ujian/{ujian}/simulasi', [UjianMonitoringController::class, 'simulasi'])->name('ujian.monitoring.simulasi');
+
+        // Latihan (Training Modules) - untuk belajar Laravel
+        // Latihan Sederhana: CRUD sederhana dengan 4 input text
+        Route::resource('latihan-sederhana', \App\Http\Controllers\Superadmin\LatihanSederhanaController::class)
+            ->parameters(['latihan-sederhana' => 'latihan_sederhana']);
+
+        // Latihan Detail: Form kompleks dengan relasi antar tabel dan modal picker
+        Route::get('latihan-detail/search-produk', [\App\Http\Controllers\Superadmin\LatihanDetailController::class, 'searchProduk'])
+            ->name('latihan-detail.search-produk');
+        Route::resource('latihan-detail', \App\Http\Controllers\Superadmin\LatihanDetailController::class)
+            ->parameters(['latihan-detail' => 'latihan_detail']);
 
         // Subscription Management
         Route::patch('subscriptions/{subscription}/activate', [SubscriptionController::class, 'activate'])->name('subscriptions.activate');

@@ -64,6 +64,12 @@
                     <span>Dashboard</span>
                 </a>
 
+                {{-- Dashboard IKU --}}
+                <a href="{{ route('superadmin.dashboard2') }}" class="sidebar-link {{ request()->routeIs('superadmin.dashboard2') ? 'active' : '' }}">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    <span>Dashboard IKU</span>
+                </a>
+
                 {{-- Section Label --}}
                 <div class="!mt-6 !mb-3 px-3">
                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Manajemen</span>
@@ -145,6 +151,51 @@
                     <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     <span>Riwayat Pembayaran</span>
                 </a>
+
+                {{-- Section Label: Latihan --}}
+                <div class="!mt-6 !mb-3 px-3">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Latihan</span>
+                </div>
+
+                {{-- Latihan Tree Menu (Collapsible) - untuk belajar Laravel --}}
+                <div x-data="{ latihanOpen: {{ request()->routeIs('superadmin.latihan-*') ? 'true' : 'false' }} }">
+                    {{-- Parent Menu Item --}}
+                    <button type="button" 
+                            @click="latihanOpen = !latihanOpen" 
+                            class="sidebar-link w-full text-left {{ request()->routeIs('superadmin.latihan-*') ? 'active' : '' }}"
+                            style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center;">
+                            <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                            <span>Latihan</span>
+                        </div>
+                        <svg class="w-4 h-4 transition-transform" 
+                             :class="latihanOpen ? 'rotate-180' : ''" 
+                             fill="none" 
+                             stroke="currentColor" 
+                             viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+
+                    {{-- Child Menu Items --}}
+                    {{-- Garis vertikal (border-left) membungkus seluruh submenu.
+                         Submenu aktif ditandai HANYA dengan teks tebal + warna terang,
+                         TANPA background biru. --}}
+                    <div x-show="latihanOpen" 
+                         x-collapse
+                         style="margin-left: 1.5rem; padding-left: 0.75rem; border-left: 1px solid #334155;">
+                        <a href="{{ route('superadmin.latihan-sederhana.index') }}" 
+                           class="block px-3 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('superadmin.latihan-sederhana.*') ? 'font-bold text-white' : 'font-normal text-slate-400 hover:text-slate-200' }}">
+                            Modul Sederhana
+                        </a>
+                        <a href="{{ route('superadmin.latihan-detail.index') }}" 
+                           class="block px-3 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('superadmin.latihan-detail.*') ? 'font-bold text-white' : 'font-normal text-slate-400 hover:text-slate-200' }}">
+                            Modul Detail
+                        </a>
+                    </div>
+                </div>
 
                 {{-- Section Label --}}
                 <div class="!mt-6 !mb-3 px-3">
