@@ -586,3 +586,18 @@ Jika dialog tidak muncul, cek browser console untuk:
 - UI Text: Bahasa Indonesia
 - Code (variables, methods, comments): English
 - Database columns: English (snake_case)
+
+## Git Workflow (WAJIB - User Standing Instruction)
+
+> Aturan ini adalah instruksi tetap dari user (ditetapkan 2026-08-10). Berlaku untuk SEMUA sesi ke depan, tidak boleh dilupakan meskipun editor ditutup dan sesi baru dibuka.
+
+- **Commit & push setiap ada perubahan.** Setiap kali menyelesaikan sebuah perubahan/task (kode, view, migrasi, test, dokumentasi), siapkan commit untuk perubahan tersebut.
+- **WAJIB konfirmasi user sebelum commit DAN sebelum push.** JANGAN pernah menjalankan `git commit` atau `git push` tanpa persetujuan eksplisit dari user terlebih dahulu. User ingin me-review perubahan sebelum masuk ke repository.
+- **Alur yang benar:**
+  1. Selesaikan perubahan.
+  2. Tampilkan ringkasan perubahan ke user (`git status` + `git diff` bila perlu) dan usulkan pesan commit.
+  3. Tunggu konfirmasi eksplisit user ("ya, commit", "silakan push", dll).
+  4. Setelah dikonfirmasi, jalankan `git add` + `git commit`, lalu tampilkan hasilnya.
+  5. Minta konfirmasi lagi sebelum `git push` (kecuali user sudah menyetujui commit+push sekaligus).
+- **Commit message:** gunakan Bahasa Inggris, ringkas, mengikuti konvensi repo yang ada.
+- **Jangan** commit secret/kredensial, dan jangan gunakan `--force`, `git config`, atau skip hooks kecuali diminta eksplisit.
