@@ -93,6 +93,7 @@ use App\Http\Controllers\Superadmin\UjianController;
 use App\Http\Controllers\Superadmin\UjianMonitoringController;
 use App\Http\Controllers\Superadmin\UjianPesertaController;
 use App\Http\Controllers\Superadmin\UjianSoalController;
+use App\Http\Controllers\Superadmin\UserLevelController;
 use App\Http\Controllers\TaxForm1721A1Controller;
 use App\Http\Controllers\ThrController;
 use App\Http\Controllers\ThrSettingController;
@@ -664,6 +665,11 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 
         Route::put('paket/{paket}/ujian', [PaketUjianController::class, 'sync'])
             ->name('paket.ujian.sync');
+
+        // manajemen modul (level user)
+        Route::resource('user-levels', UserLevelController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['user-levels' => 'userLevel']);
 
         // master peserta
         Route::post('peserta/import', [PesertaController::class, 'import'])->name('peserta.import');

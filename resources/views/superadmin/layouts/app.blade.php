@@ -56,112 +56,80 @@
                 </button>
             </div>
 
-            {{-- Navigation --}}
+            {{-- Navigation (data-driven dari daftar modul + filter akses per level) --}}
+            @php
+                $sidebarUser = auth()->user();
+
+                try {
+                    $sidebarModules = \Illuminate\Support\Facades\Schema::hasTable('panritta_modules')
+                        ? \App\Models\Module::where('is_active', true)->orderBy('urutan')->get()
+                        : collect();
+                } catch (\Throwable $e) {
+                    $sidebarModules = collect();
+                }
+
+                $allowedModules = $sidebarModules->filter(fn ($m) => $sidebarUser?->canAccessModule($m->key));
+                $groupedModules = $allowedModules->groupBy('grup');
+
+                $moduleBadges = [
+                    'system-queue' => ['count' => (function () {
+                        try {
+                            return \Illuminate\Support\Facades\Schema::hasTable('failed_jobs')
+                                ? \Illuminate\Support\Facades\DB::table('failed_jobs')->count() : 0;
+                        } catch (\Throwable $e) { return 0; }
+                    })(), 'class' => 'bg-danger-500'],
+                    'system-rate-limits' => ['count' => (function () {
+                        try {
+                            return \Illuminate\Support\Facades\Schema::hasTable('rate_limit_logs')
+                                ? \App\Models\RateLimitLog::recent(24)->count() : 0;
+                        } catch (\Throwable $e) { return 0; }
+                    })(), 'class' => 'bg-warning-500'],
+                    'security-logs' => ['count' => (function () {
+                        try {
+                            return \Illuminate\Support\Facades\Schema::hasTable('security_logs')
+                                ? \App\Models\SecurityLog::recent(24)->where('severity', 'critical')->count() : 0;
+                        } catch (\Throwable $e) { return 0; }
+                    })(), 'class' => 'bg-danger-500'],
+                    'security-blocked-ips' => ['count' => (function () {
+                        try {
+                            return \Illuminate\Support\Facades\Schema::hasTable('blocked_ips')
+                                ? \App\Models\BlockedIp::active()->count() : 0;
+                        } catch (\Throwable $e) { return 0; }
+                    })(), 'class' => 'bg-secondary-500'],
+                ];
+            @endphp
             <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-                {{-- Dashboard --}}
-                <a href="{{ route('superadmin.dashboard') }}" class="sidebar-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                    <span>Dashboard</span>
-                </a>
+                @foreach($groupedModules as $grup => $items)
+                    @if(!in_array($grup, ['Utama', '', null], true))
+                        <div class="!mt-6 !mb-3 px-3">
+                            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{{ $grup }}</span>
+                        </div>
+                    @endif
 
-                {{-- Dashboard IKU --}}
-                <a href="{{ route('superadmin.dashboard2') }}" class="sidebar-link {{ request()->routeIs('superadmin.dashboard2') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                    <span>Dashboard IKU</span>
-                </a>
+                    @foreach($items as $module)
+                        @php($badge = $moduleBadges[$module->key] ?? null)
+                        <a href="{{ $module->route_name && \Illuminate\Support\Facades\Route::has($module->route_name) ? route($module->route_name) : '#' }}"
+                           class="sidebar-link {{ $module->route_pattern && request()->routeIs($module->route_pattern) ? 'active' : '' }}">
+                            <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $module->icon }}"/>
+                            </svg>
+                            <span>{{ $module->label }}</span>
+                            @if($badge && $badge['count'] > 0)
+                                <span class="ml-auto {{ $badge['class'] }} text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ $badge['count'] }}</span>
+                            @endif
+                        </a>
+                    @endforeach
+                @endforeach
 
-                {{-- Section Label --}}
-                <div class="!mt-6 !mb-3 px-3">
-                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Manajemen</span>
-                </div>
-
-                {{-- Plans --}}
-                <a href="{{ route('superadmin.plans.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.plans.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                    <span>Plans</span>
-                </a>
-
-                {{-- Jenis Ujian --}}
-                <a href="{{ route('superadmin.jenis-ujian.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.jenis-ujian.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6m-6 4h6m-6 4h4m-6 8h10a2 2 0 002-2V7.414a2 2 0 00-.586-1.414l-2.414-2.414A2 2 0 0014.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                    <span>Jenis Ujian</span>
-                </a>
-
-                {{-- Sub Jenis Ujian --}}
-                <a href="{{ route('superadmin.sub-jenis-ujian.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.sub-jenis-ujian.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
-                    <span>Sub Jenis Ujian</span>
-                </a>
-
-                {{-- Sub Indikator --}}
-                <a href="{{ route('superadmin.sub-indikator.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.sub-indikator.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M7 12h13M10 18h10"/></svg>
-                    <span>Sub Indikator</span>
-                </a>
-
-                {{-- Bank Soal --}}
-                <a href="{{ route('superadmin.soal.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.soal.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>Bank Soal</span>
-                </a>
-
-                {{-- Ujian --}}
-                <a href="{{ route('superadmin.ujian.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.ujian.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                    <span>Manajemen Ujian</span>
-                </a>
-
-                {{-- Paket Member --}}
-                <a href="{{ route('superadmin.paket.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.paket.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                    <span>Paket Member</span>
-                </a>
-
-                {{-- Peserta --}}
-                <a href="{{ route('superadmin.peserta.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.peserta.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"/></svg>
-                    <span>Master Peserta</span>
-                </a>
-
-                {{-- Subscriptions --}}
-                <a href="{{ route('superadmin.subscriptions.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.subscriptions.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
-                    <span>Subscriptions</span>
-                </a>
-
-                {{-- Companies --}}
-                <a href="{{ route('superadmin.companies.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.companies.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                    <span>Perusahaan</span>
-                </a>
-
-                {{-- Section Label --}}
-                <div class="!mt-6 !mb-3 px-3">
-                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Pembayaran</span>
-                </div>
-
-                {{-- Payment Gateways --}}
-                <a href="{{ route('superadmin.payment-gateways.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.payment-gateways.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                    <span>Payment Gateways</span>
-                </a>
-
-                {{-- Payments --}}
-                <a href="{{ route('superadmin.payments.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.payments.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                    <span>Riwayat Pembayaran</span>
-                </a>
-
-                {{-- Section Label: Latihan --}}
+                {{-- Latihan Tree Menu (Collapsible) - untuk belajar Laravel. Hanya untuk superadmin penuh. --}}
+                @if($sidebarUser?->isSuperAdmin())
                 <div class="!mt-6 !mb-3 px-3">
                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Latihan</span>
                 </div>
 
-                {{-- Latihan Tree Menu (Collapsible) - untuk belajar Laravel --}}
                 <div x-data="{ latihanOpen: {{ request()->routeIs('superadmin.latihan-*') ? 'true' : 'false' }} }">
-                    {{-- Parent Menu Item --}}
-                    <button type="button" 
-                            @click="latihanOpen = !latihanOpen" 
+                    <button type="button"
+                            @click="latihanOpen = !latihanOpen"
                             class="sidebar-link w-full text-left {{ request()->routeIs('superadmin.latihan-*') ? 'active' : '' }}"
                             style="display: flex; align-items: center; justify-content: space-between;">
                         <div style="display: flex; align-items: center;">
@@ -170,144 +138,29 @@
                             </svg>
                             <span>Latihan</span>
                         </div>
-                        <svg class="w-4 h-4 transition-transform" 
-                             :class="latihanOpen ? 'rotate-180' : ''" 
-                             fill="none" 
-                             stroke="currentColor" 
+                        <svg class="w-4 h-4 transition-transform"
+                             :class="latihanOpen ? 'rotate-180' : ''"
+                             fill="none"
+                             stroke="currentColor"
                              viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
 
-                    {{-- Child Menu Items --}}
-                    {{-- Garis vertikal (border-left) membungkus seluruh submenu.
-                         Submenu aktif ditandai HANYA dengan teks tebal + warna terang,
-                         TANPA background biru. --}}
-                    <div x-show="latihanOpen" 
+                    <div x-show="latihanOpen"
                          x-collapse
                          style="margin-left: 1.5rem; padding-left: 0.75rem; border-left: 1px solid #334155;">
-                        <a href="{{ route('superadmin.latihan-sederhana.index') }}" 
+                        <a href="{{ route('superadmin.latihan-sederhana.index') }}"
                            class="block px-3 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('superadmin.latihan-sederhana.*') ? 'font-bold text-white' : 'font-normal text-slate-400 hover:text-slate-200' }}">
                             Modul Sederhana
                         </a>
-                        <a href="{{ route('superadmin.latihan-detail.index') }}" 
+                        <a href="{{ route('superadmin.latihan-detail.index') }}"
                            class="block px-3 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('superadmin.latihan-detail.*') ? 'font-bold text-white' : 'font-normal text-slate-400 hover:text-slate-200' }}">
                             Modul Detail
                         </a>
                     </div>
                 </div>
-
-                {{-- Section Label --}}
-                <div class="!mt-6 !mb-3 px-3">
-                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Sistem</span>
-                </div>
-
-                {{-- System Health --}}
-                <a href="{{ route('superadmin.system.health') }}" class="sidebar-link {{ request()->routeIs('superadmin.system.health') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                    <span>System Health</span>
-                </a>
-
-                {{-- Queue Monitor --}}
-                <a href="{{ route('superadmin.system.queue.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.system.queue.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    <span>Queue Monitor</span>
-                    @php
-                        try {
-                            $failedJobCount = \Illuminate\Support\Facades\Schema::hasTable('failed_jobs')
-                                ? \Illuminate\Support\Facades\DB::table('failed_jobs')->count()
-                                : 0;
-                        } catch (\Exception $e) {
-                            $failedJobCount = 0;
-                        }
-                    @endphp
-                    @if($failedJobCount > 0)
-                        <span class="ml-auto bg-danger-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ $failedJobCount }}</span>
-                    @endif
-                </a>
-
-                {{-- Email Logs --}}
-                <a href="{{ route('superadmin.system.email-logs.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.system.email-logs.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                    <span>Email Logs</span>
-                </a>
-
-                {{-- Notifications --}}
-                <a href="{{ route('superadmin.system.notifications.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.system.notifications.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                    <span>Notifications</span>
-                </a>
-
-                {{-- Audit Logs --}}
-                <a href="{{ route('superadmin.system.audit-logs.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.system.audit-logs.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-                    <span>Audit Logs</span>
-                </a>
-
-                {{-- Sessions --}}
-                <a href="{{ route('superadmin.system.sessions.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.system.sessions.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>Sessions</span>
-                </a>
-
-                {{-- Rate Limits --}}
-                <a href="{{ route('superadmin.system.rate-limits.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.system.rate-limits.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>Rate Limits</span>
-                    @php
-                        try {
-                            $rateLimitCount = \Illuminate\Support\Facades\Schema::hasTable('rate_limit_logs')
-                                ? \App\Models\RateLimitLog::recent(24)->count()
-                                : 0;
-                        } catch (\Exception $e) {
-                            $rateLimitCount = 0;
-                        }
-                    @endphp
-                    @if($rateLimitCount > 0)
-                        <span class="ml-auto bg-warning-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ $rateLimitCount }}</span>
-                    @endif
-                </a>
-
-                {{-- Section Label --}}
-                <div class="!mt-6 !mb-3 px-3">
-                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Security</span>
-                </div>
-
-                {{-- Attack Logs --}}
-                <a href="{{ route('superadmin.security.logs.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.security.logs.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    <span>Attack Logs</span>
-                    @php
-                        try {
-                            $criticalCount = \Illuminate\Support\Facades\Schema::hasTable('security_logs')
-                                ? \App\Models\SecurityLog::recent(24)->where('severity', 'critical')->count()
-                                : 0;
-                        } catch (\Exception $e) {
-                            $criticalCount = 0;
-                        }
-                    @endphp
-                    @if($criticalCount > 0)
-                        <span class="ml-auto bg-danger-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ $criticalCount }}</span>
-                    @endif
-                </a>
-
-                {{-- Blocked IPs --}}
-                <a href="{{ route('superadmin.security.blocked-ips.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.security.blocked-ips.*') ? 'active' : '' }}">
-                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                    <span>Blocked IPs</span>
-                    @php
-                        try {
-                            $blockedCount = \Illuminate\Support\Facades\Schema::hasTable('blocked_ips')
-                                ? \App\Models\BlockedIp::active()->count()
-                                : 0;
-                        } catch (\Exception $e) {
-                            $blockedCount = 0;
-                        }
-                    @endphp
-                    @if($blockedCount > 0)
-                        <span class="ml-auto bg-secondary-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ $blockedCount }}</span>
-                    @endif
-                </a>
+                @endif
             </nav>
 
             {{-- User Info + Logout --}}

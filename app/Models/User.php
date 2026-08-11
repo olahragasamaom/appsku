@@ -28,6 +28,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_active',
         'is_superadmin',
         'is_peserta',
+        'user_level_id',
         'deletion_reason',
     ];
 
@@ -44,12 +45,40 @@ class User extends Authenticatable implements MustVerifyEmail
             'is_active' => 'boolean',
             'is_superadmin' => 'boolean',
             'is_peserta' => 'boolean',
+            'user_level_id' => 'integer',
         ];
     }
 
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function userLevel(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(UserLevel::class, 'user_level_id');
+    }
+
+    /**
+     * Determine whether the user can perform an action on a superadmin module.
+     * Superadmins always have full access; users bound to a level are limited
+     * to the module permissions granted to that level's role.
+     */
+    public function canDoOnModule(string $key, string $action = 'view'): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->userLevel?->allows($key, $action) ?? false;
+    }
+
+    /**
+     * Determine whether the user can access (view) a superadmin module by its key.
+     */
+    public function canAccessModule(string $key): bool
+    {
+        return $this->canDoOnModule($key, 'view');
     }
 
     public function employee()
@@ -124,7 +153,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
         // Note: The VerifyEmail notification by default uses route('verification.verify').
-        // Since we are using a custom auth flow for peserta, we can customize the VerifyEmail 
+        // Since we are using a custom auth flow for peserta, we can customize the VerifyEmail
         // notification in AppServiceProvider or simply rely on the default if the route name matches.
         // For Panritta, we override the URL generation in AppServiceProvider or here if needed.
     }

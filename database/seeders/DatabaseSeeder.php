@@ -16,6 +16,9 @@ class DatabaseSeeder extends Seeder
         // Seed roles and permissions first
         $this->call(RolePermissionSeeder::class);
 
+        // Seed the fixed superadmin module list
+        $this->call(ModuleSeeder::class);
+
         // Create Super Admin (no company - team context null)
         setPermissionsTeamId(null);
         $superAdmin = User::factory()->create([
