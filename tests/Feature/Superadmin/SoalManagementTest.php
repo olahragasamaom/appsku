@@ -36,6 +36,14 @@ describe('Soal Index & Create Pages', function () {
         $response->assertViewIs('superadmin.soal.create');
     });
 
+    it('loads CKEditor for the soal input', function () {
+        $response = $this->get('/superadmin/soal/create');
+
+        $response->assertSuccessful();
+        $response->assertSee('ckeditorSoal(', false);
+        $response->assertSee('x-ref="editor"', false);
+    });
+
     it('prefills category when opened with sub_indikator_id in url', function () {
         $jenis = JenisUjian::factory()->create(['nama_jenis_ujian' => 'Ujian Kedinasan']);
         $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $jenis->id]);

@@ -135,7 +135,7 @@
         <div class="card-body space-y-4">
             <div>
                 <label class="block text-sm font-medium text-secondary-700 mb-1">Teks Soal <span class="text-danger-500">*</span></label>
-                <x-wysiwyg name="soal" :value="old('soal', $soal?->soal)" :required="true" rows="6" :error="$errors->has('soal')" />
+                <x-ckeditor-soal name="soal" :value="old('soal', $soal?->soal)" :required="true" rows="6" :error="$errors->has('soal')" />
                 @error('soal')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
             </div>
             <div>
