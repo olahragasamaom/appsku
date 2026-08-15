@@ -103,6 +103,30 @@ describe('Exam Engine', function () {
         ]);
     });
 
+    it('rejects an answer after the batas_waktu snapshot has passed (M-AU-8/AD-10)', function () {
+        ['ujian' => $ujian, 'ujianSoal' => $ujianSoal] = buildUjianWithSoal();
+        $peserta = User::factory()->create(['is_peserta' => true]);
+        $ujian->peserta()->create([
+            'user_id' => $peserta->id,
+            'status' => 'sedang_ujian',
+            'waktu_mulai' => now()->subHour(),
+            'batas_waktu' => now()->subMinute(),
+        ]);
+
+        $this->actingAs($peserta);
+
+        $response = $this->postJson(route('peserta.ujian.jawaban', $ujian), [
+            'ujian_soal_id' => $ujianSoal->id,
+            'jawaban' => 'B',
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseMissing('panritta_ujian_jawaban', [
+            'ujian_soal_id' => $ujianSoal->id,
+            'jawaban' => 'B',
+        ]);
+    });
+
     it('submits and finalizes the attempt', function () {
         ['ujian' => $ujian, 'ujianSoal' => $ujianSoal] = buildUjianWithSoal();
         $peserta = User::factory()->create(['is_peserta' => true]);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Peserta;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreJawabanRequest;
 use App\Models\Ujian;
 use App\Models\UjianPeserta;
 use App\Services\Ujian\UjianScoringService;
@@ -117,20 +118,15 @@ class UjianController extends Controller
         return view('peserta.ujian.kerjakan', compact('ujian', 'peserta', 'ujianSoals', 'jawaban', 'sisaDetik'));
     }
 
-    public function saveAnswer(Request $request, Ujian $ujian): JsonResponse
+    public function saveAnswer(StoreJawabanRequest $request, Ujian $ujian): JsonResponse
     {
-        $peserta = $this->resolvePeserta($request, $ujian);
+        $peserta = $request->resolvePeserta();
 
-        if ($peserta instanceof RedirectResponse || ! $peserta) {
+        if (! $peserta) {
             abort(401);
         }
 
-        abort_unless($peserta->status === 'sedang_ujian', 403);
-
-        $validated = $request->validate([
-            'ujian_soal_id' => ['required', 'integer'],
-            'jawaban' => ['nullable', 'in:A,B,C,D,E'],
-        ]);
+        $validated = $request->validated();
 
         $ujianSoal = $ujian->ujianSoals()->with('soal')->findOrFail($validated['ujian_soal_id']);
 
@@ -209,6 +205,26 @@ class UjianController extends Controller
         $breakdown = $this->scoring->breakdownPerJenis($peserta);
 
         return view('peserta.ujian.pembahasan', compact('ujian', 'peserta', 'ujianSoals', 'jawabanMap', 'breakdown'));
+    }
+
+    public function leaderboard(Request $request, Ujian $ujian): View|RedirectResponse
+    {
+        $peserta = $this->resolvePeserta($request, $ujian);
+
+        if ($peserta instanceof RedirectResponse) {
+            return $peserta;
+        }
+
+        abort_unless($peserta && $peserta->status === 'selesai', 404);
+
+        if (! $ujian->tampilkan_hasil) {
+            return redirect()->route('peserta.ujian.hasil', $ujian);
+        }
+
+        $ranking = $this->scoring->rank($ujian);
+        $posisi = $this->scoring->positionOf($peserta);
+
+        return view('peserta.ujian.leaderboard', compact('ujian', 'peserta', 'ranking', 'posisi'));
     }
 
     private function resolvePeserta(Request $request, Ujian $ujian): UjianPeserta|RedirectResponse|null

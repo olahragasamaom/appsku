@@ -110,43 +110,6 @@
                 </div>
             </div>
 
-            {{-- Hierarki Sub Jenis & Sub Indikator --}}
-            <div x-show="activeJenis" x-cloak class="mt-6 border-t border-secondary-100 pt-4">
-                <h4 class="font-medium text-secondary-800 mb-3" x-text="`Struktur Soal: ${activeJenis?.nama_jenis_ujian}`"></h4>
-                
-                <template x-if="activeJenis && activeJenis.sub_jenis_ujian.length === 0">
-                    <p class="text-sm text-secondary-500 italic">Belum ada sub jenis ujian.</p>
-                </template>
-
-                <div class="space-y-4">
-                    <template x-for="subJenis in activeJenis?.sub_jenis_ujian" :key="subJenis.id">
-                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                            <div class="flex items-center gap-2 mb-3">
-                                <span class="font-bold text-slate-800" x-text="subJenis.nama_sub_jenis_ujian"></span>
-                                <span class="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-md" x-text="subJenis.sistem_penilaian === 'benar_salah' ? 'Benar-Salah' : 'Poin per Jawaban'"></span>
-                            </div>
-
-                            <template x-if="subJenis.sub_indikator.length === 0">
-                                <p class="text-xs text-slate-500 italic ml-2">Belum ada sub indikator.</p>
-                            </template>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                <template x-for="indikator in subJenis.sub_indikator" :key="indikator.id">
-                                    <div class="bg-white border border-slate-200 rounded p-3 flex flex-col justify-between shadow-sm">
-                                        <p class="text-sm font-medium text-slate-700 mb-3" x-text="indikator.nama_sub_indikator"></p>
-                                        <a :href="`{{ route('superadmin.soal.create') }}?sub_indikator_id=${indikator.id}`" 
-                                           target="_blank"
-                                           class="btn btn-primary btn-sm w-full inline-flex justify-center text-xs">
-                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                            Tambah Soal
-                                        </a>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </div>
         </div>
     </div>
 

@@ -4,9 +4,9 @@
 > **Project Description:** [aplikasi ini merupakan aplikasi ujian online untuk client, lalu terdapat dashboard manajemen untuk manajemen data soal, jenis ujian, dll. aplikasi menggunakan laravel]
 
 ## Tech Stack Rules
-- Backend: Laravel 11 (PHP 8.2+)
-- Frontend: Inertia.js + Vue 3 (atau Blade + Tailwind CSS)
-- Database: PostgreSQL / MySQL
+- Backend: Laravel 12 (PHP 8.2+)
+- Frontend: Blade + Alpine.js + Tailwind CSS 4
+- Database: MySQL / SQLite (testing)
 
 
 ## Communication

@@ -48,7 +48,7 @@ class UjianController extends Controller
         $jenisUjians = JenisUjian::with(['subJenisUjian.subIndikator'])
             ->orderBy('nama_jenis_ujian')
             ->get();
-            
+
         $aksesMemberOptions = $this->aksesMemberOptions();
 
         return view('superadmin.ujian.create', compact('jenisUjians', 'aksesMemberOptions'));
@@ -63,18 +63,18 @@ class UjianController extends Controller
             return $ujian;
         });
 
-        return redirect()->route('superadmin.ujian.edit', $ujian)
+        return redirect()->route('superadmin.ujian.index')
             ->with('success', 'Ujian berhasil dibuat.');
     }
 
     public function edit(Ujian $ujian): View
     {
         $ujian->load('ujianJenisUjians.jenisUjian');
-        
+
         $jenisUjians = JenisUjian::with(['subJenisUjian.subIndikator'])
             ->orderBy('nama_jenis_ujian')
             ->get();
-            
+
         $aksesMemberOptions = $this->aksesMemberOptions();
         $passingGrades = $ujian->ujianJenisUjians->pluck('passing_grade', 'jenis_ujian_id');
         $selectedJenis = $ujian->ujianJenisUjians->pluck('jenis_ujian_id')->all();
