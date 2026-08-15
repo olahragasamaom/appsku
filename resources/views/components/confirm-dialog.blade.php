@@ -16,6 +16,7 @@
         type: '{{ $type }}',
         formAction: null,
         method: 'DELETE',
+        onConfirm: null,
 
         show(options = {}) {
             this.title = options.title || '{{ $title }}';
@@ -24,6 +25,7 @@
             this.type = options.type || '{{ $type }}';
             this.formAction = options.formAction || null;
             this.method = options.method || 'DELETE';
+            this.onConfirm = typeof options.onConfirm === 'function' ? options.onConfirm : null;
             this.open = true;
         },
 
@@ -32,7 +34,11 @@
         },
 
         confirm() {
-            if (this.formAction) {
+            if (this.onConfirm) {
+                const cb = this.onConfirm;
+                this.close();
+                cb();
+            } else if (this.formAction) {
                 this.$refs.confirmForm.action = this.formAction;
                 this.$refs.methodInput.value = this.method;
                 this.$refs.confirmForm.submit();

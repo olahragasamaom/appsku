@@ -1,6 +1,9 @@
 import './bootstrap';
 import './ckeditor-soal';
 import Alpine from 'alpinejs';
+import Sortable from 'sortablejs';
+
+window.Sortable = Sortable;
 
 // Currency Input Component - untuk format angka dengan pemisah ribuan
 window.currencyInput = function(initialValue = 0) {

@@ -142,7 +142,18 @@
                 <label class="block text-sm font-medium text-secondary-700 mb-1">Gambar Soal</label>
                 <input type="file" name="gambar_soal" accept="image/*" class="input w-full">
                 @if($soal?->gambar_soal)
-                    <img src="{{ Storage::url($soal->gambar_soal) }}" class="mt-2 h-24 rounded border">
+                    <div x-data="{ hapus: false }" class="mt-2">
+                        <input type="hidden" name="hapus_gambar_soal" :value="hapus ? '1' : '0'">
+                        <div class="inline-flex flex-col gap-1.5" :class="hapus ? 'opacity-50' : ''">
+                            <img src="{{ Storage::url($soal->gambar_soal) }}" class="h-24 rounded border">
+                            <button type="button" @click="hapus = !hapus"
+                                    class="inline-flex items-center gap-1 text-xs font-medium"
+                                    :class="hapus ? 'text-secondary-500' : 'text-danger-600 hover:text-danger-700'">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <span x-text="hapus ? 'Batal hapus' : 'Hapus gambar'"></span>
+                            </button>
+                        </div>
+                    </div>
                 @endif
                 @error('gambar_soal')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
             </div>
@@ -160,7 +171,7 @@
                         </template>
                     </div>
                     <div class="mb-2">
-                        <x-wysiwyg name="opsi_{{ $opt }}" :value="old('opsi_'.$opt, $soal?->{'opsi_'.$opt})" rows="2" :error="$errors->has('opsi_'.$opt)" />
+                        <x-ckeditor-soal name="opsi_{{ $opt }}" :value="old('opsi_'.$opt, $soal?->{'opsi_'.$opt})" placeholder="Tulis opsi {{ strtoupper($opt) }}..." rows="2" :error="$errors->has('opsi_'.$opt)" />
                     </div>
                     @error('opsi_'.$opt)<p class="text-sm text-danger-600 mb-2">{{ $message }}</p>@enderror
 
@@ -169,7 +180,18 @@
                             <label class="block text-xs font-medium text-secondary-600 mb-1">Gambar Opsi {{ strtoupper($opt) }}</label>
                             <input type="file" name="gambar_opsi_{{ $opt }}" accept="image/*" class="input w-full text-sm">
                             @if($soal?->{'gambar_opsi_'.$opt})
-                                <img src="{{ Storage::url($soal->{'gambar_opsi_'.$opt}) }}" class="mt-2 h-16 rounded border">
+                                <div x-data="{ hapus: false }" class="mt-2">
+                                    <input type="hidden" name="hapus_gambar_opsi_{{ $opt }}" :value="hapus ? '1' : '0'">
+                                    <div class="inline-flex flex-col gap-1.5" :class="hapus ? 'opacity-50' : ''">
+                                        <img src="{{ Storage::url($soal->{'gambar_opsi_'.$opt}) }}" class="h-16 rounded border">
+                                        <button type="button" @click="hapus = !hapus"
+                                                class="inline-flex items-center gap-1 text-xs font-medium"
+                                                :class="hapus ? 'text-secondary-500' : 'text-danger-600 hover:text-danger-700'">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            <span x-text="hapus ? 'Batal hapus' : 'Hapus gambar'"></span>
+                                        </button>
+                                    </div>
+                                </div>
                             @endif
                         </div>
                         <div x-show="sistem_penilaian === 'tiap_jawaban_ada_poin'">
@@ -210,7 +232,18 @@
                 <label class="block text-sm font-medium text-secondary-700 mb-1">Gambar Pembahasan</label>
                 <input type="file" name="gambar_pembahasan" accept="image/*" class="input w-full">
                 @if($soal?->gambar_pembahasan)
-                    <img src="{{ Storage::url($soal->gambar_pembahasan) }}" class="mt-2 h-24 rounded border">
+                    <div x-data="{ hapus: false }" class="mt-2">
+                        <input type="hidden" name="hapus_gambar_pembahasan" :value="hapus ? '1' : '0'">
+                        <div class="inline-flex flex-col gap-1.5" :class="hapus ? 'opacity-50' : ''">
+                            <img src="{{ Storage::url($soal->gambar_pembahasan) }}" class="h-24 rounded border">
+                            <button type="button" @click="hapus = !hapus"
+                                    class="inline-flex items-center gap-1 text-xs font-medium"
+                                    :class="hapus ? 'text-secondary-500' : 'text-danger-600 hover:text-danger-700'">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <span x-text="hapus ? 'Batal hapus' : 'Hapus gambar'"></span>
+                            </button>
+                        </div>
+                    </div>
                 @endif
             </div>
         </div>

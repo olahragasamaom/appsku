@@ -255,6 +255,88 @@ describe('Detach Soal', function () {
     });
 });
 
+describe('Reorder Soal', function () {
+    it('reorders soal within a sub indikator and preserves urutan slots', function () {
+        $jenis = JenisUjian::factory()->create();
+        $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $jenis->id]);
+        $subIndikator = SubIndikator::factory()->create([
+            'sub_jenis_ujian_id' => $subJenis->id,
+            'jenis_ujian_id' => $jenis->id,
+        ]);
+
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id]);
+        $ujian->jenisUjians()->attach($jenis->id);
+
+        $soalA = Soal::factory()->create(['sub_indikator_id' => $subIndikator->id]);
+        $soalB = Soal::factory()->create(['sub_indikator_id' => $subIndikator->id]);
+        $soalC = Soal::factory()->create(['sub_indikator_id' => $subIndikator->id]);
+
+        $first = $ujian->ujianSoals()->create(['soal_id' => $soalA->id, 'jenis_ujian_id' => $jenis->id, 'urutan' => 1]);
+        $second = $ujian->ujianSoals()->create(['soal_id' => $soalB->id, 'jenis_ujian_id' => $jenis->id, 'urutan' => 2]);
+        $third = $ujian->ujianSoals()->create(['soal_id' => $soalC->id, 'jenis_ujian_id' => $jenis->id, 'urutan' => 3]);
+
+        $response = $this->postJson(route('superadmin.ujian.soal.reorder', $ujian), [
+            'ujian_soal_ids' => [$third->id, $first->id, $second->id],
+        ]);
+
+        $response->assertSuccessful();
+
+        expect($third->fresh()->urutan)->toBe(1);
+        expect($first->fresh()->urutan)->toBe(2);
+        expect($second->fresh()->urutan)->toBe(3);
+    });
+
+    it('rejects reorder containing ujian soal from another ujian', function () {
+        $jenis = JenisUjian::factory()->create();
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id]);
+        $otherUjian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id]);
+        $ujian->jenisUjians()->attach($jenis->id);
+        $otherUjian->jenisUjians()->attach($jenis->id);
+
+        $soal = makeSoalForJenis($jenis);
+        $foreign = $otherUjian->ujianSoals()->create(['soal_id' => $soal->id, 'jenis_ujian_id' => $jenis->id, 'urutan' => 1]);
+
+        $response = $this->postJson(route('superadmin.ujian.soal.reorder', $ujian), [
+            'ujian_soal_ids' => [$foreign->id],
+        ]);
+
+        $response->assertNotFound();
+    });
+});
+
+describe('Finalisasi Ujian', function () {
+    it('displays the finalisasi page', function () {
+        $jenis = JenisUjian::factory()->create(['nama_jenis_ujian' => 'SKD']);
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id]);
+        $ujian->jenisUjians()->attach($jenis->id);
+
+        $response = $this->get(route('superadmin.ujian.soal.finalisasi', $ujian));
+
+        $response->assertSuccessful();
+        $response->assertViewIs('superadmin.ujian.soal.finalisasi');
+        $response->assertSee('SKD');
+    });
+
+    it('marks the ujian as finalized', function () {
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id, 'finalized_at' => null]);
+
+        $response = $this->post(route('superadmin.ujian.soal.finalize', $ujian));
+
+        $response->assertRedirect();
+        expect($ujian->fresh()->finalized_at)->not->toBeNull();
+        expect($ujian->fresh()->isFinalized())->toBeTrue();
+    });
+
+    it('reopens a finalized ujian', function () {
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id, 'finalized_at' => now()]);
+
+        $response = $this->delete(route('superadmin.ujian.soal.unfinalize', $ujian));
+
+        $response->assertRedirect();
+        expect($ujian->fresh()->finalized_at)->toBeNull();
+    });
+});
+
 describe('Remaining Slots', function () {
     it('returns the remaining slots JSON', function () {
         $skd = \App\Models\JenisUjian::factory()->create();

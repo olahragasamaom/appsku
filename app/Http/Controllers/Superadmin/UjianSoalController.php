@@ -174,6 +174,97 @@ class UjianSoalController extends Controller
             ->with('success', 'Soal berhasil ditambahkan ke ujian.');
     }
 
+    /**
+     * Tampilkan halaman finalisasi: mengurutkan soal per sub indikator
+     * (drag-and-drop) sebelum ujian dikunci sebagai final.
+     */
+    public function finalisasi(Request $request, Ujian $ujian): View
+    {
+        $ujian->load('ujianJenisUjians.jenisUjian');
+
+        $jenisUjians = $ujian->ujianJenisUjians
+            ->map(fn ($item) => $item->jenisUjian)
+            ->filter()
+            ->unique('id')
+            ->values();
+
+        $activeJenisId = (int) $request->input('jenis_ujian_id', $jenisUjians->first()?->id);
+
+        $ujianSoals = $ujian->ujianSoals()
+            ->with('soal.subIndikator.subJenisUjian')
+            ->when($activeJenisId, fn ($query) => $query->where('jenis_ujian_id', $activeJenisId))
+            ->orderBy('urutan')
+            ->orderBy('id')
+            ->get();
+
+        $ujianSoalsPerSubIndikator = $ujianSoals
+            ->groupBy(fn ($ujianSoal) => $ujianSoal->soal?->subIndikator?->nama_sub_indikator ?? 'Tanpa Sub Indikator');
+
+        $totalSoal = $ujian->ujianSoals()->count();
+
+        return view('superadmin.ujian.soal.finalisasi', compact(
+            'ujian',
+            'jenisUjians',
+            'activeJenisId',
+            'ujianSoalsPerSubIndikator',
+            'totalSoal',
+        ));
+    }
+
+    /**
+     * Tandai ujian sebagai final (susunan soal terkunci sebagai penanda status).
+     */
+    public function finalize(Ujian $ujian): RedirectResponse
+    {
+        $ujian->update(['finalized_at' => now()]);
+
+        return redirect()
+            ->route('superadmin.ujian.soal.finalisasi', $ujian)
+            ->with('success', 'Ujian berhasil difinalisasi.');
+    }
+
+    /**
+     * Batalkan finalisasi ujian (kembali ke status draft susunan soal).
+     */
+    public function unfinalize(Ujian $ujian): RedirectResponse
+    {
+        $ujian->update(['finalized_at' => null]);
+
+        return redirect()
+            ->route('superadmin.ujian.soal.finalisasi', $ujian)
+            ->with('success', 'Finalisasi ujian dibatalkan.');
+    }
+
+    /**
+     * Ubah urutan soal di dalam satu sub indikator (via drag-and-drop).
+     *
+     * Menerima daftar id UjianSoal dalam urutan baru. Nilai `urutan` yang sudah
+     * dimiliki soal-soal ini diurutkan menaik lalu dibagikan ulang sesuai urutan
+     * baru, sehingga posisi relatif terhadap sub indikator lain tetap terjaga.
+     */
+    public function reorder(Request $request, Ujian $ujian): JsonResponse
+    {
+        $validated = $request->validate([
+            'ujian_soal_ids' => ['required', 'array', 'min:1'],
+            'ujian_soal_ids.*' => ['integer'],
+        ]);
+
+        $ujianSoals = $ujian->ujianSoals()
+            ->whereIn('id', $validated['ujian_soal_ids'])
+            ->get()
+            ->keyBy('id');
+
+        abort_unless($ujianSoals->count() === count($validated['ujian_soal_ids']), 404);
+
+        $slots = $ujianSoals->pluck('urutan')->sort()->values();
+
+        foreach ($validated['ujian_soal_ids'] as $index => $id) {
+            $ujianSoals[$id]->update(['urutan' => $slots[$index]]);
+        }
+
+        return response()->json(['status' => 'ok']);
+    }
+
     public function detach(Ujian $ujian, UjianSoal $ujianSoal): RedirectResponse
     {
         abort_unless($ujianSoal->ujian_id === $ujian->id, 404);

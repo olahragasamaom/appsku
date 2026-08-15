@@ -648,12 +648,19 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('ujian/{ujian}/remaining', [UjianSoalController::class, 'remaining'])->name('ujian.soal.remaining');
         Route::get('ujian/{ujian}/bank-soal-options', [UjianSoalController::class, 'bankSoalOptions'])->name('ujian.soal.bank-options');
         Route::post('ujian/{ujian}/soal/attach', [UjianSoalController::class, 'attach'])->name('ujian.soal.attach');
+        Route::post('ujian/{ujian}/soal/reorder', [UjianSoalController::class, 'reorder'])->name('ujian.soal.reorder');
+        Route::get('ujian/{ujian}/finalisasi', [UjianSoalController::class, 'finalisasi'])->name('ujian.soal.finalisasi');
+        Route::post('ujian/{ujian}/finalisasi', [UjianSoalController::class, 'finalize'])->name('ujian.soal.finalize');
+        Route::delete('ujian/{ujian}/finalisasi', [UjianSoalController::class, 'unfinalize'])->name('ujian.soal.unfinalize');
         Route::post('ujian/{ujian}/soal/import', [UjianSoalController::class, 'importExcel'])->name('ujian.soal.import');
         Route::delete('ujian/{ujian}/soal/{ujianSoal}/detach', [UjianSoalController::class, 'detach'])->name('ujian.soal.detach');
         Route::post('ujian/{ujian}/activate', [UjianController::class, 'activate'])->name('ujian.activate');
 
         // peserta offline management
         Route::get('ujian/{ujian}/peserta-offline/export', [PesertaOfflineController::class, 'export'])->name('ujian.peserta-offline.export');
+        Route::get('peserta-offline/template', [PesertaOfflineController::class, 'template'])->name('ujian.peserta-offline.template');
+        Route::post('ujian/{ujian}/peserta-offline/import', [PesertaOfflineController::class, 'import'])->name('ujian.peserta-offline.import');
+        Route::post('ujian/{ujian}/peserta-offline/bulk-destroy', [PesertaOfflineController::class, 'bulkDestroy'])->name('ujian.peserta-offline.bulk-destroy');
         Route::resource('ujian.peserta-offline', PesertaOfflineController::class)
             ->only(['index', 'store', 'destroy'])
             ->parameters(['peserta-offline' => 'pesertaOffline']);
@@ -811,5 +818,6 @@ Route::prefix('peserta')->name('peserta.')->group(function () {
         Route::post('ujian/{ujian}/submit', [PesertaUjianController::class, 'submit'])->name('ujian.submit');
         Route::get('ujian/{ujian}/hasil', [PesertaUjianController::class, 'hasil'])->name('ujian.hasil');
         Route::get('ujian/{ujian}/pembahasan', [PesertaUjianController::class, 'pembahasan'])->name('ujian.pembahasan');
+        Route::get('ujian/{ujian}/leaderboard', [PesertaUjianController::class, 'leaderboard'])->name('ujian.leaderboard');
     });
 });

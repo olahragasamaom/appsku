@@ -38,6 +38,7 @@ class Ujian extends Model
         'token_ujian',
         'akses_member',
         'status',             // 'draft', 'aktif', 'selesai'
+        'finalized_at',       // waktu finalisasi susunan soal; null = belum final
         'dibuat_oleh',
     ];
 
@@ -57,8 +58,17 @@ class Ujian extends Model
             'durasi_ujian' => 'integer',
             'batas_keterlambatan' => 'datetime',
             'akses_member' => 'array',
+            'finalized_at' => 'datetime',
             'dibuat_oleh' => 'integer',
         ];
+    }
+
+    /**
+     * Cek apakah susunan soal ujian ini sudah difinalisasi.
+     */
+    public function isFinalized(): bool
+    {
+        return $this->finalized_at !== null;
     }
 
     /**

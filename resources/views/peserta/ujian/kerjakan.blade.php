@@ -10,6 +10,13 @@
     });
 @endphp
 
+{{-- Dekorasi background: gradient blob halus di belakang konten --}}
+<div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none" aria-hidden="true">
+    <div class="absolute -top-24 -right-24 w-96 h-96 bg-primary-200/40 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -left-24 w-80 h-80 bg-indigo-200/30 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-1/4 w-72 h-72 bg-emerald-200/20 rounded-full blur-3xl"></div>
+</div>
+
 <div x-data="examEngine({
         saveUrl: '{{ route('peserta.ujian.jawaban', $ujian) }}',
         sisaDetik: {{ $sisaDetik === null ? 'null' : $sisaDetik }},
@@ -17,31 +24,25 @@
         initialJawaban: {{ Js::from($jawaban) }}
      })"
      x-init="init()"
-     class="pb-20">
+     class="pb-28">
 
-    {{-- Header sticky: Judul ujian + timer --}}
-    <div class="flex items-center justify-between bg-white shadow-sm border border-slate-200 rounded-2xl px-5 py-4 mb-6 sticky top-2 z-30 transition-all">
-        <div>
-            <h1 class="font-bold text-lg md:text-xl text-slate-800 line-clamp-1">{{ $ujian->nama_ujian }}</h1>
-            <div class="flex items-center gap-2 mt-1">
-                <p class="text-xs text-slate-500" x-show="saving" x-cloak>
-                    <svg class="animate-spin -ml-1 mr-1.5 h-3 w-3 text-primary-600 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+    {{-- Header sticky: Judul ujian + status simpan --}}
+    <div class="flex items-center justify-between bg-gradient-to-r from-primary-600 to-primary-700 shadow-lg shadow-primary-600/20 rounded-2xl px-5 py-4 mb-6 sticky top-2 z-30 transition-all">
+        <div class="min-w-0">
+            <h1 class="font-bold text-lg md:text-xl text-white line-clamp-1">{{ $ujian->nama_ujian }}</h1>
+            <div class="flex items-center gap-2 mt-1 h-4">
+                <p class="text-xs text-primary-100" x-show="saving" x-cloak>
+                    <svg class="animate-spin -ml-1 mr-1.5 h-3 w-3 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     Menyimpan...
                 </p>
-                <p class="text-xs font-medium text-success-600" x-show="!saving && lastSaved" x-cloak>
+                <p class="text-xs font-medium text-white" x-show="!saving && lastSaved" x-cloak>
                     <svg class="w-3.5 h-3.5 inline mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     Tersimpan
                 </p>
             </div>
         </div>
-        <div class="flex items-center gap-4 sm:gap-6">
-            <template x-if="sisaDetik !== null">
-                <div class="text-right bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Sisa Waktu</span>
-                    <span class="text-xl font-black tabular-nums tracking-tight leading-none" :class="sisaDetik <= 300 ? 'text-danger-600 animate-pulse' : 'text-slate-800'" x-text="formatTime(sisaDetik)"></span>
-                </div>
-            </template>
-            <button type="button" @click="confirmSubmit()" class="btn btn-primary shadow-sm hidden sm:inline-flex">Selesai Ujian</button>
+        <div class="flex items-center gap-4 sm:gap-6 flex-shrink-0">
+            <button type="button" @click="confirmSubmit()" class="btn bg-white text-primary-700 hover:bg-primary-50 shadow-sm hidden sm:inline-flex">Selesai Ujian</button>
         </div>
     </div>
 
@@ -118,15 +119,15 @@
         </div>
 
         {{-- Area Kanan: Navigasi Soal Sticky (25%) --}}
-        <div class="w-full lg:w-72 xl:w-80 flex-shrink-0 lg:sticky lg:top-28 z-10 order-first lg:order-last mb-6 lg:mb-0">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="bg-slate-50 py-3 px-5 border-b border-slate-200">
-                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+        <div class="w-full lg:w-72 xl:w-80 flex-shrink-0 lg:sticky lg:top-24 z-10 order-first lg:order-last mb-6 lg:mb-0">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                <div class="bg-gradient-to-r from-slate-800 to-slate-700 py-3 px-5 border-b border-slate-200">
+                    <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                         Navigasi Soal
                     </h3>
                 </div>
-                <div class="p-4 max-h-[60vh] overflow-y-auto">
+                <div class="p-4 h-[52vh] overflow-y-auto">
                     @php $navIndex = 1; @endphp
                     @foreach($soalGroups as $groupName => $items)
                         <div class="mb-5 last:mb-0">
@@ -156,6 +157,29 @@
             </div>
         </div>
     </div>
+
+    {{-- Timer Floating: fixed kanan bawah, tetap saat scroll --}}
+    <template x-if="sisaDetik !== null">
+        <div class="fixed bottom-5 right-5 z-40">
+            <div class="flex flex-col items-center rounded-2xl px-5 py-3 shadow-xl border transition-all"
+                 :class="sisaDetik <= 300 ? 'bg-danger-600 border-danger-700 shadow-danger-600/40' : 'bg-white border-slate-200 shadow-slate-400/20'">
+                <span class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider mb-0.5"
+                      :class="sisaDetik <= 300 ? 'text-danger-100' : 'text-slate-400'">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Sisa Waktu
+                </span>
+                <span class="text-2xl font-black tabular-nums tracking-tight leading-none"
+                      :class="sisaDetik <= 300 ? 'text-white animate-pulse' : 'text-slate-800'"
+                      x-text="formatTime(sisaDetik)"></span>
+            </div>
+        </div>
+    </template>
+
+    {{-- Tombol Selesai Floating (mobile) --}}
+    <button type="button" @click="confirmSubmit()"
+            class="fixed bottom-5 left-5 z-40 btn btn-primary shadow-xl shadow-primary-500/40 sm:hidden">
+        Selesai Ujian
+    </button>
 
     <form id="submit-form" method="POST" action="{{ route('peserta.ujian.submit', $ujian) }}" class="hidden">
         @csrf

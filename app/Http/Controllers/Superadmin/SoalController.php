@@ -186,6 +186,9 @@ class SoalController extends Controller
                     Storage::disk('public')->delete($soal->{$field});
                 }
                 $data[$field] = $request->file($field)->store('panritta/soal', 'public');
+            } elseif ($request->boolean('hapus_'.$field) && $soal->{$field}) {
+                Storage::disk('public')->delete($soal->{$field});
+                $data[$field] = null;
             }
         }
 

@@ -237,6 +237,49 @@ describe('Soal Update & Delete', function () {
         $this->assertDatabaseMissing('panritta_soal', ['id' => $soal->id]);
     });
 
+    it('removes an existing gambar soal when hapus flag is set', function () {
+        Storage::fake('public');
+        $path = UploadedFile::fake()->image('lama.jpg')->store('panritta/soal', 'public');
+        $soal = Soal::factory()->create(['kunci_jawaban' => 'A', 'gambar_soal' => $path]);
+
+        $response = $this->put("/superadmin/soal/{$soal->id}", [
+            'sub_indikator_id' => $soal->sub_indikator_id,
+            'soal' => 'Tanpa gambar',
+            'opsi_a' => 'A',
+            'opsi_b' => 'B',
+            'opsi_c' => 'C',
+            'opsi_d' => 'D',
+            'opsi_e' => 'E',
+            'kunci_jawaban' => 'A',
+            'hapus_gambar_soal' => '1',
+        ]);
+
+        $response->assertRedirect('/superadmin/soal');
+        expect($soal->fresh()->gambar_soal)->toBeNull();
+        Storage::disk('public')->assertMissing($path);
+    });
+
+    it('keeps an existing gambar soal when hapus flag is not set', function () {
+        Storage::fake('public');
+        $path = UploadedFile::fake()->image('tetap.jpg')->store('panritta/soal', 'public');
+        $soal = Soal::factory()->create(['kunci_jawaban' => 'A', 'gambar_soal' => $path]);
+
+        $this->put("/superadmin/soal/{$soal->id}", [
+            'sub_indikator_id' => $soal->sub_indikator_id,
+            'soal' => 'Masih ada gambar',
+            'opsi_a' => 'A',
+            'opsi_b' => 'B',
+            'opsi_c' => 'C',
+            'opsi_d' => 'D',
+            'opsi_e' => 'E',
+            'kunci_jawaban' => 'A',
+            'hapus_gambar_soal' => '0',
+        ]);
+
+        expect($soal->fresh()->gambar_soal)->toBe($path);
+        Storage::disk('public')->assertExists($path);
+    });
+
     it('stores an uploaded gambar soal', function () {
         Storage::fake('public');
         $subIndikator = SubIndikator::factory()->create();

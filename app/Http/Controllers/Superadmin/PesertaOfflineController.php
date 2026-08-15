@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\Superadmin;
 
+use App\Exports\Templates\PesertaOfflineTemplateExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ImportPesertaOfflineRequest;
 use App\Http\Requests\StorePesertaOfflineRequest;
+use App\Imports\PesertaOfflineImport;
 use App\Models\PesertaOffline;
 use App\Models\Ujian;
 use App\Services\Ujian\OfflineParticipantService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PesertaOfflineController extends Controller
 {
@@ -42,6 +48,53 @@ class PesertaOfflineController extends Controller
         $pesertaOffline->delete();
 
         return back()->with('success', 'Peserta offline berhasil dihapus.');
+    }
+
+    public function bulkDestroy(Request $request, Ujian $ujian): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer'],
+        ], [
+            'ids.required' => 'Pilih minimal satu peserta untuk dihapus.',
+        ]);
+
+        $deleted = $ujian->pesertaOffline()
+            ->whereIn('id', $validated['ids'])
+            ->delete();
+
+        return back()->with('success', "{$deleted} peserta offline berhasil dihapus.");
+    }
+
+    public function template(): BinaryFileResponse
+    {
+        return Excel::download(new PesertaOfflineTemplateExport, 'template_peserta_offline.xlsx');
+    }
+
+    public function import(ImportPesertaOfflineRequest $request, Ujian $ujian): RedirectResponse
+    {
+        abort_unless($ujian->isOffline(), 404);
+
+        try {
+            $import = new PesertaOfflineImport($ujian, $this->offlineService);
+            Excel::import($import, $request->file('file'));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal mengimpor data: '.$e->getMessage());
+        }
+
+        $message = "Berhasil mengimpor {$import->getSuccessCount()} peserta.";
+
+        if ($import->getSkipCount() > 0) {
+            $message .= " {$import->getSkipCount()} data dilewati.";
+        }
+
+        $redirect = back()->with('success', $message);
+
+        if ($import->getErrors() !== []) {
+            $redirect->with('import_errors', $import->getErrors());
+        }
+
+        return $redirect;
     }
 
     public function export(Ujian $ujian): Response

@@ -177,3 +177,49 @@ describe('evaluatePass', function () {
         expect($up->kategori()->where('jenis_ujian_id', $tiu->id)->first()->lulus_kategori)->toBeFalse();
     });
 });
+
+describe('rank & positionOf', function () {
+    it('ranks finished peserta by nilai desc then fastest completion', function () {
+        $ujian = Ujian::factory()->create();
+
+        $userA = User::factory()->create(['is_peserta' => true]);
+        $userB = User::factory()->create(['is_peserta' => true]);
+        $userC = User::factory()->create(['is_peserta' => true]);
+
+        $ujian->peserta()->create(['user_id' => $userA->id, 'status' => 'selesai', 'total_nilai' => 80, 'waktu_selesai' => now()->subMinutes(10)]);
+        $ujian->peserta()->create(['user_id' => $userB->id, 'status' => 'selesai', 'total_nilai' => 90, 'waktu_selesai' => now()->subMinutes(5)]);
+        $tieFast = $ujian->peserta()->create(['user_id' => $userC->id, 'status' => 'selesai', 'total_nilai' => 90, 'waktu_selesai' => now()->subMinutes(30)]);
+
+        $ranking = app(UjianScoringService::class)->rank($ujian);
+
+        expect($ranking->pluck('user_id')->all())->toBe([$userC->id, $userB->id, $userA->id]);
+        expect($ranking->first()->id)->toBe($tieFast->id);
+    });
+
+    it('excludes peserta that have not finished', function () {
+        $ujian = Ujian::factory()->create();
+        $done = User::factory()->create(['is_peserta' => true]);
+        $ongoing = User::factory()->create(['is_peserta' => true]);
+
+        $ujian->peserta()->create(['user_id' => $done->id, 'status' => 'selesai', 'total_nilai' => 50, 'waktu_selesai' => now()]);
+        $ujian->peserta()->create(['user_id' => $ongoing->id, 'status' => 'sedang_ujian', 'total_nilai' => 99]);
+
+        $ranking = app(UjianScoringService::class)->rank($ujian);
+
+        expect($ranking)->toHaveCount(1);
+        expect($ranking->first()->user_id)->toBe($done->id);
+    });
+
+    it('returns the position of a peserta', function () {
+        $ujian = Ujian::factory()->create();
+        $top = User::factory()->create(['is_peserta' => true]);
+        $mid = User::factory()->create(['is_peserta' => true]);
+
+        $ujian->peserta()->create(['user_id' => $top->id, 'status' => 'selesai', 'total_nilai' => 100, 'waktu_selesai' => now()->subMinutes(5)]);
+        $midPeserta = $ujian->peserta()->create(['user_id' => $mid->id, 'status' => 'selesai', 'total_nilai' => 70, 'waktu_selesai' => now()]);
+
+        $posisi = app(UjianScoringService::class)->positionOf($midPeserta);
+
+        expect($posisi)->toBe(['rank' => 2, 'total' => 2]);
+    });
+});

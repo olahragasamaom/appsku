@@ -8,7 +8,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="font-sans antialiased bg-slate-50 min-h-screen">
+<body class="font-sans antialiased bg-slate-50 min-h-screen relative">
+    {{-- Dekorasi background --}}
+    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none" aria-hidden="true">
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-primary-200/40 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/3 -left-24 w-80 h-80 bg-indigo-200/30 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-1/4 w-72 h-72 bg-emerald-200/20 rounded-full blur-3xl"></div>
+    </div>
     @php
         // Siapkan data soal sebagai array untuk konsumsi Alpine.js
         $soalData = [];
@@ -56,17 +62,11 @@
         </header>
 
         <main class="max-w-6xl mx-auto px-4 py-6 pb-20">
-            {{-- Header sticky ujian: timer tiruan --}}
-            <div class="flex items-center justify-between bg-white shadow-sm border border-slate-200 rounded-2xl px-5 py-4 mb-6">
-                <div>
-                    <h1 class="font-bold text-lg md:text-xl text-slate-800 line-clamp-1">{{ $ujian->nama_ujian }}</h1>
-                    <p class="text-xs text-slate-500 mt-1">Tipe: {{ $ujian->tipe_ujian === 'offline_kelas' ? 'Offline' : 'Online' }} &middot; {{ $ujianSoals->count() }} Soal</p>
-                </div>
-                <div class="flex items-center gap-4 sm:gap-6">
-                    <div class="text-right bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 hidden sm:block">
-                        <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Sisa Waktu (Tiruan)</span>
-                        <span class="text-xl font-black tabular-nums tracking-tight leading-none text-slate-800">{{ $ujian->durasi_ujian ?? '00' }}:00</span>
-                    </div>
+            {{-- Header ujian --}}
+            <div class="flex items-center justify-between bg-gradient-to-r from-primary-600 to-primary-700 shadow-lg shadow-primary-600/20 rounded-2xl px-5 py-4 mb-6">
+                <div class="min-w-0">
+                    <h1 class="font-bold text-lg md:text-xl text-white line-clamp-1">{{ $ujian->nama_ujian }}</h1>
+                    <p class="text-xs text-primary-100 mt-1">Tipe: {{ $ujian->tipe_ujian === 'offline_kelas' ? 'Offline' : 'Online' }} &middot; {{ $ujianSoals->count() }} Soal</p>
                 </div>
             </div>
 
@@ -125,14 +125,14 @@
 
                 {{-- Bagian Kanan: Navigasi Nomor --}}
                 <div class="w-full lg:w-72 xl:w-80 flex-shrink-0 lg:sticky lg:top-24 z-10 order-first lg:order-last mb-6 lg:mb-0">
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div class="bg-slate-50 py-3 px-5 border-b border-slate-200">
-                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                        <div class="bg-gradient-to-r from-slate-800 to-slate-700 py-3 px-5 border-b border-slate-200">
+                            <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                                 Navigasi Soal
                             </h3>
                         </div>
-                        <div class="p-4 max-h-[55vh] overflow-y-auto">
+                        <div class="p-4 h-[48vh] overflow-y-auto">
                             @foreach($navGroups as $groupName => $items)
                                 <div class="mb-5 last:mb-0">
                                     <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">{{ $groupName }}</h4>
@@ -171,6 +171,17 @@
                 </div>
             </div>
         </main>
+
+        {{-- Timer Floating tiruan: fixed kanan bawah --}}
+        <div class="fixed bottom-5 right-5 z-40">
+            <div class="flex flex-col items-center rounded-2xl px-5 py-3 shadow-xl border bg-white border-slate-200 shadow-slate-400/20">
+                <span class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider mb-0.5 text-slate-400">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Sisa Waktu (Tiruan)
+                </span>
+                <span class="text-2xl font-black tabular-nums tracking-tight leading-none text-slate-800">{{ $ujian->durasi_ujian ?? '00' }}:00</span>
+            </div>
+        </div>
     </div>
 
     <script>

@@ -16,7 +16,19 @@
                 Total <span class="font-semibold {{ $totalSoal < $ujian->jumlah_soal ? 'text-danger-600' : 'text-success-600' }}">{{ $totalSoal }}</span> / {{ $ujian->jumlah_soal }} soal terisi
             </p>
         </div>
-        <a href="{{ route('superadmin.ujian.edit', $ujian) }}" class="btn btn-secondary">Kembali ke Ujian</a>
+        <div class="flex items-center gap-2">
+            @if($ujian->isFinalized())
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-success-50 text-success-700 border border-success-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Final
+                </span>
+            @endif
+            <a href="{{ route('superadmin.ujian.soal.finalisasi', $ujian) }}" class="btn btn-primary">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
+                Finalisasi &amp; Urutkan
+            </a>
+            <a href="{{ route('superadmin.ujian.edit', $ujian) }}" class="btn btn-secondary">Kembali ke Ujian</a>
+        </div>
     </div>
 @endsection
 
@@ -173,7 +185,7 @@
                 </x-table>
             </div>
 
-            {{-- TAB 2: Per Sub Indikator (dikelompokkan) --}}
+            {{-- TAB 2: Per Sub Indikator (dikelompokkan, read-only) --}}
             <div x-show="tab === 'grup'" x-cloak class="card-body space-y-6">
                 @forelse($ujianSoalsPerSubIndikator as $namaSubIndikator => $soalGroup)
                     <div>

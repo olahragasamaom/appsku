@@ -57,8 +57,11 @@
                 </div>
             </div>
 
-            <div class="mt-6 text-center">
-                <a href="{{ route('peserta.ujian.pembahasan', $ujian) }}" class="btn btn-primary">
+            <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <a href="{{ route('peserta.ujian.leaderboard', $ujian) }}" class="btn btn-secondary w-full sm:w-auto">
+                    Lihat Peringkat
+                </a>
+                <a href="{{ route('peserta.ujian.pembahasan', $ujian) }}" class="btn btn-primary w-full sm:w-auto">
                     Lihat Pembahasan Jawaban
                 </a>
             </div>

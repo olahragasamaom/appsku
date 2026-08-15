@@ -146,13 +146,34 @@ class UjianScoringService
 
     /**
      * Rebuild rankings for all finished peserta of an ujian (highest cumulative first).
+     *
+     * Urutan: nilai tertinggi lebih dulu; jika seri, penyelesaian tercepat menang.
      */
     public function rank(Ujian $ujian): \Illuminate\Support\Collection
     {
         return $ujian->peserta()
             ->with('user', 'pesertaOffline')
+            ->where('status', 'selesai')
             ->orderByDesc('total_nilai')
+            ->orderBy('waktu_selesai')
             ->get()
             ->values();
+    }
+
+    /**
+     * Ringkasan posisi seorang peserta di dalam papan peringkat sebuah ujian.
+     *
+     * @return array{rank: int|null, total: int}
+     */
+    public function positionOf(UjianPeserta $peserta): array
+    {
+        $ranking = $this->rank($peserta->ujian);
+
+        $index = $ranking->search(fn (UjianPeserta $item) => $item->id === $peserta->id);
+
+        return [
+            'rank' => $index === false ? null : $index + 1,
+            'total' => $ranking->count(),
+        ];
     }
 }
