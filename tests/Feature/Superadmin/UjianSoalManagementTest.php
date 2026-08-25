@@ -114,6 +114,55 @@ describe('Import Soal Excel per Sub Indikator', function () {
         Excel::assertImported('soal.xlsx');
     });
 
+    it('displays success message when import completes without errors', function () {
+        Excel::fake();
+
+        $jenis = JenisUjian::factory()->create();
+        $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $jenis->id]);
+        $subIndikator = SubIndikator::factory()->create([
+            'sub_jenis_ujian_id' => $subJenis->id,
+            'jenis_ujian_id' => $jenis->id,
+        ]);
+
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id, 'jumlah_soal' => 50]);
+        $ujian->jenisUjians()->attach($jenis->id);
+
+        $file = UploadedFile::fake()->create('soal.xlsx', 10, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $response = $this->post(route('superadmin.ujian.soal.import', $ujian), [
+            'sub_indikator_id' => $subIndikator->id,
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+    });
+
+    it('shows all-pass message when no errors occur', function () {
+        Excel::fake();
+
+        $jenis = JenisUjian::factory()->create();
+        $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $jenis->id]);
+        $subIndikator = SubIndikator::factory()->create([
+            'sub_jenis_ujian_id' => $subJenis->id,
+            'jenis_ujian_id' => $jenis->id,
+        ]);
+
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id, 'jumlah_soal' => 50]);
+        $ujian->jenisUjians()->attach($jenis->id);
+
+        $file = UploadedFile::fake()->create('soal.xlsx');
+
+        $response = $this->post(route('superadmin.ujian.soal.import', $ujian), [
+            'sub_indikator_id' => $subIndikator->id,
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionMissing('info');
+        $response->assertSessionHas('success');
+    });
+
     it('rejects import when sub indikator does not belong to the ujian jenis', function () {
         $jenis = JenisUjian::factory()->create();
         $otherJenis = JenisUjian::factory()->create();
@@ -161,6 +210,29 @@ describe('SoalImport parsing', function () {
             'soal' => 'Ibukota Indonesia?',
             'kunci_jawaban' => 'A',
         ]);
+    });
+
+    it('captures validation errors and skips rows with empty required fields', function () {
+        $jenis = JenisUjian::factory()->create();
+        $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $jenis->id]);
+        $subIndikator = SubIndikator::factory()->create([
+            'sub_jenis_ujian_id' => $subJenis->id,
+            'jenis_ujian_id' => $jenis->id,
+        ]);
+
+        $import = new \App\Imports\SoalImport($subIndikator->id, $this->superadmin->id);
+        $import->collection(collect([
+            collect(['soal' => 'Valid soal', 'opsi_a' => 'A', 'opsi_b' => 'B']),
+            collect(['soal' => '', 'opsi_a' => 'A', 'opsi_b' => 'B']), // missing soal
+            collect(['soal' => 'Soal 2', 'opsi_a' => '', 'opsi_b' => 'B']), // missing opsi_a
+            collect(['soal' => 'Soal 3', 'opsi_a' => 'A', 'opsi_b' => '']), // missing opsi_b
+        ]));
+
+        expect($import->getSuccessCount())->toBe(1);
+        expect($import->getSkipCount())->toBe(3);
+        expect($import->getErrors())->toHaveCount(3);
+        expect($import->getErrors()[0])->toContain('Baris 3');
+        expect($import->getErrors()[0])->toContain('kosong');
     });
 });
 

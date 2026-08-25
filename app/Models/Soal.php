@@ -57,6 +57,7 @@ class Soal extends Model
         'pembahasan',
         'gambar_pembahasan',
         'pembuat_soal_id',
+        'tipe_tampil',
     ];
 
     /**
@@ -75,6 +76,7 @@ class Soal extends Model
             'nilai_bobot_d' => 'decimal:2',
             'nilai_bobot_e' => 'decimal:2',
             'pembuat_soal_id' => 'integer',
+            'tipe_tampil' => 'string',
         ];
     }
 

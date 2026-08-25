@@ -134,10 +134,30 @@
         </div>
         <div class="card-body space-y-4">
             <div>
-                <label class="block text-sm font-medium text-secondary-700 mb-1">Teks Soal <span class="text-danger-500">*</span></label>
-                <x-ckeditor-soal name="soal" :value="old('soal', $soal?->soal)" :required="true" rows="6" :error="$errors->has('soal')" />
+                <label class="block text-sm font-medium text-secondary-700 mb-1">Teks Soal (Opsional untuk soal gambar)</label>
+                <x-ckeditor-soal name="soal" :value="old('soal', $soal?->soal)" :required="false" rows="6" :error="$errors->has('soal')" />
                 @error('soal')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
             </div>
+
+            <div>
+                <label class="block text-sm font-medium text-secondary-700 mb-2">Tipe Tampilan Soal</label>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2">
+                        <input type="radio" name="tipe_tampil" value="vertical"
+                               @checked(old('tipe_tampil', $soal?->tipe_tampil ?? 'vertical') === 'vertical')
+                               class="w-4 h-4">
+                        <span class="text-sm text-secondary-700">Vertikal (Default) - Opsi disusun ke bawah</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="radio" name="tipe_tampil" value="horizontal"
+                               @checked(old('tipe_tampil', $soal?->tipe_tampil ?? 'vertical') === 'horizontal')
+                               class="w-4 h-4">
+                        <span class="text-sm text-secondary-700">Horizontal - Opsi disusun ke samping (untuk soal analogi/pola)</span>
+                    </label>
+                </div>
+                @error('tipe_tampil')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
+            </div>
+
             <div>
                 <label class="block text-sm font-medium text-secondary-700 mb-1">Gambar Soal</label>
                 <input type="file" name="gambar_soal" accept="image/*" class="input w-full">

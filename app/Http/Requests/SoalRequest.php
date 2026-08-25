@@ -41,7 +41,7 @@ class SoalRequest extends FormRequest
 
         $rules = [
             'sub_indikator_id' => ['required', 'exists:panritta_sub_indikator,id'],
-            'soal' => ['required', 'string'],
+            'soal' => ['nullable', 'string'],
             'gambar_soal' => ['nullable', 'image', 'max:2048'],
             'opsi_a' => ['required', 'string'],
             'opsi_b' => ['required', 'string'],
@@ -55,6 +55,7 @@ class SoalRequest extends FormRequest
             'gambar_opsi_e' => ['nullable', 'image', 'max:2048'],
             'pembahasan' => ['nullable', 'string'],
             'gambar_pembahasan' => ['nullable', 'image', 'max:2048'],
+            'tipe_tampil' => ['nullable', 'in:vertical,horizontal'],
         ];
 
         // ATURAN KONDISIONAL berdasarkan sistem penilaian:
@@ -85,7 +86,6 @@ class SoalRequest extends FormRequest
         return [
             'sub_indikator_id.required' => 'Sub indikator wajib dipilih.',
             'sub_indikator_id.exists' => 'Sub indikator tidak valid.',
-            'soal.required' => 'Teks soal wajib diisi.',
             'opsi_a.required' => 'Opsi A wajib diisi.',
             'opsi_b.required' => 'Opsi B wajib diisi.',
             'opsi_c.required' => 'Opsi C wajib diisi.',
@@ -98,6 +98,7 @@ class SoalRequest extends FormRequest
             'nilai_bobot_c.required' => 'Nilai bobot C wajib diisi.',
             'nilai_bobot_d.required' => 'Nilai bobot D wajib diisi.',
             'nilai_bobot_e.required' => 'Nilai bobot E wajib diisi.',
+            'tipe_tampil.in' => 'Tipe tampil harus vertical atau horizontal.',
         ];
     }
 

@@ -67,46 +67,17 @@
                             </div>
 
                             {{-- Teks Soal & Gambar --}}
-                            <div class="prose prose-slate max-w-none text-slate-800 text-base leading-relaxed">
-                                {!! $soal->soal !!}
-                            </div>
+                            @if($soal->soal)
+                                <div class="prose prose-slate max-w-none text-slate-800 text-base leading-relaxed">
+                                    {!! $soal->soal !!}
+                                </div>
+                            @endif
                             @if($soal->gambar_soal)
                                 <img src="{{ \Illuminate\Support\Facades\Storage::url($soal->gambar_soal) }}" alt="Gambar soal" class="mt-4 max-h-80 rounded-xl border border-slate-200 shadow-sm">
                             @endif
 
-                            {{-- Opsi Jawaban --}}
-                            <div class="mt-8 space-y-3">
-                                @foreach(['A', 'B', 'C', 'D', 'E'] as $opsi)
-                                    @php 
-                                        $opsiText = $soal->{'opsi_'.strtolower($opsi)}; 
-                                        $gambarOpsi = $soal->{'gambar_opsi_'.strtolower($opsi)};
-                                    @endphp
-                                    
-                                    @if($opsiText !== null && $opsiText !== '')
-                                        <label class="flex items-start gap-4 p-4 border rounded-xl cursor-pointer transition-colors group"
-                                               :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'border-primary-500 bg-primary-50 shadow-sm ring-1 ring-primary-500' : 'border-slate-200 hover:bg-slate-50'">
-                                            
-                                            <div class="flex items-center h-6">
-                                                <input type="radio"
-                                                       name="soal_{{ $ujianSoal->id }}"
-                                                       value="{{ $opsi }}"
-                                                       x-model="jawaban[{{ $ujianSoal->id }}]"
-                                                       @change="save({{ $ujianSoal->id }}, '{{ $opsi }}')"
-                                                       class="w-5 h-5 text-primary-600 border-slate-300 focus:ring-primary-600">
-                                            </div>
-                                            
-                                            <div class="flex-1 pt-0.5">
-                                                <span class="text-base font-bold mr-2" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-700' : 'text-slate-700'">{{ $opsi }}.</span>
-                                                <span class="text-base" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-900 font-medium' : 'text-slate-700'">{{ $opsiText }}</span>
-                                                
-                                                @if($gambarOpsi)
-                                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($gambarOpsi) }}" alt="Opsi {{ $opsi }}" class="mt-3 max-h-40 rounded-lg border border-slate-200">
-                                                @endif
-                                            </div>
-                                        </label>
-                                    @endif
-                                @endforeach
-                            </div>
+                            {{-- Opsi Jawaban - Gunakan component yang support vertical/horizontal --}}
+                            <x-soal-options-display :ujianSoal="$ujianSoal" :jawaban="$jawaban" />
                         </div>
                     </div>
                 </div>

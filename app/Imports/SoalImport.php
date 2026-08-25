@@ -50,41 +50,46 @@ class SoalImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
         foreach ($rows as $row) {
             $currentRow++;
 
-            $teksSoal = trim((string) ($row['soal'] ?? ''));
-            $opsiA = trim((string) ($row['opsi_a'] ?? ''));
-            $opsiB = trim((string) ($row['opsi_b'] ?? ''));
+            try {
+                $teksSoal = trim((string) ($row['soal'] ?? ''));
+                $opsiA = trim((string) ($row['opsi_a'] ?? ''));
+                $opsiB = trim((string) ($row['opsi_b'] ?? ''));
 
-            // Soal minimal harus punya teks soal dan dua opsi jawaban
-            if ($teksSoal === '' || $opsiA === '' || $opsiB === '') {
+                // Soal minimal harus punya teks soal dan dua opsi jawaban
+                if ($teksSoal === '' || $opsiA === '' || $opsiB === '') {
+                    $this->skipCount++;
+                    $this->errors[] = "Baris {$currentRow}: Teks soal atau opsi jawaban kosong, dilewati.";
+
+                    continue;
+                }
+
+                $soal = Soal::create([
+                    'sub_indikator_id' => $this->subIndikatorId,
+                    'soal' => $teksSoal,
+                    'opsi_a' => $opsiA,
+                    'opsi_b' => $opsiB,
+                    // opsi_c & opsi_d wajib (NOT NULL) di database, default string kosong bila tidak ada
+                    'opsi_c' => trim((string) ($row['opsi_c'] ?? '')),
+                    'opsi_d' => trim((string) ($row['opsi_d'] ?? '')),
+                    // opsi_e boleh null
+                    'opsi_e' => trim((string) ($row['opsi_e'] ?? '')) ?: null,
+                    'kunci_jawaban' => $this->normalizeKunci($row['kunci_jawaban'] ?? null),
+                    'nilai_bobot_benar' => $this->numericOrNull($row['nilai_bobot_benar'] ?? null),
+                    'nilai_bobot_a' => $this->numericOrNull($row['nilai_bobot_a'] ?? null),
+                    'nilai_bobot_b' => $this->numericOrNull($row['nilai_bobot_b'] ?? null),
+                    'nilai_bobot_c' => $this->numericOrNull($row['nilai_bobot_c'] ?? null),
+                    'nilai_bobot_d' => $this->numericOrNull($row['nilai_bobot_d'] ?? null),
+                    'nilai_bobot_e' => $this->numericOrNull($row['nilai_bobot_e'] ?? null),
+                    'pembahasan' => trim((string) ($row['pembahasan'] ?? '')) ?: null,
+                    'pembuat_soal_id' => $this->pembuatSoalId,
+                ]);
+
+                $this->createdSoalIds[] = $soal->id;
+                $this->successCount++;
+            } catch (\Exception $e) {
                 $this->skipCount++;
-                $this->errors[] = "Baris {$currentRow}: Teks soal atau opsi jawaban kosong, dilewati.";
-
-                continue;
+                $this->errors[] = "Baris {$currentRow}: {$e->getMessage()}";
             }
-
-            $soal = Soal::create([
-                'sub_indikator_id' => $this->subIndikatorId,
-                'soal' => $teksSoal,
-                'opsi_a' => $opsiA,
-                'opsi_b' => $opsiB,
-                // opsi_c & opsi_d wajib (NOT NULL) di database, default string kosong bila tidak ada
-                'opsi_c' => trim((string) ($row['opsi_c'] ?? '')),
-                'opsi_d' => trim((string) ($row['opsi_d'] ?? '')),
-                // opsi_e boleh null
-                'opsi_e' => trim((string) ($row['opsi_e'] ?? '')) ?: null,
-                'kunci_jawaban' => $this->normalizeKunci($row['kunci_jawaban'] ?? null),
-                'nilai_bobot_benar' => $this->numericOrNull($row['nilai_bobot_benar'] ?? null),
-                'nilai_bobot_a' => $this->numericOrNull($row['nilai_bobot_a'] ?? null),
-                'nilai_bobot_b' => $this->numericOrNull($row['nilai_bobot_b'] ?? null),
-                'nilai_bobot_c' => $this->numericOrNull($row['nilai_bobot_c'] ?? null),
-                'nilai_bobot_d' => $this->numericOrNull($row['nilai_bobot_d'] ?? null),
-                'nilai_bobot_e' => $this->numericOrNull($row['nilai_bobot_e'] ?? null),
-                'pembahasan' => trim((string) ($row['pembahasan'] ?? '')) ?: null,
-                'pembuat_soal_id' => $this->pembuatSoalId,
-            ]);
-
-            $this->createdSoalIds[] = $soal->id;
-            $this->successCount++;
         }
     }
 

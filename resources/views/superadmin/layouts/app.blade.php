@@ -233,7 +233,29 @@
 
                 @if(session('error'))
                     <x-alert type="danger" class="mb-6" dismissible>
-                        {{ session('error') }}
+                        @if(is_array(session('error')))
+                            <ul class="list-disc list-inside space-y-1">
+                                @foreach(session('error') as $err)
+                                    <li>{{ $err }}</li>
+                                @endforeach
+                            </ul>
+                        @else
+                            {{ session('error') }}
+                        @endif
+                    </x-alert>
+                @endif
+
+                @if(session('info'))
+                    <x-alert type="info" class="mb-6" dismissible>
+                        @if(is_array(session('info')))
+                            <ul class="list-disc list-inside space-y-1">
+                                @foreach(session('info') as $msg)
+                                    <li>{{ $msg }}</li>
+                                @endforeach
+                            </ul>
+                        @else
+                            {!! nl2br(e(session('info'))) !!}
+                        @endif
                     </x-alert>
                 @endif
 

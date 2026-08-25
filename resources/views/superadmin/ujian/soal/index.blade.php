@@ -90,7 +90,8 @@
                                             <button type="button"
                                                     @click="$dispatch('open-import-soal', {
                                                         subIndikatorId: {{ $indikator->id }},
-                                                        subIndikatorNama: '{{ addslashes($indikator->nama_sub_indikator) }}'
+                                                        subIndikatorNama: '{{ addslashes($indikator->nama_sub_indikator) }}',
+                                                        subJenisUjianId: {{ $subJenis->id }}
                                                     })"
                                                     class="p-1.5 text-secondary-400 hover:text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
                                                     title="Import Soal dari Excel">
@@ -219,8 +220,13 @@
         </div>
 
         {{-- Modal Import Excel per Sub Indikator --}}
-        <div x-data="{ show: false, subIndikatorId: null, subIndikatorNama: '' }"
-             x-on:open-import-soal.window="show = true; subIndikatorId = $event.detail.subIndikatorId; subIndikatorNama = $event.detail.subIndikatorNama"
+        <div x-data="{ show: false, subIndikatorId: null, subIndikatorNama: '', subJenisUjianId: null }"
+             x-on:open-import-soal.window="
+                 show = true;
+                 subIndikatorId = $event.detail.subIndikatorId;
+                 subIndikatorNama = $event.detail.subIndikatorNama;
+                 subJenisUjianId = $event.detail.subJenisUjianId;
+             "
              x-on:keydown.escape.window="show = false"
              x-effect="document.body.style.overflow = show ? 'hidden' : ''"
              x-show="show"
@@ -248,12 +254,15 @@
                         <div class="text-xs text-secondary-500 bg-secondary-50 rounded-lg p-3">
                             <div class="flex items-center justify-between mb-2">
                                 <p class="font-medium text-secondary-700">Format kolom header (baris pertama):</p>
-                                <a href="{{ route('superadmin.soal.template') }}" class="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 font-medium">
+                                <a :href="subJenisUjianId && subIndikatorId ? 
+                                       `/superadmin/soal/template-import/${subJenisUjianId}/{{ $ujian->id }}/${subIndikatorId}` : 
+                                       (subJenisUjianId ? `/superadmin/soal/template-import/${subJenisUjianId}` : '{{ route('superadmin.soal.template') }}')" 
+                                   class="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 font-medium">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                     Download Template
                                 </a>
                             </div>
-                            <code class="block overflow-x-auto whitespace-nowrap pb-1">soal, opsi_a, opsi_b, opsi_c, opsi_d, opsi_e, kunci_jawaban, nilai_bobot_benar, pembahasan</code>
+                            <code class="block overflow-x-auto whitespace-nowrap pb-1 text-secondary-600">Lihat file Excel untuk format kolom yang sudah disesuaikan</code>
                         </div>
                     </div>
                     <div class="modal-footer flex items-center justify-end gap-3">

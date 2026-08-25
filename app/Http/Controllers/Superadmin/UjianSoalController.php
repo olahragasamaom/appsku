@@ -89,6 +89,7 @@ class UjianSoalController extends Controller
      * 1. Validasi file & sub indikator tujuan.
      * 2. Proses baris Excel jadi Soal baru via SoalImport (dikelompokkan ke sub indikator terpilih).
      * 3. Lampirkan soal-soal yang baru dibuat ke ujian (hormati kapasitas ujian).
+     * 4. Capture errors dan tampilkan ke user.
      */
     public function importExcel(Request $request, Ujian $ujian): RedirectResponse
     {
@@ -105,20 +106,36 @@ class UjianSoalController extends Controller
             404
         );
 
-        $import = new SoalImport($subIndikator->id, $request->user()->id);
-        Excel::import($import, $request->file('file'));
+        try {
+            $import = new SoalImport($subIndikator->id, $request->user()->id);
+            Excel::import($import, $request->file('file'));
 
-        $newSoalIds = $import->getCreatedSoalIds();
+            $newSoalIds = $import->getCreatedSoalIds();
+            $errors = $import->getErrors();
+            $successCount = $import->getSuccessCount();
+            $skipCount = $import->getSkipCount();
 
-        if ($newSoalIds !== []) {
-            $this->assemblyService->addQuestions($ujian, $jenisUjianId, $newSoalIds);
+            if ($newSoalIds !== []) {
+                $this->assemblyService->addQuestions($ujian, $jenisUjianId, $newSoalIds);
+            }
+
+            $redirect = redirect()
+                ->route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $jenisUjianId]);
+
+            if ($errors !== []) {
+                $errorMessage = "Import selesai dengan {$successCount} soal ditambahkan, {$skipCount} dilewati.\n\nError/Warning:\n".implode("\n", $errors);
+                $redirect->with('info', $errorMessage);
+            } else {
+                $message = "Import selesai: {$successCount} soal ditambahkan, {$skipCount} dilewati.";
+                $redirect->with('success', $message);
+            }
+
+            return $redirect;
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $subIndikator->subJenisUjian?->jenis_ujian_id ?? null])
+                ->with('error', 'Import gagal: '.$e->getMessage());
         }
-
-        $message = "Import selesai: {$import->getSuccessCount()} soal ditambahkan, {$import->getSkipCount()} dilewati.";
-
-        return redirect()
-            ->route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $jenisUjianId])
-            ->with('success', $message);
     }
 
     public function bankSoalOptions(Request $request, Ujian $ujian): JsonResponse

@@ -15,6 +15,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Facades\Excel;
+
 /**
  * CONTROLLER: SoalController
  * ===========================
@@ -35,8 +38,6 @@ use Illuminate\View\View;
  *   GET    .../soal/options/sub-jenis-ujian/{jenisUjian}   -> subJenisUjianOptions() [JSON]
  *   GET    .../soal/options/sub-indikator/{subJenisUjian}  -> subIndikatorOptions()  [JSON]
  */
-use Symfony\Component\HttpFoundation\StreamedResponse;
-
 class SoalController extends Controller
 {
     /**
@@ -269,34 +270,105 @@ class SoalController extends Controller
     }
 
     /**
-     * Download format Excel/CSV kosong untuk template import soal.
+     * Download format Excel (.xlsx) template untuk import soal.
+     * Format dinamis sesuai dengan sub jenis ujian (benar_salah vs tiap_jawaban_ada_poin).
+     * Filename menyertakan nama ujian dan kategori soal untuk kemudahan distribusi.
+     *
+     * Jika subJenisUjian diberikan:
+     * - Benar-Salah: Tampilkan kolom kunci_jawaban + nilai_bobot_benar
+     * - Tiap Jawaban Ada Poin: Tampilkan kolom nilai_bobot_a/b/c/d/e, TIDAK tampilkan kunci_jawaban
+     *
+     * Jika tidak ada subJenisUjian: Tampilkan template generic (full columns).
      */
-    public function downloadTemplate(): StreamedResponse
+    public function downloadTemplate(?SubJenisUjian $subJenisUjian = null, ?Ujian $ujian = null, ?SubIndikator $subIndikator = null)
     {
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="template_import_soal.csv"',
-        ];
+        $baseColumns = ['soal', 'pembahasan'];
+        $data = [];
 
-        $columns = [
-            'soal', 'opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'opsi_e',
-            'kunci_jawaban', 'nilai_bobot_benar',
-            'nilai_bobot_a', 'nilai_bobot_b', 'nilai_bobot_c', 'nilai_bobot_d', 'nilai_bobot_e',
-            'pembahasan',
-        ];
+        if ($subJenisUjian === null) {
+            // Generic template (semua kolom)
+            $columns = [
+                'soal', 'opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'opsi_e',
+                'kunci_jawaban', 'nilai_bobot_benar',
+                'nilai_bobot_a', 'nilai_bobot_b', 'nilai_bobot_c', 'nilai_bobot_d', 'nilai_bobot_e',
+                'pembahasan',
+            ];
+            $data[] = $columns;
+            $data[] = ['Apa ibukota Indonesia?', 'Jakarta', 'Bandung', 'Surabaya', 'Semarang', '', 'A', '5', '', '', '', '', '', 'Jakarta adalah ibukota negara RI.'];
+            $data[] = ['Menurut Anda, seberapa penting disiplin?', 'Sangat penting', 'Penting', 'Biasa saja', 'Kurang penting', 'Tidak penting', '', '', '5', '4', '3', '2', '1', 'Disiplin menentukan integritas.'];
+        } else {
+            // Dynamic template berdasarkan sistem penilaian
+            $columns = ['soal'];
 
-        return response()->stream(function () use ($columns) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
+            // Tambah kolom opsi berdasarkan jumlah jawaban pilihan ganda
+            $jumlahOpsi = $subJenisUjian->jumlah_jawaban_pilihan_ganda ?? 5;
+            $opsiLetters = ['a', 'b', 'c', 'd', 'e'];
+            for ($i = 0; $i < $jumlahOpsi; $i++) {
+                $columns[] = 'opsi_'.$opsiLetters[$i];
+            }
 
-            // Baris contoh untuk sistem Benar-Salah
-            fputcsv($file, ['Apa ibukota Indonesia?', 'Jakarta', 'Bandung', 'Surabaya', 'Semarang', '', 'A', '5', '', '', '', '', '', 'Jakarta adalah ibukota negara RI.']);
+            // Tambah kolom berdasarkan sistem penilaian
+            if ($subJenisUjian->sistem_penilaian === 'benar_salah') {
+                $columns[] = 'kunci_jawaban';
+                $columns[] = 'nilai_bobot_benar';
+            } else {
+                // tiap_jawaban_ada_poin
+                for ($i = 0; $i < $jumlahOpsi; $i++) {
+                    $columns[] = 'nilai_bobot_'.$opsiLetters[$i];
+                }
+            }
 
-            // Baris contoh untuk sistem Poin per Jawaban (opsional)
-            fputcsv($file, ['Menurut Anda, seberapa penting disiplin?', 'Sangat penting', 'Penting', 'Biasa saja', 'Kurang penting', 'Tidak penting', '', '', '5', '4', '3', '2', '1', 'Disiplin menentukan integritas.']);
+            $columns[] = 'pembahasan';
 
-            fclose($file);
-        }, 200, $headers);
+            $data[] = $columns;
+
+            // Contoh data berdasarkan sistem penilaian
+            if ($subJenisUjian->sistem_penilaian === 'benar_salah') {
+                $exampleRow = ['Apa ibukota Indonesia?'];
+                for ($i = 0; $i < $jumlahOpsi; $i++) {
+                    $exampleRow[] = ['Jakarta', 'Bandung', 'Surabaya', 'Semarang', 'Yogyakarta'][$i] ?? '';
+                }
+                $exampleRow[] = 'A';
+                $exampleRow[] = $subJenisUjian->nilai_benar ?? '5';
+                $exampleRow[] = 'Jakarta adalah ibukota negara RI.';
+                $data[] = $exampleRow;
+            } else {
+                // tiap_jawaban_ada_poin
+                $exampleRow = ['Menurut Anda, seberapa penting disiplin?'];
+                $opsiTKP = ['Sangat penting', 'Penting', 'Biasa saja', 'Kurang penting', 'Tidak penting'];
+                for ($i = 0; $i < $jumlahOpsi; $i++) {
+                    $exampleRow[] = $opsiTKP[$i] ?? '';
+                }
+                $bobotTKP = [5, 4, 3, 2, 1];
+                for ($i = 0; $i < $jumlahOpsi; $i++) {
+                    $exampleRow[] = $bobotTKP[$i] ?? '';
+                }
+                $exampleRow[] = 'Disiplin menentukan integritas.';
+                $data[] = $exampleRow;
+            }
+        }
+
+        // Generate filename dengan informasi ujian, kategori, dan tipe soal
+        if ($ujian && $subIndikator && $subJenisUjian) {
+            $ujianSlug = \Illuminate\Support\Str::slug($ujian->nama_ujian);
+            $kategoriSlug = \Illuminate\Support\Str::slug($subIndikator->nama_sub_indikator);
+            $tipeSlug = \Illuminate\Support\Str::slug($subJenisUjian->nama_sub_jenis_ujian);
+            $filename = "import_soal_{$ujianSlug}_{$kategoriSlug}_{$tipeSlug}.xlsx";
+        } elseif ($subJenisUjian) {
+            $filename = 'template_'.\Illuminate\Support\Str::slug($subJenisUjian->nama_sub_jenis_ujian).'.xlsx';
+        } else {
+            $filename = 'template_import_soal.xlsx';
+        }
+
+        return Excel::download(new class($data) implements FromArray
+        {
+            public function __construct(private array $data) {}
+
+            public function array(): array
+            {
+                return $this->data;
+            }
+        }, $filename);
     }
 
     /**

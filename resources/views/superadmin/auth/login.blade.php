@@ -21,7 +21,7 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased" x-data="{ demoEmail: 'superadmin@Panritta.com', demoPassword: 'password' }">
+<body class="font-sans antialiased" x-data="{ demoEmail: 'superadmin@panritta.com', demoPassword: 'password123' }">
     <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative;">
         {{-- Background Decorations --}}
         <div style="position: absolute; inset: 0; overflow: hidden; pointer-events: none;">
@@ -108,7 +108,7 @@
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div>
                                 <span style="font-size: 14px; font-weight: 600; color: #92400e;">Super Admin</span>
-                                <p style="font-size: 12px; color: #b45309; margin-top: 2px;">superadmin@Panritta.com</p>
+                                <p style="font-size: 12px; color: #b45309; margin-top: 2px;">superadmin@panritta.com</p>
                             </div>
                             <span style="font-size: 11px; background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: white; padding: 4px 10px; border-radius: 9999px; font-weight: 500;">
                                 Klik untuk isi
