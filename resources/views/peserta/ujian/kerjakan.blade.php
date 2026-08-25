@@ -21,14 +21,16 @@
         saveUrl: '{{ route('peserta.ujian.jawaban', $ujian) }}',
         sisaDetik: {{ $sisaDetik === null ? 'null' : $sisaDetik }},
         submitFormId: 'submit-form',
-        initialJawaban: {{ Js::from($jawaban) }}
+        initialJawaban: {{ Js::from($jawaban) }},
+        currentSoalIndex: 0,
+        totalSoal: {{ count($ujianSoals) }}
      })"
      x-init="init()"
      class="pb-28">
 
     {{-- Header sticky: Judul ujian + status simpan --}}
     <div class="flex items-center justify-between bg-gradient-to-r from-primary-600 to-primary-700 shadow-lg shadow-primary-600/20 rounded-2xl px-5 py-4 mb-6 sticky top-2 z-30 transition-all">
-        <div class="min-w-0">
+        <div class="min-w-0 flex-1">
             <h1 class="font-bold text-lg md:text-xl text-white line-clamp-1">{{ $ujian->nama_ujian }}</h1>
             <div class="flex items-center gap-2 mt-1 h-4">
                 <p class="text-xs text-primary-100" x-show="saving" x-cloak>
@@ -41,18 +43,26 @@
                 </p>
             </div>
         </div>
-        <div class="flex items-center gap-4 sm:gap-6 flex-shrink-0">
+        <div class="flex items-center gap-3 flex-shrink-0">
+            <span class="text-xs font-semibold text-primary-100 whitespace-nowrap">Soal <span x-text="currentSoalIndex + 1"></span> dari <span x-text="totalSoal"></span></span>
             <button type="button" @click="confirmSubmit()" class="btn bg-white text-primary-700 hover:bg-primary-50 shadow-sm hidden sm:inline-flex">Selesai Ujian</button>
         </div>
     </div>
 
     <div class="flex flex-col lg:flex-row gap-6 items-start relative">
-        {{-- Area Kiri: Daftar Soal (75%) --}}
-        <div class="flex-1 w-full space-y-8">
-            @php $globalIndex = 1; @endphp
-            @foreach($ujianSoals as $ujianSoal)
+        {{-- Area Kiri: Soal Saat Ini (75%) --}}
+        <div class="flex-1 w-full">
+            @php 
+                $soalArray = $ujianSoals->all();
+                $globalIndex = 1;
+            @endphp
+            @foreach($soalArray as $index => $ujianSoal)
                 @php $soal = $ujianSoal->soal; @endphp
-                <div id="soal-{{ $ujianSoal->id }}" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden scroll-mt-24">
+                <div id="soal-{{ $ujianSoal->id }}" 
+                     class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
+                     x-show="currentSoalIndex === {{ $index }}"
+                     x-transition:enter="transition ease-in-out duration-300"
+                     x-transition:leave="transition ease-in-out duration-300">
                     <div class="p-6 sm:p-8 flex items-start gap-4 sm:gap-6">
                         <div class="flex-col items-center flex-shrink-0 hidden sm:flex">
                             <span class="w-10 h-10 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-lg border border-slate-200 shadow-sm">{{ $globalIndex }}</span>
@@ -78,15 +88,27 @@
 
                             {{-- Opsi Jawaban - Gunakan component yang support vertical/horizontal --}}
                             <x-soal-options-display :ujianSoal="$ujianSoal" :jawaban="$jawaban" />
+
+                            {{-- Navigation Buttons --}}
+                            <div class="flex gap-3 justify-between mt-8 pt-6 border-t border-slate-200">
+                                <button type="button" 
+                                        @click="currentSoalIndex = Math.max(0, currentSoalIndex - 1)"
+                                        :disabled="currentSoalIndex === 0"
+                                        class="btn btn-secondary"
+                                        :class="currentSoalIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''">
+                                    ← Sebelumnya
+                                </button>
+                                <button type="button" 
+                                        @click="currentSoalIndex === totalSoal - 1 ? confirmSubmit() : (currentSoalIndex = Math.min(totalSoal - 1, currentSoalIndex + 1))"
+                                        class="btn btn-primary"
+                                        x-text="currentSoalIndex === totalSoal - 1 ? 'Akhiri Ujian' : 'Selanjutnya →'">
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
                 @php $globalIndex++; @endphp
             @endforeach
-            
-            <div class="flex justify-center sm:justify-end mt-8 pt-6 border-t border-slate-200">
-                <button type="button" @click="confirmSubmit()" class="btn btn-primary px-8 py-3 text-lg w-full sm:w-auto shadow-lg shadow-primary-500/30">Akhiri Ujian Sekarang</button>
-            </div>
         </div>
 
         {{-- Area Kanan: Navigasi Soal Sticky (25%) --}}
@@ -99,17 +121,22 @@
                     </h3>
                 </div>
                 <div class="p-4 h-[52vh] overflow-y-auto">
-                    @php $navIndex = 1; @endphp
+                    @php 
+                        $navIndex = 0;
+                        $soalIndexMap = [];
+                    @endphp
                     @foreach($soalGroups as $groupName => $items)
                         <div class="mb-5 last:mb-0">
                             <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">{{ $groupName }}</h4>
                             <div class="grid grid-cols-5 gap-2">
                                 @foreach($items as $ujianSoal)
-                                    <a href="#soal-{{ $ujianSoal->id }}" 
-                                       class="w-full aspect-square flex items-center justify-center rounded-lg text-sm font-bold transition-all border"
-                                       :class="jawaban[{{ $ujianSoal->id }}] ? 'bg-primary-500 text-white border-primary-600 shadow-sm' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50 hover:border-slate-400'">
-                                        {{ $navIndex++ }}
-                                    </a>
+                                    <button type="button" 
+                                            @click="currentSoalIndex = {{ $navIndex }}"
+                                            class="w-full aspect-square flex items-center justify-center rounded-lg text-sm font-bold transition-all border"
+                                            :class="currentSoalIndex === {{ $navIndex }} ? 'bg-indigo-600 text-white border-indigo-700 shadow-md ring-2 ring-indigo-400' : (jawaban[{{ $ujianSoal->id }}] ? 'bg-primary-500 text-white border-primary-600 shadow-sm' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50 hover:border-slate-400')">
+                                         {{ $navIndex + 1 }}
+                                    </button>
+                                    @php $navIndex++; @endphp
                                 @endforeach
                             </div>
                         </div>
@@ -166,6 +193,8 @@
             sisaDetik: config.sisaDetik,
             submitFormId: config.submitFormId,
             jawaban: config.initialJawaban || {},
+            currentSoalIndex: config.currentSoalIndex || 0,
+            totalSoal: config.totalSoal || 0,
             saving: false,
             lastSaved: false,
             timer: null,
@@ -180,23 +209,22 @@
                         }
                     }, 1000);
                 }
-                
-                // Active link highlighting on scroll
-                const observer = new IntersectionObserver(entries => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const id = entry.target.id;
-                            document.querySelectorAll('.nav-link').forEach(link => {
-                                link.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-400');
-                                if (link.getAttribute('href') === '#' + id) {
-                                    link.classList.add('ring-2', 'ring-offset-2', 'ring-slate-400');
-                                }
-                            });
-                        }
-                    });
-                }, { rootMargin: '-20% 0px -60% 0px' });
-                
-                document.querySelectorAll('[id^="soal-"]').forEach(el => observer.observe(el));
+
+                // Scroll to top when soal changes (untuk UX yang lebih baik)
+                this.$watch('currentSoalIndex', () => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+
+                // Keyboard shortcuts (arrow keys untuk navigasi)
+                document.addEventListener('keydown', (e) => {
+                    // Skip jika user sedang mengetik di input/textarea
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                    if (e.key === 'ArrowLeft') {
+                        this.currentSoalIndex = Math.max(0, this.currentSoalIndex - 1);
+                    } else if (e.key === 'ArrowRight') {
+                        this.currentSoalIndex = Math.min(this.totalSoal - 1, this.currentSoalIndex + 1);
+                    }
+                });
             },
 
             async save(ujianSoalId, jawaban) {
