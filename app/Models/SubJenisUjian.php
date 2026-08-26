@@ -41,6 +41,7 @@ class SubJenisUjian extends Model
         'sistem_penilaian',
         'jumlah_jawaban_pilihan_ganda',
         'nilai_benar',
+        'passing_grade',
     ];
 
     /**
@@ -55,6 +56,7 @@ class SubJenisUjian extends Model
             'urutan' => 'integer',
             'jumlah_jawaban_pilihan_ganda' => 'integer',
             'nilai_benar' => 'decimal:2',
+            'passing_grade' => 'decimal:2',
         ];
     }
 

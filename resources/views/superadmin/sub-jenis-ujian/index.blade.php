@@ -85,7 +85,7 @@
                                                     @click="$dispatch('sub-jenis-ujian-form', {
                                                         mode: 'edit',
                                                         action: '{{ route('superadmin.sub-jenis-ujian.update', $subJenisUjian) }}',
-                                                        data: {{ Js::from($subJenisUjian->only(['jenis_ujian_id', 'nama_sub_jenis_ujian', 'keterangan', 'urutan', 'sistem_penilaian', 'jumlah_jawaban_pilihan_ganda', 'nilai_benar'])) }}
+                                                        data: {{ Js::from($subJenisUjian->only(['jenis_ujian_id', 'nama_sub_jenis_ujian', 'keterangan', 'urutan', 'sistem_penilaian', 'jumlah_jawaban_pilihan_ganda', 'nilai_benar', 'passing_grade'])) }}
                                                     })"
                                                     class="btn btn-ghost btn-sm">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,6 +137,7 @@
                 sistem_penilaian: {{ Js::from(old('sistem_penilaian', 'benar_salah')) }},
                 jumlah_jawaban_pilihan_ganda: {{ Js::from(old('jumlah_jawaban_pilihan_ganda', '5')) }},
                 nilai_benar: {{ Js::from(old('nilai_benar', '5')) }},
+                passing_grade: {{ Js::from(old('passing_grade', '')) }},
             },
             show(detail) {
                 this.mode = detail.mode;
@@ -150,6 +151,7 @@
                         sistem_penilaian: detail.data.sistem_penilaian,
                         jumlah_jawaban_pilihan_ganda: String(detail.data.jumlah_jawaban_pilihan_ganda),
                         nilai_benar: detail.data.nilai_benar,
+                        passing_grade: detail.data.passing_grade ?? '',
                     };
                 } else {
                     this.form = { 
@@ -159,7 +161,8 @@
                         urutan: '0', 
                         sistem_penilaian: 'benar_salah', 
                         jumlah_jawaban_pilihan_ganda: '5', 
-                        nilai_benar: '5' 
+                        nilai_benar: '5',
+                        passing_grade: ''
                     };
                 }
                 this.open = true;
@@ -255,6 +258,15 @@
                                    class="input w-full @error('nilai_benar') border-danger-500 @enderror">
                             @error('nilai_benar')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-secondary-700 mb-1">Passing Grade (Opsional)</label>
+                        <p class="text-xs text-secondary-500 mb-2">Jika kosong, akan otomatis dihitung 60% dari total nilai. Contoh: 60, 90, 75</p>
+                        <input type="number" step="0.01" name="passing_grade" x-model="form.passing_grade"
+                               class="input w-full @error('passing_grade') border-danger-500 @enderror"
+                               placeholder="Kosongkan untuk auto-calculate (60%)">
+                        @error('passing_grade')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
