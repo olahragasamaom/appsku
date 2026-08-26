@@ -26,8 +26,18 @@ class UjianMonitoringController extends Controller
 
     public function liveData(Ujian $ujian): JsonResponse
     {
-        // Get passing grade total untuk ujian
+        // Calculate passing grade with fallback logic
         $totalPassingGrade = (float) $ujian->ujianJenisUjians()->sum('passing_grade');
+        
+        // Jika tidak ada passing grade yang di-set di ujian, hitung default dari sub jenis ujian
+        if ($totalPassingGrade === 0.0 && $ujian->subJenisUjian) {
+            $nilaiPerSoal = $ujian->subJenisUjian->nilai_benar ?? 5;
+            $totalSoal = $ujian->ujianSoals()->count();
+            if ($totalSoal > 0) {
+                $totalNilai = $totalSoal * $nilaiPerSoal;
+                $totalPassingGrade = (float) round($totalNilai * 0.6, 2); // Default 60%
+            }
+        }
         
         $peserta = $ujian->peserta()
             ->with('user', 'pesertaOffline', 'jawaban')

@@ -124,15 +124,34 @@ class UjianScoringService
      */
     public function breakdownPerJenis(UjianPeserta $peserta): array
     {
-        $peserta->loadMissing('ujian.ujianJenisUjians.jenisUjian', 'jawaban');
+        $peserta->loadMissing('ujian.ujianJenisUjians.jenisUjian', 'ujian.subJenisUjian', 'jawaban');
 
         $nilaiPerJenis = $peserta->jawaban
             ->groupBy('jenis_ujian_id')
             ->map(fn ($rows) => (float) $rows->sum('nilai'));
 
-        return $peserta->ujian->ujianJenisUjians->map(function ($ujianJenis) use ($nilaiPerJenis) {
+        return $peserta->ujian->ujianJenisUjians->map(function ($ujianJenis) use ($nilaiPerJenis, $peserta) {
             $nilai = $nilaiPerJenis->get($ujianJenis->jenis_ujian_id, 0.0);
-            $passingGrade = $ujianJenis->passing_grade !== null ? (float) $ujianJenis->passing_grade : null;
+            
+            // Priority 1: Use passing grade from ujian_jenis_ujian (set saat membuat ujian)
+            $passingGrade = $ujianJenis->passing_grade !== null 
+                ? (float) $ujianJenis->passing_grade 
+                : null;
+            
+            // Priority 2: Fallback ke sub jenis ujian jika ada dan passing grade belum di-set
+            // Hitung passing grade otomatis dari total soal kategori ini
+            if ($passingGrade === null && $peserta->ujian->subJenisUjian) {
+                $totalSoalKategori = $peserta->ujian->ujianSoals()
+                    ->where('jenis_ujian_id', $ujianJenis->jenis_ujian_id)
+                    ->count();
+                
+                // Default passing: 60% dari total nilai kategori
+                if ($totalSoalKategori > 0) {
+                    $nilaiPerSoal = $peserta->ujian->subJenisUjian->nilai_benar ?? 5;
+                    $totalNilaiKategori = $totalSoalKategori * $nilaiPerSoal;
+                    $passingGrade = (float) round($totalNilaiKategori * 0.6, 2);
+                }
+            }
 
             return [
                 'jenis_ujian_id' => $ujianJenis->jenis_ujian_id,
