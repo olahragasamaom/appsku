@@ -34,7 +34,12 @@
                                 <div class="flex items-center justify-between gap-3">
                                     <p class="text-xs text-slate-400">{{ $ujianSoal->jenisUjian?->nama_jenis_ujian }}</p>
 
-                                    @if($sistem === 'benar_salah')
+                                    @if($jawaban === null)
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            Tidak Dikerjakan (0 poin)
+                                        </span>
+                                    @elseif($sistem === 'benar_salah')
                                         @if($isBenar)
                                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-success-100 text-success-700">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -91,7 +96,14 @@
                                     @endforeach
                                 </div>
 
-                                @if($sistem === 'benar_salah' && ! $isBenar)
+                                @if($jawaban === null)
+                                    <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <p class="text-sm text-yellow-800">
+                                            <svg class="w-4 h-4 inline-block mr-1.5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            <span class="font-semibold">Anda tidak mengerjakan soal ini</span>
+                                        </p>
+                                    </div>
+                                @elseif($sistem === 'benar_salah' && ! $isBenar)
                                     <p class="mt-2 text-sm text-slate-600">
                                         Jawaban seharusnya:
                                         <span class="font-semibold text-success-700">{{ $soal->kunci_jawaban ?? '-' }}</span>
