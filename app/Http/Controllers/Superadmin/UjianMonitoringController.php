@@ -26,25 +26,43 @@ class UjianMonitoringController extends Controller
 
     public function liveData(Ujian $ujian): JsonResponse
     {
+        // Get passing grade total untuk ujian
+        $totalPassingGrade = (float) $ujian->ujianJenisUjians()->sum('passing_grade');
+        
         $peserta = $ujian->peserta()
-            ->with('user', 'pesertaOffline')
-            ->orderByDesc('total_nilai')
-            ->orderBy('waktu_selesai')
+            ->with('user', 'pesertaOffline', 'jawaban')
             ->get()
-            ->map(fn ($item, $index) => [
-                'id' => $item->id, // key unik untuk x-for
-                'rank' => $index + 1,
-                // Nama diambil dari user (online) atau peserta offline
-                'nama' => $item->user?->name ?? $item->pesertaOffline?->nama_peserta ?? 'Peserta #'.$item->id,
-                'username' => $item->user?->username ?? $item->pesertaOffline?->nomor_peserta ?? '-',
-                'status' => $item->status,
-                'total_nilai' => $item->total_nilai !== null ? (float) $item->total_nilai : null,
-                'lulus' => $item->lulus,
-            ]);
+            ->map(function ($item) use ($totalPassingGrade) {
+                // Hitung skor real-time dari jawaban yang sudah tersimpan
+                $nilaiRealtime = $item->jawaban->sum('nilai');
+                
+                // Gunakan total_nilai jika sudah finalized (selesai), 
+                // atau gunakan skor real-time dari jawaban yang tersimpan
+                $displayNilai = $item->total_nilai !== null ? (float) $item->total_nilai : (float) $nilaiRealtime;
+                
+                // Cek apakah nilai sudah mencapai passing grade
+                $isPass = $displayNilai >= $totalPassingGrade;
+                
+                return [
+                    'id' => $item->id,
+                    'nama' => $item->user?->name ?? $item->pesertaOffline?->nama_peserta ?? 'Peserta #'.$item->id,
+                    'username' => $item->user?->username ?? $item->pesertaOffline?->nomor_peserta ?? '-',
+                    'status' => $item->status,
+                    'total_nilai' => $displayNilai > 0 ? $displayNilai : null,
+                    'lulus' => $item->lulus,
+                    'passing_grade' => $totalPassingGrade,
+                    'is_pass' => $isPass,
+                ];
+            })
+            ->sortBy(fn ($item) => $item['is_pass'] ? 0 : 1)  // Pass first (true=0, false=1)
+            ->sortByDesc('total_nilai')  // Then by value descending
+            ->values()                    // Reset indices
+            ->map(fn ($item, $index) => array_merge($item, ['rank' => $index + 1])); // Add rank
 
         return response()->json([
             'peserta' => $peserta,
             'updated_at' => now()->toDateTimeString(),
+            'passing_grade' => $totalPassingGrade,
         ]);
     }
 
