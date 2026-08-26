@@ -29,31 +29,62 @@
 
         @if($ujian->tampilkan_hasil)
             <div class="card mt-6">
-                <div class="card-body-sm">
-                    <x-table>
-                        <x-slot name="header">
-                            <th class="px-6 py-3 text-left">Jenis Ujian</th>
-                            <th class="px-6 py-3 text-center">Nilai</th>
-                            <th class="px-6 py-3 text-center">Passing Grade</th>
-                            <th class="px-6 py-3 text-center">Status</th>
-                        </x-slot>
+                <div class="card-body">
+                    <h2 class="text-lg font-bold text-slate-900 mb-4">Detail Hasil Per Kategori</h2>
+                    <div class="space-y-3">
                         @foreach($breakdown as $row)
-                            <tr>
-                                <td class="px-6 py-4 font-medium text-slate-800">{{ $row['nama'] }}</td>
-                                <td class="px-6 py-4 text-center">{{ $row['nilai'] }}</td>
-                                <td class="px-6 py-4 text-center">{{ $row['passing_grade'] ?? '-' }}</td>
-                                <td class="px-6 py-4 text-center">
-                                    @if($row['lulus'] === true)
-                                        <span class="text-success-600 text-sm font-medium">Lulus</span>
-                                    @elseif($row['lulus'] === false)
-                                        <span class="text-danger-600 text-sm font-medium">Tidak Lulus</span>
+                            @php
+                                $isPassed = $row['lulus'] === true;
+                                $percentScore = $row['passing_grade'] ? round(($row['nilai'] / $row['passing_grade']) * 100, 0) : 0;
+                            @endphp
+                            <div class="border rounded-lg p-4 transition-all"
+                                 :class="$isPassed ? 'border-success-300 bg-success-50' : 'border-danger-300 bg-danger-50'">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex-1">
+                                        <h3 class="font-semibold text-slate-900">{{ $row['nama'] }}</h3>
+                                        <p class="text-xs text-slate-500 mt-0.5">
+                                            Passing Grade: <span class="font-medium">{{ $row['passing_grade'] ?? '-' }}</span>
+                                        </p>
+                                    </div>
+                                    @if($isPassed)
+                                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-success-100 text-success-700 flex-shrink-0">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                            Lulus
+                                        </span>
                                     @else
-                                        <span class="text-slate-400 text-sm">-</span>
+                                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-danger-100 text-danger-700 flex-shrink-0">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            Tidak Lulus
+                                        </span>
                                     @endif
-                                </td>
-                            </tr>
+                                </div>
+
+                                <div class="flex items-end gap-4">
+                                    <div class="flex-1">
+                                        <div class="mb-2">
+                                            <div class="flex items-center justify-between mb-1">
+                                                <span class="text-sm font-medium text-slate-700">Nilai Anda</span>
+                                                <span class="text-sm font-bold" :class="$isPassed ? 'text-success-600' : 'text-danger-600'">
+                                                    {{ $row['nilai'] }}
+                                                </span>
+                                            </div>
+                                            <div class="w-full bg-slate-200 rounded-full h-2">
+                                                <div class="bg-gradient-to-r h-2 rounded-full transition-all"
+                                                     :class="$isPassed ? 'from-success-400 to-success-600' : 'from-danger-400 to-danger-600'"
+                                                     style="width: {{ min($percentScore, 100) }}%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right flex-shrink-0">
+                                        <div class="text-xs text-slate-500 mb-1">Capai Target</div>
+                                        <div class="text-2xl font-bold" :class="$isPassed ? 'text-success-600' : 'text-danger-600'">
+                                            {{ min($percentScore, 100) }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         @endforeach
-                    </x-table>
+                    </div>
                 </div>
             </div>
 
