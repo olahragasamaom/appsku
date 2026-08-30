@@ -40,7 +40,7 @@ class DashboardController extends Controller
         $ujianDariPaket = collect();
         foreach ($langgananAktif as $langganan) {
             foreach ($langganan->paket->ujians as $ujian) {
-                if ($ujian->status === 'aktif') {
+                if ($ujian->status === 'aktif' && $this->isUjianAccessible($ujian)) {
                     $ujianDariPaket->push($ujian);
                 }
             }
@@ -65,5 +65,35 @@ class DashboardController extends Controller
             ->get();
 
         return view('peserta.dashboard', compact('ujianDariPaket', 'allocations', 'riwayat'));
+    }
+
+    /**
+     * Cek apakah ujian masih bisa diakses berdasarkan tanggal ujian dan batas keterlambatan.
+     * - Jika tanggal_ujian null: ujian bisa diakses kapan saja (no time restriction).
+     * - Jika tanggal_ujian ada dan batas_keterlambatan null: hanya bisa diakses setelah tanggal_ujian.
+     * - Jika keduanya ada: bisa diakses dari tanggal_ujian hingga batas_keterlambatan.
+     */
+    private function isUjianAccessible(Ujian $ujian): bool
+    {
+        // Jika tidak ada tanggal ujian, ujian bisa diakses kapan saja
+        if (! $ujian->tanggal_ujian) {
+            return true;
+        }
+
+        $now = now();
+
+        // Jika belum waktunya ujian (sebelum tanggal_ujian), tidak bisa diakses
+        if ($now->lt($ujian->tanggal_ujian)) {
+            return false;
+        }
+
+        // Jika sudah lewat tanggal ujian, cek batas keterlambatan
+        if ($ujian->batas_keterlambatan) {
+            // Bisa diakses sampai batas_keterlambatan
+            return $now->lte($ujian->batas_keterlambatan);
+        }
+
+        // Jika tidak ada batas keterlambatan, ujian bisa diakses selamanya setelah tanggal_ujian
+        return true;
     }
 }
