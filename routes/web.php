@@ -672,6 +672,14 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::patch('ujian/{ujian}/peserta-offline/{pesertaOffline}/kehadiran', [\App\Http\Controllers\Superadmin\PesertaOfflineKehadiranController::class, 'update'])
             ->name('ujian.peserta-offline.kehadiran.update');
 
+        // monitoring pengawas offline (real-time) - P8-T1
+        Route::get('ujian/{ujian}/pengawas', [\App\Http\Controllers\Superadmin\OfflineMonitoringController::class, 'index'])
+            ->name('ujian.pengawas.index');
+        Route::get('ujian/{ujian}/pengawas/live', [\App\Http\Controllers\Superadmin\OfflineMonitoringController::class, 'live'])
+            ->name('ujian.pengawas.live');
+        Route::post('ujian/{ujian}/pengawas/force-logout/{session}', [\App\Http\Controllers\Superadmin\OfflineMonitoringController::class, 'forceLogout'])
+            ->name('ujian.pengawas.force-logout');
+
         // paket member management
         Route::resource('paket', PaketController::class)
             ->except(['show'])

@@ -16,7 +16,12 @@
             <h2 class="font-semibold text-xl text-secondary-800">Kelola Kehadiran</h2>
             <p class="text-sm text-secondary-500">{{ $ujian->nama_ujian }}</p>
         </div>
-        <a href="{{ route('superadmin.ujian.peserta-offline.index', $ujian) }}" class="btn btn-ghost">Kembali</a>
+        <div class="flex gap-2">
+            <a href="{{ route('superadmin.ujian.pengawas.index', $ujian) }}" class="btn btn-primary">
+                Monitoring Pengawas
+            </a>
+            <a href="{{ route('superadmin.ujian.peserta-offline.index', $ujian) }}" class="btn btn-ghost">Kembali</a>
+        </div>
     </div>
 @endsection
 

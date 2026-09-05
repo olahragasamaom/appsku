@@ -15,6 +15,9 @@
             <p class="text-sm text-secondary-500">{{ $ujian->nama_ujian }}</p>
         </div>
         <div class="flex gap-2">
+            <a href="{{ route('superadmin.ujian.pengawas.index', $ujian) }}" class="btn btn-primary">
+                Monitoring
+            </a>
             <a href="{{ route('superadmin.ujian.peserta-offline.kehadiran.index', $ujian) }}" class="btn btn-primary">
                 Kelola Kehadiran
             </a>
