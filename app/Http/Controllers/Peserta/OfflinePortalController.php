@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginPesertaOfflineRequest;
 use App\Models\PesertaOffline;
 use App\Models\Ujian;
+use App\Models\UjianPeserta;
 use App\Services\Ujian\AttemptService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -86,7 +87,14 @@ class OfflinePortalController extends Controller
             abort(403, 'Anda belum dimarkir hadir.');
         }
 
-        $attempt = $this->attemptService->startOffline($peserta->nomor_peserta, $peserta->kode_akses, $ujian);
+        $attempt = UjianPeserta::create([
+            'ujian_id' => $ujian->id,
+            'status' => 'sedang_ujian',
+            'waktu_mulai' => now(),
+            'batas_waktu' => now()->addMinutes($ujian->durasi_ujian ?? 90),
+        ]);
+
+        $peserta->update(['ujian_peserta_id' => $attempt->id]);
 
         $request->session()->put([
             'offline_ujian_id' => $ujian->id,
