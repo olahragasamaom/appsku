@@ -667,6 +667,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         // peserta offline attendance/kehadiran management (P5-T9)
         Route::get('ujian/{ujian}/peserta-offline/kehadiran', [\App\Http\Controllers\Superadmin\PesertaOfflineKehadiranController::class, 'index'])
             ->name('ujian.peserta-offline.kehadiran.index');
+        Route::post('ujian/{ujian}/peserta-offline/kehadiran/bulk', [\App\Http\Controllers\Superadmin\PesertaOfflineKehadiranController::class, 'bulkUpdate'])
+            ->name('ujian.peserta-offline.kehadiran.bulk');
         Route::patch('ujian/{ujian}/peserta-offline/{pesertaOffline}/kehadiran', [\App\Http\Controllers\Superadmin\PesertaOfflineKehadiranController::class, 'update'])
             ->name('ujian.peserta-offline.kehadiran.update');
 

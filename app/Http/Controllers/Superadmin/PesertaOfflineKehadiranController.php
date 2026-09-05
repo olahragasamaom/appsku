@@ -38,7 +38,27 @@ class PesertaOfflineKehadiranController extends Controller
 
         $this->participantService->markAttendance($pesertaOffline, $ujian, $status);
 
-        return redirect()->route('superadmin.ujian.peserta-offline.kehadiran', $ujian->id)
+        return redirect()->route('superadmin.ujian.peserta-offline.kehadiran.index', $ujian->id)
             ->with('success', "Kehadiran peserta {$pesertaOffline->nomor_peserta} diperbarui.");
+    }
+
+    public function bulkUpdate(MarkAttendanceRequest $request, Ujian $ujian): RedirectResponse
+    {
+        $status = $request->validated()['status_kehadiran'];
+        $pesertaIds = $request->input('peserta_ids', []);
+
+        if (empty($pesertaIds)) {
+            return redirect()->route('superadmin.ujian.peserta-offline.kehadiran.index', $ujian->id)
+                ->with('error', 'Tidak ada peserta yang dipilih.');
+        }
+
+        $pesertaOffline = PesertaOffline::whereIn('id', $pesertaIds)->get();
+
+        foreach ($pesertaOffline as $peserta) {
+            $this->participantService->markAttendance($peserta, $ujian, $status);
+        }
+
+        return redirect()->route('superadmin.ujian.peserta-offline.kehadiran.index', $ujian->id)
+            ->with('success', count($pesertaIds)." peserta diperbarui menjadi {$status}.");
     }
 }
