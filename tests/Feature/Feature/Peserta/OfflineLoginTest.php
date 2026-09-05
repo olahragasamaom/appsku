@@ -46,7 +46,8 @@ describe('Offline participant login flow (P5-T6)', function () {
                 'kode_akses' => 'WRONGCODE',
             ]);
 
-            expect($response->status())->toBe(422);
+            // ValidationException is caught and returns 302 redirect
+            expect($response->status())->toBe(302);
             expect(session('offline_peserta_id'))->toBeNull();
         });
 
@@ -56,7 +57,7 @@ describe('Offline participant login flow (P5-T6)', function () {
                 'kode_akses' => 'ANYCODE',
             ]);
 
-            expect($response->status())->toBe(422);
+            expect($response->status())->toBe(302);
             expect(session('offline_peserta_id'))->toBeNull();
         });
     });
@@ -105,7 +106,11 @@ describe('Offline participant login flow (P5-T6)', function () {
 
             $response->assertViewHas('ujians');
             $ujians = $response->viewData('ujians');
-            expect($ujians->first()->kehadiran)->not->toBeNull();
+            // kehadiran adalah collection via whereHas eager loading
+            expect($ujians->count())->toBeGreaterThan(0);
+            $firstUjian = $ujians->first();
+            expect($firstUjian->pesertaOfflineKehadiran)->not->toBeNull();
+            expect($firstUjian->pesertaOfflineKehadiran->count())->toBeGreaterThan(0);
         });
     });
 
