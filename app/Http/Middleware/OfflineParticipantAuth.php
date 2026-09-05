@@ -76,6 +76,17 @@ class OfflineParticipantAuth
         // 6. Validate attendance is still 'hadir'
         $peserta = $attempt->pesertaOffline;
         if ($peserta) {
+            // Check if peserta is blocked (bisa diblokir mid-exam)
+            if ($peserta->is_blocked) {
+                $request->session()->forget([
+                    'offline_peserta_id',
+                    'offline_session_token',
+                    'offline_ujian_id',
+                    'offline_attempt_id',
+                ]);
+                abort(403, 'Akun Anda telah diblokir oleh pengawas. Alasan: '.($peserta->blocked_reason ?? 'Tidak dijelaskan'));
+            }
+
             $ujianForAttendance = $attempt->ujian ?? null;
             $ujianId = $ujianForAttendance ? $ujianForAttendance->id : $offlineUjianId;
 

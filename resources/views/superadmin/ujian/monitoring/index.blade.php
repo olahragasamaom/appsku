@@ -114,16 +114,23 @@
                                     <td class="py-3 px-4 text-sm font-medium text-secondary-800" x-text="p.nomor_peserta"></td>
                                     <td class="py-3 px-4 text-sm text-secondary-700" x-text="p.nama_peserta"></td>
                                     <td class="py-3 px-4 text-center">
-                                        <template x-if="p.status_kehadiran === 'hadir'">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
-                                                Hadir
-                                            </span>
-                                        </template>
-                                        <template x-if="p.status_kehadiran !== 'hadir'">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary-100 text-secondary-600">
-                                                Belum Hadir
-                                            </span>
-                                        </template>
+                                        <div class="inline-flex flex-col gap-1">
+                                            <template x-if="p.status_kehadiran === 'hadir'">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
+                                                    Hadir
+                                                </span>
+                                            </template>
+                                            <template x-if="p.status_kehadiran !== 'hadir'">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary-100 text-secondary-600">
+                                                    Belum Hadir
+                                                </span>
+                                            </template>
+                                            <template x-if="p.is_blocked">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-danger-100 text-danger-700" :title="p.blocked_reason">
+                                                    ⛔ Diblokir
+                                                </span>
+                                            </template>
+                                        </div>
                                     </td>
                                     <td class="py-3 px-4 text-center">
                                         <div class="inline-flex items-center gap-2">
@@ -139,24 +146,148 @@
                                     <td class="py-3 px-4 text-xs text-secondary-500 font-mono" x-text="p.ip_address || '-'"></td>
                                     <td class="py-3 px-4 text-xs text-secondary-500" x-text="formatTime(p.last_activity)"></td>
                                     <td class="py-3 px-4 text-center">
-                                        <template x-if="p.session_id">
-                                            <form :action="`{{ url('/superadmin/ujian/' . $ujian->id . '/pengawas/force-logout') }}/${p.session_id}`" method="POST" class="inline">
-                                                @csrf
-                                                <button type="submit"
-                                                        onclick="return confirm('Yakin ingin force logout peserta ini?')"
-                                                        class="btn btn-ghost btn-sm text-danger-600">
-                                                    Force Logout
+                                        <div class="inline-flex flex-wrap gap-1 justify-center">
+                                            <template x-if="p.session_id">
+                                                <form :action="`{{ url('/superadmin/ujian/' . $ujian->id . '/pengawas/force-logout') }}/${p.session_id}`" method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit"
+                                                            onclick="return confirm('Yakin ingin force logout peserta ini?')"
+                                                            class="btn btn-ghost btn-sm text-warning-600"
+                                                            title="Force Logout">
+                                                        Logout
+                                                    </button>
+                                                </form>
+                                            </template>
+
+                                            <template x-if="p.status_ujian === 'sedang_ujian_online' || p.status_ujian === 'sedang_ujian_idle'">
+                                                <button type="button"
+                                                        @click="openExtendModal(p)"
+                                                        class="btn btn-ghost btn-sm text-primary-600"
+                                                        title="Tambah Waktu">
+                                                    +Waktu
                                                 </button>
-                                            </form>
-                                        </template>
-                                        <template x-if="!p.session_id">
-                                            <span class="text-xs text-secondary-400">-</span>
-                                        </template>
+                                            </template>
+
+                                            <template x-if="!p.is_blocked">
+                                                <button type="button"
+                                                        @click="openBlockModal(p)"
+                                                        class="btn btn-ghost btn-sm text-danger-600"
+                                                        title="Blokir Peserta">
+                                                    Blokir
+                                                </button>
+                                            </template>
+
+                                            <template x-if="p.is_blocked">
+                                                <form :action="`{{ url('/superadmin/ujian/' . $ujian->id . '/pengawas/peserta') }}/${p.peserta_offline_id}/unblock`" method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit"
+                                                            onclick="return confirm('Yakin ingin unblock peserta ini?')"
+                                                            class="btn btn-ghost btn-sm text-success-600"
+                                                            title="Unblock Peserta">
+                                                        Unblock
+                                                    </button>
+                                                </form>
+                                            </template>
+                                        </div>
                                     </td>
                                 </tr>
                             </template>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Modal: Blokir Peserta -->
+        <div x-show="showBlockModal" x-cloak
+             style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 99999;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5);"
+                 @click="closeBlockModal()"></div>
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; padding: 1rem; pointer-events: none;">
+                <div style="pointer-events: auto; width: 100%; max-width: 28rem; background-color: white; border-radius: 1rem;">
+                    <form :action="`{{ url('/superadmin/ujian/' . $ujian->id . '/pengawas/peserta') }}/${selectedParticipant.peserta_offline_id}/block`" method="POST">
+                        @csrf
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold text-secondary-800 mb-1">Blokir Peserta</h3>
+                            <p class="text-sm text-secondary-500 mb-4">
+                                <span x-text="selectedParticipant.nomor_peserta"></span> - <span x-text="selectedParticipant.nama_peserta"></span>
+                            </p>
+
+                            <div class="mb-4">
+                                <label for="block_reason" class="block text-sm font-medium text-secondary-700 mb-1">
+                                    Alasan Blokir <span class="text-danger-500">*</span>
+                                </label>
+                                <textarea name="reason" id="block_reason" rows="3"
+                                          class="input w-full"
+                                          placeholder="Contoh: Ketahuan menyontek, membawa HP, dll..."
+                                          required></textarea>
+                            </div>
+
+                            <div class="bg-danger-50 border border-danger-200 rounded-lg p-3 mb-4">
+                                <p class="text-sm text-danger-700">
+                                    ⚠️ Peserta yang diblokir tidak akan bisa login kembali sampai di-unblock oleh admin.
+                                    Sesi aktif juga akan di-force logout.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="border-t border-secondary-200 p-4 flex justify-end gap-2">
+                            <button type="button" @click="closeBlockModal()" class="btn btn-ghost">Batal</button>
+                            <button type="submit" class="btn btn-danger">Blokir Peserta</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Extend Time -->
+        <div x-show="showExtendModal" x-cloak
+             style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 99999;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5);"
+                 @click="closeExtendModal()"></div>
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; padding: 1rem; pointer-events: none;">
+                <div style="pointer-events: auto; width: 100%; max-width: 28rem; background-color: white; border-radius: 1rem;">
+                    <form :action="`{{ url('/superadmin/ujian/' . $ujian->id . '/pengawas/attempt') }}/${selectedParticipant.attempt_id}/extend-time`" method="POST">
+                        @csrf
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold text-secondary-800 mb-1">Tambah Waktu Ujian</h3>
+                            <p class="text-sm text-secondary-500 mb-4">
+                                <span x-text="selectedParticipant.nomor_peserta"></span> - <span x-text="selectedParticipant.nama_peserta"></span>
+                            </p>
+
+                            <div class="mb-4">
+                                <label for="added_minutes" class="block text-sm font-medium text-secondary-700 mb-1">
+                                    Tambahan Waktu (menit) <span class="text-danger-500">*</span>
+                                </label>
+                                <input type="number" name="added_minutes" id="added_minutes"
+                                       class="input w-full"
+                                       min="1" max="180" step="1"
+                                       placeholder="Contoh: 15"
+                                       required>
+                                <p class="text-xs text-secondary-500 mt-1">Range: 1-180 menit</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="extend_reason" class="block text-sm font-medium text-secondary-700 mb-1">
+                                    Alasan <span class="text-danger-500">*</span>
+                                </label>
+                                <textarea name="reason" id="extend_reason" rows="3"
+                                          class="input w-full"
+                                          placeholder="Contoh: Peserta mengalami masalah teknis (koneksi terputus), listrik padam, dll..."
+                                          required></textarea>
+                            </div>
+
+                            <div class="bg-primary-50 border border-primary-200 rounded-lg p-3 mb-4">
+                                <p class="text-sm text-primary-700">
+                                    ℹ️ Extension akan langsung berlaku dan tercatat di riwayat audit.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="border-t border-secondary-200 p-4 flex justify-end gap-2">
+                            <button type="button" @click="closeExtendModal()" class="btn btn-ghost">Batal</button>
+                            <button type="submit" class="btn btn-primary">Tambah Waktu</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -175,6 +306,9 @@
                 participants: [],
                 lastUpdated: '-',
                 refreshInterval: null,
+                showBlockModal: false,
+                showExtendModal: false,
+                selectedParticipant: {},
 
                 init() {
                     this.fetchLive();
@@ -191,6 +325,30 @@
                     } catch (error) {
                         console.error('Failed to fetch live data:', error);
                     }
+                },
+
+                openBlockModal(participant) {
+                    this.selectedParticipant = participant;
+                    this.showBlockModal = true;
+                },
+
+                closeBlockModal() {
+                    this.showBlockModal = false;
+                    this.selectedParticipant = {};
+                },
+
+                openExtendModal(participant) {
+                    if (!participant.attempt_id) {
+                        alert('Peserta belum memulai ujian, tidak bisa extend waktu.');
+                        return;
+                    }
+                    this.selectedParticipant = participant;
+                    this.showExtendModal = true;
+                },
+
+                closeExtendModal() {
+                    this.showExtendModal = false;
+                    this.selectedParticipant = {};
                 },
 
                 formatStatus(status) {

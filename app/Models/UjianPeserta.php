@@ -71,4 +71,9 @@ class UjianPeserta extends Model
     {
         return $this->belongsTo(PesertaLangganan::class, 'langganan_id');
     }
+
+    public function timeExtensions(): HasMany
+    {
+        return $this->hasMany(TimeExtension::class, 'ujian_peserta_id')->orderByDesc('granted_at');
+    }
 }

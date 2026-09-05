@@ -680,6 +680,14 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('ujian/{ujian}/pengawas/force-logout/{session}', [\App\Http\Controllers\Superadmin\OfflineMonitoringController::class, 'forceLogout'])
             ->name('ujian.pengawas.force-logout');
 
+        // pengawas actions: block/unblock peserta, add time extension
+        Route::post('ujian/{ujian}/pengawas/peserta/{pesertaOffline}/block', [\App\Http\Controllers\Superadmin\PengawasActionController::class, 'block'])
+            ->name('ujian.pengawas.block');
+        Route::post('ujian/{ujian}/pengawas/peserta/{pesertaOffline}/unblock', [\App\Http\Controllers\Superadmin\PengawasActionController::class, 'unblock'])
+            ->name('ujian.pengawas.unblock');
+        Route::post('ujian/{ujian}/pengawas/attempt/{ujianPeserta}/extend-time', [\App\Http\Controllers\Superadmin\PengawasActionController::class, 'addTimeExtension'])
+            ->name('ujian.pengawas.extend-time');
+
         // paket member management
         Route::resource('paket', PaketController::class)
             ->except(['show'])

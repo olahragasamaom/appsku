@@ -64,6 +64,7 @@ class OfflineMonitoringController extends Controller
             $lastActivity = null;
             $ipAddress = null;
             $sessionId = null;
+            $attemptId = $peserta->ujian_peserta_id;
 
             if ($session) {
                 $sessionId = $session->id;
@@ -91,6 +92,9 @@ class OfflineMonitoringController extends Controller
                 'last_activity' => $lastActivity,
                 'ip_address' => $ipAddress,
                 'session_id' => $sessionId,
+                'attempt_id' => $attemptId,
+                'is_blocked' => (bool) $peserta->is_blocked,
+                'blocked_reason' => $peserta->blocked_reason,
             ];
         });
 

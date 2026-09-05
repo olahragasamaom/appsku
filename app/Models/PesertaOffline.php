@@ -21,6 +21,9 @@ class PesertaOffline extends Model
         'kode_akses',
         'kode_akses_plain',
         'ujian_peserta_id',
+        'is_blocked',
+        'blocked_at',
+        'blocked_reason',
     ];
 
     protected $hidden = [
@@ -33,6 +36,8 @@ class PesertaOffline extends Model
             'id' => 'integer',
             'ujian_id' => 'integer',
             'ujian_peserta_id' => 'integer',
+            'is_blocked' => 'boolean',
+            'blocked_at' => 'datetime',
         ];
     }
 

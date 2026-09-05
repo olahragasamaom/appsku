@@ -44,6 +44,13 @@ class OfflinePortalController extends Controller
             ]);
         }
 
+        // Cek apakah peserta di-blokir
+        if ($peserta->is_blocked) {
+            throw ValidationException::withMessages([
+                'kode_akses' => 'Akun Anda telah diblokir. Alasan: '.($peserta->blocked_reason ?? 'Tidak dijelaskan'),
+            ]);
+        }
+
         // Force logout any existing active sessions (anti multi-device)
         OfflineParticipantSession::where('peserta_offline_id', $peserta->id)
             ->whereIn('status', ['logged_in', 'sedang_ujian'])
