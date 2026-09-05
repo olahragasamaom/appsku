@@ -158,8 +158,24 @@ class UjianController extends Controller
             abort(404);
         }
 
+        // P5-T7 revised: Check attendance for offline participants before submit
+        if ($peserta->pesertaOffline) {
+            $kehadiran = $peserta->pesertaOffline->kehadiran()
+                ->where('ujian_id', $ujian->id)
+                ->first();
+
+            if (! $kehadiran || $kehadiran->status_kehadiran !== 'hadir') {
+                abort(403, 'Status kehadiran tidak valid untuk menyelesaikan ujian.');
+            }
+        }
+
         if ($peserta->status !== 'selesai') {
             $this->scoring->finalize($peserta);
+        }
+
+        // Clear offline session keys after successful submit
+        if ($request->session()->has('offline_peserta_id')) {
+            $request->session()->forget(['offline_peserta_id', 'offline_ujian_id', 'offline_attempt_id']);
         }
 
         return redirect()->route('peserta.ujian.hasil', $ujian)

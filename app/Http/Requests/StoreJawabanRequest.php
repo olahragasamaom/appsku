@@ -53,6 +53,7 @@ class StoreJawabanRequest extends FormRequest
 
     /**
      * Validasi tambahan: status attempt & batas waktu snapshot (M-AU-8/AD-10).
+     * Juga validasi attendance untuk offline participants (P5-T8).
      */
     public function withValidator($validator): void
     {
@@ -75,6 +76,21 @@ class StoreJawabanRequest extends FormRequest
                 throw ValidationException::withMessages([
                     'attempt' => 'Waktu ujian sudah habis.',
                 ]);
+            }
+
+            // Attendance validation for offline participants (P5-T8 revised)
+            if ($peserta->pesertaOffline) {
+                /** @var Ujian $ujian */
+                $ujian = $this->route('ujian');
+                $kehadiran = $peserta->pesertaOffline->kehadiran()
+                    ->where('ujian_id', $ujian->id)
+                    ->first();
+
+                if (! $kehadiran || $kehadiran->status_kehadiran !== 'hadir') {
+                    throw ValidationException::withMessages([
+                        'attempt' => 'Status kehadiran tidak valid untuk mengerjakan ujian.',
+                    ]);
+                }
             }
         });
     }
