@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PesertaOffline extends Model
 {
@@ -22,8 +23,6 @@ class PesertaOffline extends Model
         'ujian_peserta_id',
     ];
 
-    // Hanya sembunyikan hash bcrypt-nya. kode_akses_plain sengaja ditampilkan
-    // agar admin bisa melihat & mencetak ulang kartu peserta.
     protected $hidden = [
         'kode_akses',
     ];
@@ -45,5 +44,10 @@ class PesertaOffline extends Model
     public function ujianPeserta(): BelongsTo
     {
         return $this->belongsTo(UjianPeserta::class, 'ujian_peserta_id');
+    }
+
+    public function kehadiran(): HasMany
+    {
+        return $this->hasMany(PesertaOfflineKehadiran::class, 'peserta_offline_id');
     }
 }

@@ -36,6 +36,13 @@ class UjianFactory extends Factory
         ];
     }
 
+    public function offline(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'tipe_ujian' => 'offline_kelas',
+        ]);
+    }
+
     public function online(): static
     {
         return $this->state(fn (array $attributes): array => [
@@ -45,6 +52,20 @@ class UjianFactory extends Factory
             'batas_keterlambatan' => null,
             'token_ujian' => null,
             'akses_member' => ['Free', 'Basic'],
+        ]);
+    }
+
+    public function active(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => 'aktif',
+        ]);
+    }
+
+    public function draft(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => 'draft',
         ]);
     }
 }

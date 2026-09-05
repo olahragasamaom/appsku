@@ -46,7 +46,6 @@ use App\Http\Controllers\Peserta\AuthController as PesertaAuthController;
 use App\Http\Controllers\Peserta\DashboardController as PesertaDashboardController;
 use App\Http\Controllers\Peserta\LanggananController as PesertaLanggananController;
 use App\Http\Controllers\Peserta\OAuthController as PesertaOAuthController;
-use App\Http\Controllers\Peserta\OfflineLoginController as PesertaOfflineLoginController;
 use App\Http\Controllers\Peserta\OfflinePortalController;
 use App\Http\Controllers\Peserta\UjianController as PesertaUjianController;
 use App\Http\Controllers\PositionController;
@@ -781,10 +780,12 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('peserta')->name('peserta.')->group(function () {
-    // Portal & Login Offline Participant (No Auth Required)
+    // Portal & Login Offline Participant (No Auth Required) - P5-T6 revised flow
     Route::get('ujian-offline', [OfflinePortalController::class, 'index'])->name('ujian.offline.portal');
-    Route::get('ujian/{ujian}/offline/login', [PesertaOfflineLoginController::class, 'show'])->name('ujian.offline.login');
-    Route::post('ujian/{ujian}/offline/login', [PesertaOfflineLoginController::class, 'login']);
+    Route::post('ujian-offline/login', [OfflinePortalController::class, 'login'])->name('ujian.offline.login');
+    Route::get('offline/daftar', [OfflinePortalController::class, 'exams'])->name('offline.exams');
+    Route::post('ujian/{ujian}/offline/mulai', [OfflinePortalController::class, 'start'])->name('offline.start');
+    Route::post('ujian-offline/logout', [OfflinePortalController::class, 'logout'])->name('ujian.offline.logout');
 
     Route::middleware('guest')->group(function () {
         Route::get('login', [PesertaAuthController::class, 'showLoginForm'])->name('login');

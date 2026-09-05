@@ -13,21 +13,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
-/**
- * CONTROLLER: OfflinePortalController (P5-T6 revised)
- * ====================================
- * New flow: login → daftar ujian → ikuti ujian (dengan attendance check)
- */
-class OfflinePortalController extends Controller
+class OfflineController extends Controller
 {
-    public function __construct(
-        private readonly AttemptService $attemptService
-    ) {}
-
-    public function index(): View
-    {
-        return view('peserta.ujian.offline.portal');
-    }
+    public function __construct(private AttemptService $attemptService) {}
 
     public function login(LoginPesertaOfflineRequest $request): RedirectResponse
     {
@@ -100,7 +88,6 @@ class OfflinePortalController extends Controller
     {
         $request->session()->forget(['offline_peserta_id', 'offline_ujian_id', 'offline_attempt_id']);
 
-        return redirect()->route('peserta.ujian.offline.portal')
-            ->with('success', 'Anda telah logout.');
+        return redirect()->route('peserta.ujian.offline.login');
     }
 }

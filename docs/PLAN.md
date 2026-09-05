@@ -141,6 +141,17 @@
 - **Spec Ref:** §4.4, C-4.
 - **Tests:** `tests/Feature/Migration/PesertaOfflineSchemaTest.php` — unique per `ujian_id`.
 
+### P1-T7 — Create `panritta_peserta_offline_kehadiran` pivot (C-4 attendance)
+
+- **Goal:** Track offline participant attendance per exam; enable superadmin to mark hadir/tidak_hadir.
+- **Create:** `php artisan make:migration create_panritta_peserta_offline_kehadiran_table --no-interaction`
+- **Change:** `id`, `peserta_offline_id` FK → `panritta_peserta_offline.id` (cascade), `ujian_id` FK
+  → `panritta_ujian.id` (cascade), `status_kehadiran` enum(hadir/tidak_hadir) default `tidak_hadir`,
+  timestamps, `unique(peserta_offline_id, ujian_id)`.
+- **Spec Ref:** C-4 (attendance flow revised).
+- **Tests:** `tests/Feature/Migration/PesertaOfflineKehadiranSchemaTest.php` — unique enforced;
+  default status `tidak_hadir`.
+
 ### P1 — Macro Gate
 
 - `php artisan migrate:fresh --seed` completes without error.
@@ -202,6 +213,19 @@
   `auto_submitted:boolean`, `langganan_id:integer`.
 - **Spec Ref:** §4.2, AD-10.
 - **Tests:** covered in `UjianPesertaKategoriRelationTest` + attempt tests (P3).
+
+### P2-T6 — New model `PesertaOfflineKehadiran` (C-4 attendance)
+
+- **Goal:** ORM access to offline participant attendance status per exam.
+- **Create:** `php artisan make:model PesertaOfflineKehadiran -f --no-interaction`
+  (`$table = 'panritta_peserta_offline_kehadiran'`).
+- **Change:**
+  - Relations: `PesertaOfflineKehadiran::pesertaOffline(): BelongsTo`, `PesertaOfflineKehadiran::ujian(): BelongsTo`.
+  - `app/Models/PesertaOffline.php` — add `kehadiran(): HasMany`.
+  - `app/Models/Ujian.php` — add `pesertaOfflineKehadiran(): HasMany`.
+- **Casts:** `status_kehadiran` enum cast (if using native enum).
+- **Spec Ref:** C-4 (attendance revised).
+- **Tests:** `tests/Feature/Model/PesertaOfflineKehadiranRelationTest.php`.
 
 ### P2 — Macro Gate
 
@@ -269,16 +293,24 @@
   - re-take creates new row (AD-9);
   - `submit` idempotency; `autoSubmitExpired` processes each row once, no quota refund (R3).
 
-### P3-T4 — `OfflineParticipantService` — admin CRUD + credential generation
+### P3-T4 — `OfflineParticipantService` — admin CRUD + credential generation + attendance
 
-- **Goal:** Manage offline participant master data (C-4).
+- **Goal:** Manage offline participant master data + attendance tracking (C-4).
 - **Create:** `app/Services/Ujian/OfflineParticipantService.php`
-- **Methods:** `create(Ujian, array): PesertaOffline` (validates `offline_kelas`; generates
-  plaintext `kode_akses` returned once; stores `Hash::make`), `bulkCreate(Ujian, array): Collection`,
-  `blockParticipant(PesertaOffline): void` (sets linked `UjianPeserta.status=diblokir`).
-- **Spec Ref:** §6.4, C-4.
+- **Methods:**
+  - `create(Ujian, array): PesertaOffline` — validates `offline_kelas`; generates plaintext
+    `kode_akses` returned once; stores `Hash::make`; initializes `PesertaOfflineKehadiran` row for
+    this exam with `status_kehadiran='tidak_hadir'`.
+  - `bulkCreate(Ujian, array): Collection` — batch import; returns collection of `[nomor_peserta, kode_akses_plaintext]`;
+    auto-create kehadiran rows.
+  - `blockParticipant(PesertaOffline): void` — sets linked `UjianPeserta.status=diblokir`.
+  - `markAttendance(PesertaOffline, Ujian, string $status): void` — sets `PesertaOfflineKehadiran.status_kehadiran`
+    to `hadir` or `tidak_hadir`; idempotent. If participant is mid-attempt and marked `tidak_hadir`,
+    the attempt is blocked (enforced in P5 controller).
+- **Spec Ref:** §6.4, C-4 (attendance revised).
 - **Tests:** `tests/Feature/Ujian/OfflineParticipantServiceTest.php` — create on non-offline exam
-  rejected; plaintext returned once; hash stored (not plaintext); block sets status.
+  rejected; plaintext returned once; hash stored; kehadiran row auto-created with default `tidak_hadir`;
+  `markAttendance` idempotent.
 
 ### P3-T5 — `TokenService` — offline token generation & uniqueness
 
@@ -406,34 +438,49 @@
 - **Tests:** `tests/Feature/Superadmin/PesertaOfflineManagementTest.php` — create returns plaintext
   once; unique `nomor_peserta` per exam; export renders credential sheet.
 
-### P5-T6 — Offline participant login (`PesertaOfflineController@login`)
+### P5-T6 — Offline participant login + exam list (`Peserta\OfflineController`)
 
-- **Goal:** Credential login → `AttemptService::startOffline` + set session keys (C-4/§8.3).
-- **Create:** `php artisan make:request LoginPesertaOfflineRequest --no-interaction`.
-- **Change:** `Peserta\` namespace controller method `login`; sets
-  `offline_peserta_id`/`offline_ujian_id`/`offline_attempt_id` session keys.
-- **Routes:** `POST ujian/offline/login` (no auth middleware).
-- **Spec Ref:** §8.3, §9.2, §10.
-- **Tests:** `tests/Feature/Peserta/OfflineLoginTest.php` — correct creds start attempt + session set;
-  wrong `kode_akses` rejected.
+- **Goal:** Credential login → authenticate + show available exams (attendance-aware) (C-4/§8.3).
+- **Create:** `php artisan make:controller Peserta/OfflineController --no-interaction`;
+  `php artisan make:request LoginPesertaOfflineRequest --no-interaction`.
+- **Change:**
+  - `login()` — POST handler: validates `nomor_peserta` + `kode_akses`; sets `offline_peserta_id`
+    session key only (NOT attempt-specific keys); redirects to exam list.
+  - `exams()` — GET handler: shows list of all offline exams scoped to this participant. For each exam:
+    display status badge (hadir/tidak_hadir/pending) and a conditional "Ikuti Ujian" button (enabled
+    if exam `status=aktif` AND kehadiran `status_kehadiran=hadir`).
+  - `start(Ujian)` — POST handler: validates attendance + exam status; calls
+    `AttemptService::startOffline()` and sets remaining session keys (`offline_ujian_id`,
+    `offline_attempt_id`).
+- **Routes:**
+  - `POST ujian/offline/login` (unauthenticated)
+  - `GET ujian/offline/daftar` (requires `offline.auth` middleware that only checks `offline_peserta_id`)
+  - `POST ujian/{ujian}/offline/mulai` (requires `offline.auth` middleware scoped to `offline_peserta_id`)
+- **Spec Ref:** §8.3, §9.2, §10, C-4 (attendance revised).
+- **Tests:** `tests/Feature/Peserta/OfflineLoginTest.php` — correct creds → session set + redirect to
+  list; wrong creds rejected; exam list shows only offline exams with correct attendance status;
+  "Ikuti Ujian" button disabled when not hadir or exam not aktif; start validates attendance before
+  attempt creation.
 
-### P5-T7 — Refactor `Peserta\UjianController` to services + dual-guard + snapshot deadline
+### P5-T7 — Refactor `Peserta\UjianController` to services + dual-guard + snapshot deadline + attendance
 
-- **Goal:** Replace inline logic with `AttemptService`; enforce dual-guard ownership (C-4) and
-  snapshot `batas_waktu` checks (M-AU-8). This resolves CF-1 read assumptions (latest attempt).
+- **Goal:** Replace inline logic with `AttemptService`; enforce dual-guard ownership (C-4),
+  snapshot `batas_waktu` checks (M-AU-8), and attendance validation (C-4 revised). This resolves CF-1
+  read assumptions (latest attempt).
 - **Change:** `app/Http/Controllers/Peserta/UjianController.php` —
   - `start` → `AttemptService::start` (online) / token path unchanged for online exams; offline via
     P5-T6.
   - `saveAnswer` → add dual-guard (session vs `Auth::id()`); validate `now() < batas_waktu` using
-    snapshot (M-AU-8); resolve attempt as latest `sedang_ujian` row (AD-9 — no longer unique).
+    snapshot (M-AU-8); **for offline participants, validate attendance is still `hadir` (abort 403 if
+    marked `tidak_hadir`)**; resolve attempt as latest `sedang_ujian` row (AD-9 — no longer unique).
   - `submit` → `AttemptService::submit`; clear offline session keys on offline submit (§8.3).
   - `hasil` → dual-guard; show only when `tampilkan_hasil` AND `selesai`.
   - Deadline helpers now read `peserta->batas_waktu` snapshot instead of recomputing from
     `durasi_ujian` (align with AD-10).
-- **Spec Ref:** §6.3, §8.3, §9.2 (C-4, M-AU-8, AD-9/AD-10).
+- **Spec Ref:** §6.3, §8.3, §9.2 (C-4, M-AU-8, AD-9/AD-10, C-4 attendance revised).
 - **Tests:** extend `tests/Feature/Peserta/UjianEngineTest.php`; add
   `tests/Feature/Peserta/AccessIsolationTest.php` — participant A cannot access B's attempt (403);
-  answer after `batas_waktu` rejected.
+  answer after `batas_waktu` rejected; offline participant marked `tidak_hadir` receives 403 on save/submit.
 
 ### P5-T8 — `StoreJawabanRequest` (extract answer validation, M-AU-8)
 
@@ -441,6 +488,23 @@
 - **Create:** `php artisan make:request StoreJawabanRequest --no-interaction`.
 - **Spec Ref:** §10 `StoreJawabanRequest` (M-AU-8).
 - **Tests:** covered by P5-T7 isolation/deadline tests.
+
+### P5-T9 — Superadmin attendance management (`Superadmin\PesertaOfflineKehadiranController`)
+
+- **Goal:** Admin marks offline participant attendance (hadir/tidak_hadir) per exam (C-4).
+- **Create:** `php artisan make:controller Superadmin/PesertaOfflineKehadiranController --no-interaction`;
+  `php artisan make:request MarkAttendanceRequest --no-interaction`.
+- **Routes:**
+  - `GET ujian/{ujian}/peserta-offline/kehadiran` — show attendance management page with toggle for each participant
+  - `PATCH ujian/{ujian}/peserta-offline/{pesertaOffline}/kehadiran` — update attendance status
+- **Logic:**
+  - Admin can toggle attendance between `hadir` / `tidak_hadir`.
+  - Idempotent: toggling same status twice should be no-op.
+  - If participant marked `tidak_hadir` while mid-attempt, the next API call from participant (save answer, submit)
+    is rejected with 403 (enforced in P5-T7 dual-guard).
+- **Spec Ref:** §9.1, §10, C-4 (attendance revised).
+- **Tests:** `tests/Feature/Superadmin/AttendanceManagementTest.php` — list shows all participants; toggle
+  hadir ↔ tidak_hadir works; admin can toggle anytime (pre/during exam); toggle is idempotent.
 
 ### P5 — Macro Gate
 
@@ -536,15 +600,17 @@ P1-T4 (pivot) MUST precede P3-T7 and P5-T3.
 | §4.1 pivot `panritta_paket_ujian` (AD-5) | P1-T4, P2-T1, P3-T7, P5-T3 |
 | §4.3 per-category result (AD-4) | P1-T5, P2-T2, P3-T2 |
 | §4.4 offline master (C-4) | P1-T6, P2-T3, P3-T4, P5-T5 |
+| §4.4 offline attendance (C-4 revised) | P1-T7, P2-T6, P3-T4, P5-T6, P5-T7, P5-T9 |
 | §6.1 `ExamAssemblyService` | P3-T1, P5-T4 |
 | §6.2 scoring persist (C-2/C-3/AD-4) | P3-T2 |
 | §6.3 `AttemptService` snapshot deadline (C-AU-1/5/6, AD-10) | P3-T3, P6-T1 |
 | §6.3 quota unlimited (M-AU-4/AD-8) | P3-T6, P5-T2 |
 | §6.4 `OfflineParticipantService` | P3-T4, P5-T5 |
+| §6.4 `OfflineParticipantService` attendance | P3-T4, P5-T6, P5-T9 |
 | §6.5 `TokenService` | P3-T5 |
 | §8.3 offline session + middleware (C-AU-2) | P4-T1, P4-T2, P5-T6, P5-T7 |
-| §9 route surface | P5-T3..T8 |
-| §10 form requests | P5-T1, P5-T2, P5-T3, P5-T5, P5-T6, P5-T8 |
+| §9 route surface | P5-T3..T9 |
+| §10 form requests | P5-T1, P5-T2, P5-T3, P5-T5, P5-T6, P5-T8, P5-T9 |
 | §11 scheduled jobs | P6-T1, P6-T2, P6-T3 |
 | §12 testing strategy | test items across every P*-T* + P7-T1/T2 |
 

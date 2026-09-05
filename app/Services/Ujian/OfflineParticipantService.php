@@ -3,6 +3,7 @@
 namespace App\Services\Ujian;
 
 use App\Models\PesertaOffline;
+use App\Models\PesertaOfflineKehadiran;
 use App\Models\Ujian;
 use App\Models\UjianPeserta;
 use Illuminate\Support\Collection;
@@ -14,6 +15,7 @@ class OfflineParticipantService
 {
     /**
      * Create a single offline participant and return the plaintext kode_akses once.
+     * Auto-initializes attendance record with status 'tidak_hadir'.
      *
      * @param  array{nomor_peserta: string, nama_peserta: string}  $data
      * @return array{peserta: PesertaOffline, kode_akses: string}
@@ -29,8 +31,13 @@ class OfflineParticipantService
             'nomor_peserta' => $data['nomor_peserta'],
             'nama_peserta' => $data['nama_peserta'],
             'kode_akses' => Hash::make($plaintext),
-            // Simpan versi teks agar bisa ditampilkan & dicetak ulang oleh admin
             'kode_akses_plain' => $plaintext,
+        ]);
+
+        PesertaOfflineKehadiran::create([
+            'peserta_offline_id' => $peserta->id,
+            'ujian_id' => $ujian->id,
+            'status_kehadiran' => 'tidak_hadir',
         ]);
 
         return ['peserta' => $peserta, 'kode_akses' => $plaintext];
@@ -66,6 +73,31 @@ class OfflineParticipantService
             UjianPeserta::where('id', $peserta->ujian_peserta_id)
                 ->update(['status' => 'diblokir']);
         }
+    }
+
+    /**
+     * Mark attendance for an offline participant on a specific exam.
+     * Idempotent: updating to same status is safe.
+     *
+     * @param  string  $status  'hadir' or 'tidak_hadir'
+     */
+    public function markAttendance(PesertaOffline $peserta, Ujian $ujian, string $status): void
+    {
+        if (! in_array($status, ['hadir', 'tidak_hadir'])) {
+            throw ValidationException::withMessages([
+                'status_kehadiran' => "Status kehadiran harus 'hadir' atau 'tidak_hadir'.",
+            ]);
+        }
+
+        PesertaOfflineKehadiran::updateOrCreate(
+            [
+                'peserta_offline_id' => $peserta->id,
+                'ujian_id' => $ujian->id,
+            ],
+            [
+                'status_kehadiran' => $status,
+            ]
+        );
     }
 
     private function assertOffline(Ujian $ujian): void
