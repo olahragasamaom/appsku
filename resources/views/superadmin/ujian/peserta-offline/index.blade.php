@@ -14,16 +14,26 @@
             <h2 class="font-semibold text-xl text-secondary-800">Peserta Offline</h2>
             <p class="text-sm text-secondary-500">{{ $ujian->nama_ujian }}</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
             <a href="{{ route('superadmin.ujian.pengawas.index', $ujian) }}" class="btn btn-primary">
                 Monitoring
             </a>
             <a href="{{ route('superadmin.ujian.peserta-offline.kehadiran.index', $ujian) }}" class="btn btn-primary">
                 Kelola Kehadiran
             </a>
+            <a href="{{ route('superadmin.ujian.peserta-offline.assign.index', $ujian) }}" class="btn btn-secondary">
+                Assign Peserta
+            </a>
             <a href="{{ route('superadmin.ujian.peserta-offline.export', $ujian) }}" class="btn btn-secondary">
                 Cetak Kartu
             </a>
+            <form action="{{ route('superadmin.ujian.peserta-offline.bulk-reset-kode', $ujian) }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="btn btn-warning"
+                        onclick="return confirm('Yakin ingin reset kode akses SEMUA peserta di ujian ini? Kode lama akan tidak berlaku lagi!')">
+                    Reset Semua Kode
+                </button>
+            </form>
             <a href="{{ route('superadmin.ujian.index') }}" class="btn btn-ghost">Kembali</a>
         </div>
     </div>
@@ -169,11 +179,23 @@
                                       x-text="item.kode_akses"></span>
                             </td>
                             <td class="text-right">
-                                <button type="button"
-                                        @click="confirmDelete(item)"
-                                        class="btn btn-ghost btn-sm text-danger-600">
-                                    Hapus
-                                </button>
+                                <div class="inline-flex gap-1">
+                                    <form :action="`{{ url('/superadmin/ujian/' . $ujian->id . '/peserta-offline') }}/${item.id}/reset-kode`"
+                                          method="POST" class="inline"
+                                          @submit="return confirm('Yakin ingin reset kode akses peserta ini?')">
+                                        @csrf
+                                        <button type="submit"
+                                                class="btn btn-ghost btn-sm text-primary-600"
+                                                title="Reset kode akses">
+                                            Reset Kode
+                                        </button>
+                                    </form>
+                                    <button type="button"
+                                            @click="confirmDelete(item)"
+                                            class="btn btn-ghost btn-sm text-danger-600">
+                                        Hapus
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </template>

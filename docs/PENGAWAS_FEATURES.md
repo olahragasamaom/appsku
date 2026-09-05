@@ -162,6 +162,85 @@ panritta_time_extensions:
 
 ---
 
+### 6. Reset Kode Akses 🔑
+
+**Deskripsi:** Reset kode akses peserta karena lupa atau hilang. Kode lama akan tidak berlaku lagi.
+
+**Kapan Digunakan:**
+- Peserta lupa kode akses
+- Kartu peserta hilang
+- Ada kebocoran kode
+- Perlu regenerate massal sebelum ujian
+
+**Ada 2 Mode:**
+
+**Mode 1: Reset Individual**
+1. Ke halaman **Peserta Offline** (bukan Monitoring)
+2. Klik tombol **"Reset Kode"** (warna biru) di baris peserta
+3. Konfirmasi "Yakin ingin reset kode akses peserta ini?"
+4. Kode baru muncul di **alert hijau** — catat/print sekarang!
+5. Alert format: `Peserta P001: Kode Akses = ABC12XYZ`
+
+**Mode 2: Bulk Reset (Semua Peserta di Ujian)**
+1. Ke halaman **Peserta Offline**
+2. Klik tombol **"Reset Semua Kode"** (warna kuning, di header)
+3. Konfirmasi dengan warning yang jelas
+4. Semua peserta di-reset sekaligus
+5. Auto-redirect ke halaman **Cetak Kartu** untuk print ulang
+
+**Audit Trail:**
+```
+panritta_peserta_offline:
+- kode_akses: [new hash]
+- kode_akses_plain: [new plaintext untuk print]
+- kode_akses_reset_at: 2026-09-05 17:30:00
+- kode_akses_reset_by: 1 (admin user_id)
+```
+
+---
+
+### 7. Assign Peserta ke Multiple Ujian 👥
+
+**Deskripsi:** Fleksibilitas untuk 1 peserta mengikuti beberapa ujian offline berbeda tanpa perlu bikin data peserta baru.
+
+**Konsep:**
+- Peserta punya **ujian_id** (ujian utama, "native")
+- Bisa ditambahkan ke ujian lain via **kehadiran record** (`panritta_peserta_offline_kehadiran`)
+- Peserta yang di-assign akan muncul di daftar ujian saat login
+
+**Kapan Digunakan:**
+- Peserta ikut multi-day exam yang berbeda
+- Peserta cadangan yang perlu akses ke ujian sekaligus
+- Reorganisasi peserta antar-kelas/sesi
+
+**Cara Akses:**
+1. Ke halaman **Peserta Offline**
+2. Klik tombol **"Assign Peserta"** (warna abu-abu)
+3. Halaman Assign muncul dengan 3 section:
+
+**Section 1: Copy dari Ujian Lain**
+- Dropdown pilih ujian sumber (dengan info jumlah peserta)
+- Klik **"Copy Peserta"** → semua peserta dari ujian sumber di-copy
+- Duplikat otomatis di-skip
+
+**Section 2: Peserta yang Sudah Assigned**
+- Daftar semua peserta yang bisa ikut ujian ini
+- Ada label "Native" untuk peserta dengan `ujian_id` yang sama
+- Peserta "Native" **tidak bisa dilepas** (harus hapus dari halaman utama)
+- Peserta assigned dari ujian lain bisa **Lepas** (unassign)
+
+**Section 3: Peserta Tersedia untuk di-Assign**
+- Daftar peserta dari ujian offline LAIN yang belum di-assign
+- Checkbox multi-select (dengan "Select All")
+- Klik **"Assign Peserta Terpilih"** → assign massal
+
+**Efek:**
+- Assign membuat record baru di `panritta_peserta_offline_kehadiran`
+- Status kehadiran default: `tidak_hadir` (perlu di-mark hadir manual)
+- Unassign menghapus record kehadiran (bukan menghapus peserta)
+
+---
+
 ## Perbandingan Fitur Aksi
 
 | Fitur | Kondisi | Efek | Reversible? | Audit |
@@ -279,6 +358,38 @@ POST /superadmin/ujian/{ujian}/pengawas/attempt/{attempt}/extend-time
      Name: superadmin.ujian.pengawas.extend-time
 ```
 
+### Reset Kode Akses
+```
+POST /superadmin/ujian/{ujian}/peserta-offline/{peserta}/reset-kode
+     → Reset kode akses individual
+     Name: superadmin.ujian.peserta-offline.reset-kode
+
+POST /superadmin/ujian/{ujian}/peserta-offline/bulk-reset-kode
+     → Reset semua kode akses di ujian (redirect ke cetak kartu)
+     Name: superadmin.ujian.peserta-offline.bulk-reset-kode
+```
+
+### Assign Peserta ke Multiple Ujian
+```
+GET  /superadmin/ujian/{ujian}/peserta-offline/assign
+     → Halaman manajemen assign
+     Name: superadmin.ujian.peserta-offline.assign.index
+
+POST /superadmin/ujian/{ujian}/peserta-offline/assign
+     → Assign peserta terpilih (multi-select)
+     Body: peserta_ids[] (array)
+     Name: superadmin.ujian.peserta-offline.assign.store
+
+DELETE /superadmin/ujian/{ujian}/peserta-offline/{peserta}/unassign
+     → Lepas peserta dari ujian (tidak hapus data peserta)
+     Name: superadmin.ujian.peserta-offline.assign.unassign
+
+POST /superadmin/ujian/{ujian}/peserta-offline/copy-from
+     → Copy semua peserta dari ujian lain
+     Body: source_ujian_id (required)
+     Name: superadmin.ujian.peserta-offline.assign.copy
+```
+
 ---
 
 ## Testing
@@ -336,10 +447,8 @@ A: Ya, extension bekerja untuk semua peserta yang sedang_ujian (baik online maup
 4. ✅ Blokir Peserta (Permanent)
 5. ✅ Time Extension (Tambah Waktu)
 6. ✅ Attendance Management (Individual + Bulk)
-
-### HIGH PRIORITY (Belum) ⏳
-7. ⏳ Reset Kode Akses Peserta
-8. ⏳ Assign Peserta ke Multiple Ujian
+7. ✅ Reset Kode Akses Peserta (Individual + Bulk)
+8. ✅ Assign Peserta ke Multiple Ujian (Copy from Ujian, Assign, Unassign)
 
 ### MEDIUM PRIORITY 📋
 9. 📋 Riwayat Session Peserta (History UI)
@@ -356,6 +465,16 @@ A: Ya, extension bekerja untuk semua peserta yang sedang_ujian (baik online maup
 ---
 
 ## Changelog
+
+**2026-09-05** — Reset Kode Akses & Assign Multiple Ujian
+- Reset kode akses individual per peserta
+- Bulk reset kode akses semua peserta di ujian (langsung ke halaman cetak kartu)
+- Assign peserta existing (dari ujian lain) ke ujian ini via UI
+- Unassign peserta dari ujian tertentu (tanpa hapus data peserta)
+- Copy semua peserta dari ujian lain (bulk)
+- Audit trail: kode_akses_reset_at, kode_akses_reset_by di panritta_peserta_offline
+- New controllers: PesertaOfflineKodeAksesController, PesertaOfflineAssignController
+- New view: assign.blade.php
 
 **2026-09-05** — Blokir Peserta & Time Extension
 - Add block/unblock peserta functionality

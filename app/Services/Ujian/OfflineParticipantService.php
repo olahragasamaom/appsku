@@ -100,6 +100,104 @@ class OfflineParticipantService
         );
     }
 
+    /**
+     * Reset kode akses untuk peserta. Generate kode baru dan return plaintext-nya.
+     * Tercatat siapa dan kapan reset dilakukan.
+     */
+    public function resetKodeAkses(PesertaOffline $peserta, ?int $resetBy = null): string
+    {
+        $plaintext = $this->generateKodeAkses();
+
+        $peserta->update([
+            'kode_akses' => Hash::make($plaintext),
+            'kode_akses_plain' => $plaintext,
+            'kode_akses_reset_at' => now(),
+            'kode_akses_reset_by' => $resetBy,
+        ]);
+
+        return $plaintext;
+    }
+
+    /**
+     * Bulk reset kode akses untuk semua peserta di ujian tertentu.
+     * Return collection [{nomor_peserta, kode_akses_plain}, ...] untuk print/export.
+     *
+     * @return Collection<int, array{nomor_peserta: string, kode_akses: string}>
+     */
+    public function bulkResetKodeAkses(Ujian $ujian, ?int $resetBy = null): Collection
+    {
+        $peserta = PesertaOffline::where('ujian_id', $ujian->id)->get();
+
+        return $peserta->map(function (PesertaOffline $p) use ($resetBy): array {
+            $plaintext = $this->resetKodeAkses($p, $resetBy);
+
+            return [
+                'nomor_peserta' => $p->nomor_peserta,
+                'nama_peserta' => $p->nama_peserta,
+                'kode_akses' => $plaintext,
+            ];
+        });
+    }
+
+    /**
+     * Assign peserta existing ke ujian lain (buat kehadiran record baru).
+     * Idempotent: kalau sudah pernah assigned, tidak duplicate.
+     */
+    public function assignToUjian(PesertaOffline $peserta, Ujian $ujian): PesertaOfflineKehadiran
+    {
+        $this->assertOffline($ujian);
+
+        return PesertaOfflineKehadiran::firstOrCreate(
+            [
+                'peserta_offline_id' => $peserta->id,
+                'ujian_id' => $ujian->id,
+            ],
+            [
+                'status_kehadiran' => 'tidak_hadir',
+            ]
+        );
+    }
+
+    /**
+     * Remove peserta dari ujian tertentu (hapus kehadiran, bukan peserta).
+     */
+    public function unassignFromUjian(PesertaOffline $peserta, Ujian $ujian): void
+    {
+        PesertaOfflineKehadiran::where('peserta_offline_id', $peserta->id)
+            ->where('ujian_id', $ujian->id)
+            ->delete();
+    }
+
+    /**
+     * Copy peserta dari ujian sumber ke ujian target (bulk assign).
+     * Return jumlah peserta yang berhasil di-copy.
+     */
+    public function copyPesertaFromUjian(Ujian $sourceUjian, Ujian $targetUjian): int
+    {
+        $this->assertOffline($targetUjian);
+
+        $sourcePeserta = PesertaOffline::where('ujian_id', $sourceUjian->id)->get();
+
+        $count = 0;
+        foreach ($sourcePeserta as $peserta) {
+            $created = PesertaOfflineKehadiran::firstOrCreate(
+                [
+                    'peserta_offline_id' => $peserta->id,
+                    'ujian_id' => $targetUjian->id,
+                ],
+                [
+                    'status_kehadiran' => 'tidak_hadir',
+                ]
+            );
+
+            if ($created->wasRecentlyCreated) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
     private function assertOffline(Ujian $ujian): void
     {
         if (! $ujian->isOffline()) {

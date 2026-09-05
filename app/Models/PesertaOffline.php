@@ -24,6 +24,8 @@ class PesertaOffline extends Model
         'is_blocked',
         'blocked_at',
         'blocked_reason',
+        'kode_akses_reset_at',
+        'kode_akses_reset_by',
     ];
 
     protected $hidden = [
@@ -38,6 +40,8 @@ class PesertaOffline extends Model
             'ujian_peserta_id' => 'integer',
             'is_blocked' => 'boolean',
             'blocked_at' => 'datetime',
+            'kode_akses_reset_at' => 'datetime',
+            'kode_akses_reset_by' => 'integer',
         ];
     }
 

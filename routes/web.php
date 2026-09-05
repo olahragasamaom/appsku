@@ -688,6 +688,22 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('ujian/{ujian}/pengawas/attempt/{ujianPeserta}/extend-time', [\App\Http\Controllers\Superadmin\PengawasActionController::class, 'addTimeExtension'])
             ->name('ujian.pengawas.extend-time');
 
+        // reset kode akses peserta
+        Route::post('ujian/{ujian}/peserta-offline/{pesertaOffline}/reset-kode', [\App\Http\Controllers\Superadmin\PesertaOfflineKodeAksesController::class, 'reset'])
+            ->name('ujian.peserta-offline.reset-kode');
+        Route::post('ujian/{ujian}/peserta-offline/bulk-reset-kode', [\App\Http\Controllers\Superadmin\PesertaOfflineKodeAksesController::class, 'bulkReset'])
+            ->name('ujian.peserta-offline.bulk-reset-kode');
+
+        // assign peserta ke multiple ujian
+        Route::get('ujian/{ujian}/peserta-offline/assign', [\App\Http\Controllers\Superadmin\PesertaOfflineAssignController::class, 'index'])
+            ->name('ujian.peserta-offline.assign.index');
+        Route::post('ujian/{ujian}/peserta-offline/assign', [\App\Http\Controllers\Superadmin\PesertaOfflineAssignController::class, 'assign'])
+            ->name('ujian.peserta-offline.assign.store');
+        Route::delete('ujian/{ujian}/peserta-offline/{pesertaOffline}/unassign', [\App\Http\Controllers\Superadmin\PesertaOfflineAssignController::class, 'unassign'])
+            ->name('ujian.peserta-offline.assign.unassign');
+        Route::post('ujian/{ujian}/peserta-offline/copy-from', [\App\Http\Controllers\Superadmin\PesertaOfflineAssignController::class, 'copyFromUjian'])
+            ->name('ujian.peserta-offline.assign.copy');
+
         // paket member management
         Route::resource('paket', PaketController::class)
             ->except(['show'])
