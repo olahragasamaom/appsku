@@ -15,6 +15,9 @@
             <p class="text-sm text-secondary-500">{{ $ujian->nama_ujian }}</p>
         </div>
         <div class="flex gap-2">
+            <a href="{{ route('superadmin.ujian.peserta-offline.kehadiran.index', $ujian) }}" class="btn btn-primary">
+                Kelola Kehadiran
+            </a>
             <a href="{{ route('superadmin.ujian.peserta-offline.export', $ujian) }}" class="btn btn-secondary">
                 Cetak Kartu
             </a>
