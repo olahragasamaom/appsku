@@ -9,16 +9,20 @@ use Spatie\Permission\Models\Role;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    Role::create(['name' => 'admin']);
+    $this->company = Company::factory()->create();
+
+    app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($this->company->id);
+
+    $role = Role::create(['name' => 'admin']);
     Role::create(['name' => 'hr-manager']);
     Role::create(['name' => 'employee']);
-
-    $this->company = Company::factory()->create();
 
     $this->admin = User::factory()->create([
         'company_id' => $this->company->id,
     ]);
     $this->admin->assignRole('admin');
+
+    grantModulePermissionsToRole($role, ['thr', 'thr-settings']);
 });
 
 describe('THR Setting Index', function () {

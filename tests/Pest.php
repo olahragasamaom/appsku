@@ -71,3 +71,25 @@ function createStandardRoles(int $companyId): void
 {
     createCompanyRoles($companyId, ['admin', 'hr-manager', 'employee']);
 }
+
+/**
+ * Grant all permissions for a list of modules to a role.
+ *
+ * @param  \Spatie\Permission\Models\Role  $role  The role to grant permissions to
+ * @param  array  $moduleKeys  Array of module keys (e.g., ['thr', 'thr-settings'])
+ */
+function grantModulePermissionsToRole(\Spatie\Permission\Models\Role $role, array $moduleKeys = []): void
+{
+    $actions = ['view', 'edit', 'delete'];
+
+    foreach ($moduleKeys as $moduleKey) {
+        foreach ($actions as $action) {
+            $permission = \Spatie\Permission\Models\Permission::firstOrCreate([
+                'name' => "{$moduleKey}.{$action}",
+                'guard_name' => 'web',
+            ]);
+
+            $role->givePermissionTo($permission);
+        }
+    }
+}
