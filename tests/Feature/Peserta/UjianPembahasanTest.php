@@ -61,13 +61,14 @@ describe('Peserta Pembahasan (offline)', function () {
     it('shows the pembahasan page for a finished offline attempt', function () {
         ['ujian' => $ujian, 'usBenar' => $usBenar, 'usSalah' => $usSalah] = buildPembahasanUjian();
 
-        $attempt = finishedAttempt($ujian, [
-            ['ujian_soal' => $usBenar, 'values' => ['jawaban' => 'B', 'nilai' => 5, 'benar' => true]],
-            ['ujian_soal' => $usSalah, 'values' => ['jawaban' => 'C', 'nilai' => 0, 'benar' => false]],
-        ]);
+        ['attempt' => $attempt, 'peserta' => $peserta, 'sessionToken' => $sessionToken] = createOfflineParticipantSessionForTest($ujian);
+        $attempt->update(['status' => 'selesai']);
+        $attempt->jawaban()->create(['ujian_soal_id' => $usBenar->id, 'soal_id' => $usBenar->soal_id, 'jenis_ujian_id' => $usBenar->jenis_ujian_id, 'jawaban' => 'B', 'nilai' => 5, 'benar' => true]);
+        $attempt->jawaban()->create(['ujian_soal_id' => $usSalah->id, 'soal_id' => $usSalah->soal_id, 'jenis_ujian_id' => $usSalah->jenis_ujian_id, 'jawaban' => 'C', 'nilai' => 0, 'benar' => false]);
 
         $response = $this->withSession([
-            'offline_peserta_id' => 1,
+            'offline_peserta_id' => $peserta->id,
+            'offline_session_token' => $sessionToken,
             'offline_attempt_id' => $attempt->id,
             'offline_ujian_id' => $ujian->id,
         ])->get(route('peserta.ujian.pembahasan', $ujian));
@@ -81,13 +82,14 @@ describe('Peserta Pembahasan (offline)', function () {
     it('exposes correct benar/salah state and expected key to the view', function () {
         ['ujian' => $ujian, 'usBenar' => $usBenar, 'usSalah' => $usSalah, 'soalSalah' => $soalSalah] = buildPembahasanUjian();
 
-        $attempt = finishedAttempt($ujian, [
-            ['ujian_soal' => $usBenar, 'values' => ['jawaban' => 'B', 'nilai' => 5, 'benar' => true]],
-            ['ujian_soal' => $usSalah, 'values' => ['jawaban' => 'C', 'nilai' => 0, 'benar' => false]],
-        ]);
+        ['attempt' => $attempt, 'peserta' => $peserta, 'sessionToken' => $sessionToken] = createOfflineParticipantSessionForTest($ujian);
+        $attempt->update(['status' => 'selesai']);
+        $attempt->jawaban()->create(['ujian_soal_id' => $usBenar->id, 'soal_id' => $usBenar->soal_id, 'jenis_ujian_id' => $usBenar->jenis_ujian_id, 'jawaban' => 'B', 'nilai' => 5, 'benar' => true]);
+        $attempt->jawaban()->create(['ujian_soal_id' => $usSalah->id, 'soal_id' => $usSalah->soal_id, 'jenis_ujian_id' => $usSalah->jenis_ujian_id, 'jawaban' => 'C', 'nilai' => 0, 'benar' => false]);
 
         $response = $this->withSession([
-            'offline_peserta_id' => 1,
+            'offline_peserta_id' => $peserta->id,
+            'offline_session_token' => $sessionToken,
             'offline_attempt_id' => $attempt->id,
             'offline_ujian_id' => $ujian->id,
         ])->get(route('peserta.ujian.pembahasan', $ujian));
@@ -97,14 +99,14 @@ describe('Peserta Pembahasan (offline)', function () {
     });
 
     it('redirects to hasil when tampilkan_hasil is false', function () {
-        ['ujian' => $ujian, 'usBenar' => $usBenar] = buildPembahasanUjian(['tampilkan_hasil' => false]);
+        ['ujian' => $ujian] = buildPembahasanUjian(['tampilkan_hasil' => false]);
 
-        $attempt = finishedAttempt($ujian, [
-            ['ujian_soal' => $usBenar, 'values' => ['jawaban' => 'B', 'nilai' => 5, 'benar' => true]],
-        ]);
+        ['attempt' => $attempt, 'peserta' => $peserta, 'sessionToken' => $sessionToken] = createOfflineParticipantSessionForTest($ujian);
+        $attempt->update(['status' => 'selesai']);
 
         $response = $this->withSession([
-            'offline_peserta_id' => 1,
+            'offline_peserta_id' => $peserta->id,
+            'offline_session_token' => $sessionToken,
             'offline_attempt_id' => $attempt->id,
             'offline_ujian_id' => $ujian->id,
         ])->get(route('peserta.ujian.pembahasan', $ujian));
@@ -115,14 +117,11 @@ describe('Peserta Pembahasan (offline)', function () {
     it('404s when the attempt is not yet selesai', function () {
         ['ujian' => $ujian] = buildPembahasanUjian();
 
-        $attempt = $ujian->peserta()->create([
-            'user_id' => null,
-            'status' => 'sedang_ujian',
-            'waktu_mulai' => now(),
-        ]);
+        ['attempt' => $attempt, 'peserta' => $peserta, 'sessionToken' => $sessionToken] = createOfflineParticipantSessionForTest($ujian);
 
         $response = $this->withSession([
-            'offline_peserta_id' => 1,
+            'offline_peserta_id' => $peserta->id,
+            'offline_session_token' => $sessionToken,
             'offline_attempt_id' => $attempt->id,
             'offline_ujian_id' => $ujian->id,
         ])->get(route('peserta.ujian.pembahasan', $ujian));

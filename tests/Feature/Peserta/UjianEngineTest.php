@@ -169,14 +169,11 @@ describe('Offline Participant Flow', function () {
     it('can view the exam page using session keys', function () {
         ['ujian' => $ujian, 'ujianSoal' => $ujianSoal] = buildUjianWithSoal(['tipe_ujian' => 'offline_kelas']);
 
-        $attempt = $ujian->peserta()->create([
-            'user_id' => null,
-            'status' => 'sedang_ujian',
-            'waktu_mulai' => now(),
-        ]);
+        ['attempt' => $attempt, 'peserta' => $peserta, 'sessionToken' => $sessionToken] = createOfflineParticipantSessionForTest($ujian);
 
         $response = $this->withSession([
-            'offline_peserta_id' => 1,
+            'offline_peserta_id' => $peserta->id,
+            'offline_session_token' => $sessionToken,
             'offline_attempt_id' => $attempt->id,
             'offline_ujian_id' => $ujian->id,
         ])->get(route('peserta.ujian.kerjakan', $ujian));
@@ -189,14 +186,11 @@ describe('Offline Participant Flow', function () {
     it('can save an answer using session keys', function () {
         ['ujian' => $ujian, 'ujianSoal' => $ujianSoal] = buildUjianWithSoal(['tipe_ujian' => 'offline_kelas']);
 
-        $attempt = $ujian->peserta()->create([
-            'user_id' => null,
-            'status' => 'sedang_ujian',
-            'waktu_mulai' => now(),
-        ]);
+        ['attempt' => $attempt, 'peserta' => $peserta, 'sessionToken' => $sessionToken] = createOfflineParticipantSessionForTest($ujian);
 
         $response = $this->withSession([
-            'offline_peserta_id' => 1,
+            'offline_peserta_id' => $peserta->id,
+            'offline_session_token' => $sessionToken,
             'offline_attempt_id' => $attempt->id,
             'offline_ujian_id' => $ujian->id,
         ])->postJson(route('peserta.ujian.jawaban', $ujian), [
@@ -217,11 +211,7 @@ describe('Offline Participant Flow', function () {
     it('can submit the exam using session keys', function () {
         ['ujian' => $ujian, 'ujianSoal' => $ujianSoal] = buildUjianWithSoal(['tipe_ujian' => 'offline_kelas']);
 
-        $attempt = $ujian->peserta()->create([
-            'user_id' => null,
-            'status' => 'sedang_ujian',
-            'waktu_mulai' => now(),
-        ]);
+        ['attempt' => $attempt, 'peserta' => $peserta, 'sessionToken' => $sessionToken] = createOfflineParticipantSessionForTest($ujian);
 
         $attempt->jawaban()->create([
             'ujian_soal_id' => $ujianSoal->id,
@@ -233,7 +223,8 @@ describe('Offline Participant Flow', function () {
         ]);
 
         $response = $this->withSession([
-            'offline_peserta_id' => 1,
+            'offline_peserta_id' => $peserta->id,
+            'offline_session_token' => $sessionToken,
             'offline_attempt_id' => $attempt->id,
             'offline_ujian_id' => $ujian->id,
         ])->post(route('peserta.ujian.submit', $ujian));
@@ -249,15 +240,12 @@ describe('Deadline snapshot (AD-10 / C-AU-6)', function () {
     it('auto-submits when batas_waktu snapshot has passed even if waktu_mulai + durasi has not', function () {
         ['ujian' => $ujian] = buildUjianWithSoal(['tipe_ujian' => 'offline_kelas', 'durasi_ujian' => 120]);
 
-        $attempt = $ujian->peserta()->create([
-            'user_id' => null,
-            'status' => 'sedang_ujian',
-            'waktu_mulai' => now(),
-            'batas_waktu' => now()->subMinute(),
-        ]);
+        ['attempt' => $attempt, 'peserta' => $peserta, 'sessionToken' => $sessionToken] = createOfflineParticipantSessionForTest($ujian);
+        $attempt->update(['batas_waktu' => now()->subMinute()]);
 
         $response = $this->withSession([
-            'offline_peserta_id' => 1,
+            'offline_peserta_id' => $peserta->id,
+            'offline_session_token' => $sessionToken,
             'offline_attempt_id' => $attempt->id,
             'offline_ujian_id' => $ujian->id,
         ])->get(route('peserta.ujian.kerjakan', $ujian));
@@ -269,15 +257,12 @@ describe('Deadline snapshot (AD-10 / C-AU-6)', function () {
     it('stays in the exam when batas_waktu snapshot is still in the future', function () {
         ['ujian' => $ujian] = buildUjianWithSoal(['tipe_ujian' => 'offline_kelas', 'durasi_ujian' => 1]);
 
-        $attempt = $ujian->peserta()->create([
-            'user_id' => null,
-            'status' => 'sedang_ujian',
-            'waktu_mulai' => now()->subMinutes(10),
-            'batas_waktu' => now()->addMinutes(30),
-        ]);
+        ['attempt' => $attempt, 'peserta' => $peserta, 'sessionToken' => $sessionToken] = createOfflineParticipantSessionForTest($ujian);
+        $attempt->update(['batas_waktu' => now()->addMinutes(30)]);
 
         $response = $this->withSession([
-            'offline_peserta_id' => 1,
+            'offline_peserta_id' => $peserta->id,
+            'offline_session_token' => $sessionToken,
             'offline_attempt_id' => $attempt->id,
             'offline_ujian_id' => $ujian->id,
         ])->get(route('peserta.ujian.kerjakan', $ujian));

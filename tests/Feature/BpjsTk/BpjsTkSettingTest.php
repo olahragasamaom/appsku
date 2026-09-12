@@ -3,21 +3,13 @@
 use App\Models\BpjsTkSetting;
 use App\Models\Company;
 use App\Models\JkkRiskRate;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    Role::create(['name' => 'admin']);
-
-    $this->company = Company::factory()->create();
-
-    $this->admin = User::factory()->create([
-        'company_id' => $this->company->id,
-    ]);
-    $this->admin->assignRole('admin');
+    $this->company = $this->createCompanyWithPermissionContext();
+    $this->admin = $this->createAdminUserWithAllPermissions($this->company);
 });
 
 describe('BPJS TK Settings Access', function () {

@@ -93,3 +93,72 @@ function grantModulePermissionsToRole(\Spatie\Permission\Models\Role $role, arra
         }
     }
 }
+
+/**
+ * Grant ALL module permissions to a role (convenience helper for admin/hr/payroll roles).
+ * Useful for integration tests that don't care about permission restrictions.
+ *
+ * @param  \Spatie\Permission\Models\Role  $role  The role to grant all permissions to
+ */
+function grantAllModulePermissionsToRole(\Spatie\Permission\Models\Role $role): void
+{
+    $actions = ['view', 'edit', 'delete'];
+
+    foreach (\App\Models\Module::all() as $module) {
+        foreach ($actions as $action) {
+            $permission = \Spatie\Permission\Models\Permission::firstOrCreate([
+                'name' => "{$module->key}.{$action}",
+                'guard_name' => 'web',
+            ]);
+
+            $role->givePermissionTo($permission);
+        }
+    }
+}
+
+/**
+ * Create an offline participant session for testing offline exam flows.
+ * Sets up both OfflineParticipantSession record and session keys required by OfflineParticipantAuth middleware.
+ *
+ * @param  \App\Models\Ujian  $ujian  The offline exam
+ * @param  string|null  $nomor_peserta  The participant number (optional, for custom setup)
+ * @return array ['peserta' => PesertaOffline, 'attempt' => UjianPeserta, 'sessionToken' => string]
+ */
+function createOfflineParticipantSessionForTest(\App\Models\Ujian $ujian, ?string $nomor_peserta = null): array
+{
+    $peserta = \App\Models\PesertaOffline::factory()->create([
+        'ujian_id' => $ujian->id,
+        'nomor_peserta' => $nomor_peserta ?? fake()->unique()->numerify('###'),
+    ]);
+
+    $kehadiran = \App\Models\PesertaOfflineKehadiran::factory()->create([
+        'peserta_offline_id' => $peserta->id,
+        'ujian_id' => $ujian->id,
+        'status_kehadiran' => 'hadir',
+    ]);
+
+    $attempt = $ujian->peserta()->create([
+        'user_id' => null,
+        'peserta_offline_id' => $peserta->id,
+        'status' => 'sedang_ujian',
+        'waktu_mulai' => now(),
+        'batas_waktu' => now()->addHours(2),
+    ]);
+
+    $sessionToken = \Illuminate\Support\Str::random(40);
+    $session = \App\Models\OfflineParticipantSession::create([
+        'peserta_offline_id' => $peserta->id,
+        'ujian_id' => $ujian->id,
+        'session_token' => $sessionToken,
+        'status' => 'sedang_ujian',
+        'login_at' => now(),
+        'last_activity_at' => now(),
+    ]);
+
+    return [
+        'peserta' => $peserta,
+        'attempt' => $attempt,
+        'sessionToken' => $sessionToken,
+        'kehadiran' => $kehadiran,
+    ];
+}

@@ -61,15 +61,21 @@ class OfflineParticipantAuth
         }
 
         if ($attempt->status === 'selesai') {
-            $ujian = $attempt->ujian;
-            if ($ujian->tampilkan_hasil) {
-                return redirect()->route('peserta.ujian.hasil', $ujian->id);
-            } else {
-                abort(403, 'Ujian sudah selesai.');
+            $routeName = $request->route()->getName();
+            // Allow access to pembahasan and hasil routes when selesai
+            if (! in_array($routeName, ['peserta.ujian.pembahasan', 'peserta.ujian.hasil'])) {
+                $ujian = $attempt->ujian;
+                if ($ujian->tampilkan_hasil) {
+                    return redirect()->route('peserta.ujian.hasil', $ujian->id);
+                } else {
+                    abort(403, 'Ujian sudah selesai.');
+                }
             }
         }
 
-        if ($attempt->status !== 'sedang_ujian') {
+        $routeName = $request->route()->getName();
+        // Allow selesai status for pembahasan and hasil routes
+        if ($attempt->status !== 'sedang_ujian' && ! in_array($routeName, ['peserta.ujian.pembahasan', 'peserta.ujian.hasil'])) {
             abort(403, 'Status ujian tidak valid.');
         }
 
