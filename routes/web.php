@@ -106,6 +106,18 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
+    if (auth()->check()) {
+        $user = auth()->user();
+
+        if ($user->isSuperAdmin()) {
+            return redirect()->route('superadmin.dashboard');
+        } elseif ($user->is_peserta) {
+            return redirect()->route('peserta.dashboard');
+        } else {
+            return redirect()->route('dashboard');
+        }
+    }
+
     $pakets = \App\Models\Paket::where('is_active', true)
         ->orderBy('urutan')
         ->orderBy('harga')
@@ -592,7 +604,8 @@ Route::prefix('portal')->name('portal.')->middleware(['auth', 'employee'])->grou
 
 // Superadmin Auth (Guest)
 Route::prefix('superadmin')->name('superadmin.')->group(function () {
-    Route::middleware('guest')->group(function () {
+    Route::middleware('guest:web')->group(function () {
+        Route::get('/', [SuperadminAuthController::class, 'indexLoginRedirect'])->name('index');
         Route::get('login', [SuperadminAuthController::class, 'showLoginForm'])->name('login');
         Route::post('login', [SuperadminAuthController::class, 'login']);
     });
@@ -603,6 +616,13 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         // Dashboard
         Route::get('/', [SuperadminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard2', [\App\Http\Controllers\Superadmin\Dashboard2Controller::class, 'index'])->name('dashboard2');
+
+        // User Management
+        Route::resource('users', \App\Http\Controllers\Superadmin\UserController::class)->only(['index', 'show']);
+
+        // Change Password
+        Route::get('change-password', [\App\Http\Controllers\Superadmin\ChangePasswordController::class, 'index'])->name('change-password.index');
+        Route::put('change-password', [\App\Http\Controllers\Superadmin\ChangePasswordController::class, 'update'])->name('change-password.update');
 
         // Company Management (View Only)
         Route::get('companies', [\App\Http\Controllers\Superadmin\CompanyController::class, 'index'])->name('companies.index');
@@ -655,9 +675,17 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::delete('ujian/{ujian}/soal/{ujianSoal}/detach', [UjianSoalController::class, 'detach'])->name('ujian.soal.detach');
         Route::post('ujian/{ujian}/activate', [UjianController::class, 'activate'])->name('ujian.activate');
 
+        // absensi management
+        Route::get('absensi', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'index'])->name('absensi.index');
+        Route::get('absensi/ujian/{ujian}/activation', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'activation'])->name('absensi.activation');
+        Route::patch('absensi/ujian/{ujian}/peserta/{pesertaOffline}/toggle', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'toggleActivation'])->name('absensi.toggle');
+        Route::post('absensi/ujian/{ujian}/bulk-toggle', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'bulkToggleActivation'])->name('absensi.bulk-toggle');
+
         // peserta offline management
+        Route::get('ujian/{ujian}/peserta-offline/passwords', [PesertaOfflineController::class, 'showPasswords'])->name('ujian.peserta-offline.passwords');
         Route::get('ujian/{ujian}/peserta-offline/export', [PesertaOfflineController::class, 'export'])->name('ujian.peserta-offline.export');
         Route::get('peserta-offline/template', [PesertaOfflineController::class, 'template'])->name('ujian.peserta-offline.template');
+        Route::get('ujian/{ujian}/peserta-offline/import', [PesertaOfflineController::class, 'importForm'])->name('ujian.peserta-offline.import.form');
         Route::post('ujian/{ujian}/peserta-offline/import', [PesertaOfflineController::class, 'import'])->name('ujian.peserta-offline.import');
         Route::post('ujian/{ujian}/peserta-offline/bulk-destroy', [PesertaOfflineController::class, 'bulkDestroy'])->name('ujian.peserta-offline.bulk-destroy');
         Route::resource('ujian.peserta-offline', PesertaOfflineController::class)
@@ -811,6 +839,32 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
             Route::post('blocked-ips/{blockedIp}/unblock', [BlockedIpController::class, 'unblock'])->name('blocked-ips.unblock');
             Route::resource('blocked-ips', BlockedIpController::class)->only(['index', 'create', 'store', 'destroy']);
         });
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Pengajar (Teacher) Routes
+|--------------------------------------------------------------------------
+*/
+Route::prefix('pengajar')->name('pengajar.')->group(function () {
+    Route::middleware('guest:web')->group(function () {
+        Route::get('/login-pengajar', [\App\Http\Controllers\Pengajar\AuthController::class, 'showLoginForm'])->name('login');
+        Route::post('/login-pengajar', [\App\Http\Controllers\Pengajar\AuthController::class, 'login']);
+    });
+
+    Route::middleware(['auth', 'pengajar'])->group(function () {
+        Route::post('/logout-pengajar', [\App\Http\Controllers\Pengajar\AuthController::class, 'logout'])->name('logout');
+
+        // Dashboard
+        Route::get('/', [\App\Http\Controllers\Pengajar\DashboardController::class, 'index'])->name('dashboard');
+
+        // Soal Management
+        Route::resource('soal', \App\Http\Controllers\Pengajar\SoalController::class);
+
+        // Change Password
+        Route::get('change-password', [\App\Http\Controllers\Pengajar\ChangePasswordController::class, 'index'])->name('change-password.index');
+        Route::put('change-password', [\App\Http\Controllers\Pengajar\ChangePasswordController::class, 'update'])->name('change-password.update');
     });
 });
 

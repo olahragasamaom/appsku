@@ -1,7 +1,7 @@
 @extends('layouts.guest')
 
 @section('title', 'Masuk - Panritta')
-@section('description', 'Masuk ke akun Panritta Anda untuk mengelola payroll dan HR.')
+@section('description', 'Masuk ke akun Panritta Anda untuk persiapan ujian kedinasan dengan percaya diri.')
 
 @section('content')
 <div class="min-h-screen flex">
@@ -33,66 +33,60 @@
             <!-- Main Content - Centered -->
             <div class="flex-1 flex items-center justify-center">
                 <div class="max-w-md">
-                    <!-- Badge -->
-                    <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
-                        <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        <span class="text-white/90 text-sm font-medium">Platform HR #1 di Indonesia</span>
-                    </div>
+                  
 
                     <!-- Headline -->
-                    <h1 class="text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
-                        Selamat Datang<br>Kembali!
-                    </h1>
-                    <p class="text-primary-100 text-lg mb-10">
-                        Kelola payroll dan HR perusahaan Anda dengan mudah, aman, dan efisien.
-                    </p>
+                     <h1 class="text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+                         Persiapan Ujian<br>Kedinasan!
+                     </h1>
+                     <p class="text-primary-100 text-lg mb-10">
+                         Latihan soal dan persiapan ujian kedinasan dengan materi berkualitas dan monitoring real-time.
+                     </p>
 
                     <!-- Stats Grid -->
-                    <div class="grid grid-cols-3 gap-4 mb-2">
-                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center">
-                            <div class="text-3xl font-bold text-white mb-1">500+</div>
-                            <div class="text-primary-200 text-sm">Perusahaan*</div>
-                        </div>
-                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center">
-                            <div class="text-3xl font-bold text-white mb-1">50K+</div>
-                            <div class="text-primary-200 text-sm">Karyawan*</div>
-                        </div>
-                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center">
-                            <div class="text-3xl font-bold text-white mb-1">99%</div>
-                            <div class="text-primary-200 text-sm">Uptime*</div>
-                        </div>
-                    </div>
+                     <div class="grid grid-cols-3 gap-4 mb-2">
+                         <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center">
+                             <div class="text-3xl font-bold text-white mb-1">10K+</div>
+                             <div class="text-primary-200 text-sm">Peserta*</div>
+                         </div>
+                         <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center">
+                             <div class="text-3xl font-bold text-white mb-1">500+</div>
+                             <div class="text-primary-200 text-sm">Soal Ujian*</div>
+                         </div>
+                         <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center">
+                             <div class="text-3xl font-bold text-white mb-1">95%</div>
+                             <div class="text-primary-200 text-sm">Kelulusan*</div>
+                         </div>
+                     </div>
                     <p class="text-primary-200 text-xs text-center mb-8">*Data ilustrasi</p>
 
                     <!-- Features List -->
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <span class="text-white">Dashboard real-time & analytics</span>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <span class="text-white">Payroll otomatis dengan PPh 21 & BPJS</span>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <span class="text-white">Mobile app untuk karyawan</span>
-                        </div>
-                    </div>
+                     <div class="space-y-4">
+                         <div class="flex items-center gap-4">
+                             <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                 <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                 </svg>
+                             </div>
+                             <span class="text-white">Ribuan soal ujian kedinasan berkualitas</span>
+                         </div>
+                         <div class="flex items-center gap-4">
+                             <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                 <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                 </svg>
+                             </div>
+                             <span class="text-white">Simulasi ujian dengan scoring real-time</span>
+                         </div>
+                         <div class="flex items-center gap-4">
+                             <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                 <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                 </svg>
+                             </div>
+                             <span class="text-white">Analisis mendalam untuk meningkatkan nilai</span>
+                         </div>
+                     </div>
                 </div>
             </div>
 
@@ -101,9 +95,7 @@
                 <div class="text-primary-300 text-sm">
                     &copy; {{ date('Y') }} Panritta. All rights reserved.
                 </div>
-                <a href="https://jagoflutter.com" target="_blank" class="text-white/60 hover:text-white/80 text-sm transition-colors">
-                    Powered by jagoflutter.com
-                </a>
+               
             </div>
         </div>
     </div>
@@ -272,27 +264,27 @@
                         </div>
                     </template>
                     <template x-if="activePortal === 'company'">
-                        <div class="flex items-start gap-2">
-                            <svg class="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <div>
-                                <p class="font-medium text-secondary-900">Company Portal (Admin/HR/Payroll)</p>
-                                <p class="text-secondary-600">Kelola karyawan, kehadiran, cuti, payroll, dan laporan perusahaan.</p>
-                            </div>
-                        </div>
-                    </template>
+                         <div class="flex items-start gap-2">
+                             <svg class="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                             </svg>
+                             <div>
+                                 <p class="font-medium text-secondary-900">Admin Portal (Superadmin)</p>
+                                 <p class="text-secondary-600">Kelola ujian, peserta, soal, dan monitoring pelaksanaan ujian kedinasan.</p>
+                             </div>
+                         </div>
+                     </template>
                     <template x-if="activePortal === 'employee'">
-                        <div class="flex items-start gap-2">
-                            <svg class="w-5 h-5 text-success-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <div>
-                                <p class="font-medium text-secondary-900">Employee Portal</p>
-                                <p class="text-secondary-600">Lihat slip gaji, ajukan cuti/lembur, dan kelola profil karyawan.</p>
-                            </div>
-                        </div>
-                    </template>
+                         <div class="flex items-start gap-2">
+                             <svg class="w-5 h-5 text-success-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                             </svg>
+                             <div>
+                                 <p class="font-medium text-secondary-900">Peserta Portal</p>
+                                 <p class="text-secondary-600">Ikuti ujian online, lihat hasil, dan pantau progres persiapan Anda.</p>
+                             </div>
+                         </div>
+                     </template>
                 </div>
 
                 <!-- Demo Accounts based on Portal -->
@@ -313,50 +305,50 @@
                         </div>
                     </template>
 
-                    <!-- Company Portal -->
-                    <template x-if="activePortal === 'company'">
-                        <div class="space-y-2">
-                            <button type="button"
-                                    @click="document.getElementById('email').value = 'admin@demo.Panritta.com'; document.getElementById('password').value = 'password';"
-                                    class="w-full text-left px-3 py-2 rounded-lg border border-secondary-200 hover:border-primary-300 hover:bg-primary-50 transition-colors">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <span class="text-sm font-medium text-secondary-900">Admin Demo</span>
-                                        <p class="text-xs text-secondary-500">admin@demo.Panritta.com</p>
-                                    </div>
-                                    <span class="text-xs bg-primary-100 text-primary-700 px-2 py-1 rounded-full">Admin</span>
-                                </div>
-                            </button>
-                            <button type="button"
-                                    @click="document.getElementById('email').value = 'hr@demo.Panritta.com'; document.getElementById('password').value = 'password';"
-                                    class="w-full text-left px-3 py-2 rounded-lg border border-secondary-200 hover:border-success-300 hover:bg-success-50 transition-colors">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <span class="text-sm font-medium text-secondary-900">HR Manager Demo</span>
-                                        <p class="text-xs text-secondary-500">hr@demo.Panritta.com</p>
-                                    </div>
-                                    <span class="text-xs bg-success-100 text-success-700 px-2 py-1 rounded-full">HR Manager</span>
-                                </div>
-                            </button>
-                        </div>
-                    </template>
+                    <!-- Admin Portal -->
+                     <template x-if="activePortal === 'company'">
+                         <div class="space-y-2">
+                             <button type="button"
+                                     @click="document.getElementById('email').value = 'admin@demo.panritta.com'; document.getElementById('password').value = 'password';"
+                                     class="w-full text-left px-3 py-2 rounded-lg border border-secondary-200 hover:border-primary-300 hover:bg-primary-50 transition-colors">
+                                 <div class="flex items-center justify-between">
+                                     <div>
+                                         <span class="text-sm font-medium text-secondary-900">Admin Ujian Demo</span>
+                                         <p class="text-xs text-secondary-500">admin@demo.panritta.com</p>
+                                     </div>
+                                     <span class="text-xs bg-primary-100 text-primary-700 px-2 py-1 rounded-full">Admin</span>
+                                 </div>
+                             </button>
+                             <button type="button"
+                                     @click="document.getElementById('email').value = 'pengawas@demo.panritta.com'; document.getElementById('password').value = 'password';"
+                                     class="w-full text-left px-3 py-2 rounded-lg border border-secondary-200 hover:border-success-300 hover:bg-success-50 transition-colors">
+                                 <div class="flex items-center justify-between">
+                                     <div>
+                                         <span class="text-sm font-medium text-secondary-900">Pengawas Ujian Demo</span>
+                                         <p class="text-xs text-secondary-500">pengawas@demo.panritta.com</p>
+                                     </div>
+                                     <span class="text-xs bg-success-100 text-success-700 px-2 py-1 rounded-full">Pengawas</span>
+                                 </div>
+                             </button>
+                         </div>
+                     </template>
 
-                    <!-- Employee Portal -->
-                    <template x-if="activePortal === 'employee'">
-                        <div class="space-y-2">
-                            <button type="button"
-                                    @click="document.getElementById('email').value = 'karyawan@demo.Panritta.com'; document.getElementById('password').value = 'password';"
-                                    class="w-full text-left px-3 py-2 rounded-lg border border-secondary-200 hover:border-success-300 hover:bg-success-50 transition-colors">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <span class="text-sm font-medium text-secondary-900">Karyawan Demo</span>
-                                        <p class="text-xs text-secondary-500">karyawan@demo.Panritta.com</p>
-                                    </div>
-                                    <span class="text-xs bg-success-100 text-success-700 px-2 py-1 rounded-full">Employee</span>
-                                </div>
-                            </button>
-                        </div>
-                    </template>
+                    <!-- Peserta Portal -->
+                     <template x-if="activePortal === 'employee'">
+                         <div class="space-y-2">
+                             <button type="button"
+                                     @click="document.getElementById('email').value = 'peserta@demo.panritta.com'; document.getElementById('password').value = 'password';"
+                                     class="w-full text-left px-3 py-2 rounded-lg border border-secondary-200 hover:border-success-300 hover:bg-success-50 transition-colors">
+                                 <div class="flex items-center justify-between">
+                                     <div>
+                                         <span class="text-sm font-medium text-secondary-900">Peserta Ujian Demo</span>
+                                         <p class="text-xs text-secondary-500">peserta@demo.panritta.com</p>
+                                     </div>
+                                     <span class="text-xs bg-success-100 text-success-700 px-2 py-1 rounded-full">Peserta</span>
+                                 </div>
+                             </button>
+                         </div>
+                     </template>
                 </div>
 
                 <p class="text-xs text-secondary-400 mt-3 text-center">Password untuk semua akun: <code class="bg-secondary-100 px-1 py-0.5 rounded">password</code></p>

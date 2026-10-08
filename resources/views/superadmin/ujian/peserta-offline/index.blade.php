@@ -15,14 +15,11 @@
             <p class="text-sm text-secondary-500">{{ $ujian->nama_ujian }}</p>
         </div>
         <div class="flex flex-wrap gap-2">
-            <a href="{{ route('superadmin.ujian.pengawas.index', $ujian) }}" class="btn btn-primary">
-                Monitoring
-            </a>
-            <a href="{{ route('superadmin.ujian.peserta-offline.kehadiran.index', $ujian) }}" class="btn btn-primary">
-                Kelola Kehadiran
-            </a>
-            <a href="{{ route('superadmin.ujian.peserta-offline.assign.index', $ujian) }}" class="btn btn-secondary">
-                Assign Peserta
+            <a href="{{ route('superadmin.ujian.peserta-offline.import.form', $ujian) }}" class="btn btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Impor Peserta
             </a>
             <a href="{{ route('superadmin.ujian.peserta-offline.export', $ujian) }}" class="btn btn-secondary">
                 Cetak Kartu
@@ -34,7 +31,6 @@
                     Reset Semua Kode
                 </button>
             </form>
-            <a href="{{ route('superadmin.ujian.index') }}" class="btn btn-ghost">Kembali</a>
         </div>
     </div>
 @endsection
@@ -94,38 +90,6 @@
                     </div>
                     <div>
                         <button type="submit" class="btn btn-primary w-full">Tambah</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header flex items-center justify-between">
-                <h3 class="card-title">Impor Peserta dari Excel</h3>
-                <a href="{{ route('superadmin.ujian.peserta-offline.template') }}" class="btn btn-secondary btn-sm">
-                    Unduh Template
-                </a>
-            </div>
-            <div class="card-body">
-                <p class="text-sm text-secondary-500 mb-4">
-                    Unduh template terlebih dahulu, isi kolom <strong>Nomor Peserta</strong> dan
-                    <strong>Nama Peserta</strong>, lalu unggah kembali. Kode akses akan dibuat otomatis
-                    untuk setiap peserta.
-                </p>
-                <form action="{{ route('superadmin.ujian.peserta-offline.import', $ujian) }}" method="POST"
-                      enctype="multipart/form-data"
-                      class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                    @csrf
-                    <div class="md:col-span-2">
-                        <label for="file" class="block text-sm font-medium text-secondary-700 mb-1">
-                            File Excel/CSV <span class="text-danger-500">*</span>
-                        </label>
-                        <input type="file" name="file" id="file" accept=".xlsx,.xls,.csv"
-                               class="input w-full @error('file') border-danger-500 @enderror" required>
-                        @error('file')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <button type="submit" class="btn btn-primary w-full">Impor</button>
                     </div>
                 </form>
             </div>

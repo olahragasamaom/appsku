@@ -56,34 +56,11 @@
                 </button>
             </div>
 
-            {{-- Navigation (data-driven dari daftar modul + filter akses per level) --}}
+            {{-- Navigation Menu Tree --}}
             @php
                 $sidebarUser = auth()->user();
 
-                try {
-                    $sidebarModules = \Illuminate\Support\Facades\Schema::hasTable('panritta_modules')
-                        ? \App\Models\Module::where('is_active', true)->orderBy('urutan')->get()
-                        : collect();
-                } catch (\Throwable $e) {
-                    $sidebarModules = collect();
-                }
-
-                $allowedModules = $sidebarModules->filter(fn ($m) => $sidebarUser?->canAccessModule($m->key));
-                $groupedModules = $allowedModules->groupBy('grup');
-
                 $moduleBadges = [
-                    'system-queue' => ['count' => (function () {
-                        try {
-                            return \Illuminate\Support\Facades\Schema::hasTable('failed_jobs')
-                                ? \Illuminate\Support\Facades\DB::table('failed_jobs')->count() : 0;
-                        } catch (\Throwable $e) { return 0; }
-                    })(), 'class' => 'bg-danger-500'],
-                    'system-rate-limits' => ['count' => (function () {
-                        try {
-                            return \Illuminate\Support\Facades\Schema::hasTable('rate_limit_logs')
-                                ? \App\Models\RateLimitLog::recent(24)->count() : 0;
-                        } catch (\Throwable $e) { return 0; }
-                    })(), 'class' => 'bg-warning-500'],
                     'security-logs' => ['count' => (function () {
                         try {
                             return \Illuminate\Support\Facades\Schema::hasTable('security_logs')
@@ -98,48 +75,37 @@
                     })(), 'class' => 'bg-secondary-500'],
                 ];
             @endphp
+
             <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-                @foreach($groupedModules as $grup => $items)
-                    @if(!in_array($grup, ['Utama', '', null], true))
-                        <div class="!mt-6 !mb-3 px-3">
-                            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{{ $grup }}</span>
-                        </div>
-                    @endif
 
-                    @foreach($items as $module)
-                        @php($badge = $moduleBadges[$module->key] ?? null)
-                        <a href="{{ $module->route_name && \Illuminate\Support\Facades\Route::has($module->route_name) ? route($module->route_name) : '#' }}"
-                           class="sidebar-link {{ $module->route_pattern && request()->routeIs($module->route_pattern) ? 'active' : '' }}">
-                            <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $module->icon }}"/>
-                            </svg>
-                            <span>{{ $module->label }}</span>
-                            @if($badge && $badge['count'] > 0)
-                                <span class="ml-auto {{ $badge['class'] }} text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ $badge['count'] }}</span>
-                            @endif
-                        </a>
-                    @endforeach
-                @endforeach
+                {{-- Dashboard --}}
+                <a href="{{ route('superadmin.dashboard') }}"
+                   class="sidebar-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l9-9 9 9M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-10"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 21h6v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4"/>
+                    </svg>
+                    <span class="flex-1">Home</span>
+                </a>
 
-                {{-- Latihan Tree Menu (Collapsible) - untuk belajar Laravel. Hanya untuk superadmin penuh. --}}
-                @if($sidebarUser?->isSuperAdmin())
+                {{-- Jenis Ujian (Collapsible Tree) --}}
                 <div class="!mt-6 !mb-3 px-3">
-                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Latihan</span>
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Ujian & Peserta</span>
                 </div>
 
-                <div x-data="{ latihanOpen: {{ request()->routeIs('superadmin.latihan-*') ? 'true' : 'false' }} }">
+                <div x-data="{ jenisUjianOpen: {{ request()->routeIs('superadmin.jenis-ujian.*', 'superadmin.sub-jenis-ujian.*', 'superadmin.sub-indikator.*') ? 'true' : 'false' }} }">
                     <button type="button"
-                            @click="latihanOpen = !latihanOpen"
-                            class="sidebar-link w-full text-left {{ request()->routeIs('superadmin.latihan-*') ? 'active' : '' }}"
-                            style="display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center;">
-                            <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            @click="jenisUjianOpen = !jenisUjianOpen"
+                            class="sidebar-link {{ request()->routeIs('superadmin.jenis-ujian.*', 'superadmin.sub-jenis-ujian.*', 'superadmin.sub-indikator.*') ? 'active' : '' }}"
+                            style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                            <svg class="sidebar-icon flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                             </svg>
-                            <span>Latihan</span>
+                            <span class="truncate">Jenis Ujian</span>
                         </div>
-                        <svg class="w-4 h-4 transition-transform"
-                             :class="latihanOpen ? 'rotate-180' : ''"
+                        <svg class="w-4 h-4 transition-transform flex-shrink-0 ml-2"
+                             :class="jenisUjianOpen ? 'rotate-180' : ''"
                              fill="none"
                              stroke="currentColor"
                              viewBox="0 0 24 24">
@@ -147,20 +113,145 @@
                         </svg>
                     </button>
 
-                    <div x-show="latihanOpen"
+                    <div x-show="jenisUjianOpen"
                          x-collapse
                          style="margin-left: 1.5rem; padding-left: 0.75rem; border-left: 1px solid #334155;">
-                        <a href="{{ route('superadmin.latihan-sederhana.index') }}"
-                           class="block px-3 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('superadmin.latihan-sederhana.*') ? 'font-bold text-white' : 'font-normal text-slate-400 hover:text-slate-200' }}">
-                            Modul Sederhana
+                        <a href="{{ route('superadmin.jenis-ujian.index') }}"
+                           class="block px-3 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('superadmin.jenis-ujian.*') ? 'font-bold text-white' : 'font-normal text-slate-400 hover:text-slate-200' }}">
+                            Jenis Ujian
                         </a>
-                        <a href="{{ route('superadmin.latihan-detail.index') }}"
-                           class="block px-3 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('superadmin.latihan-detail.*') ? 'font-bold text-white' : 'font-normal text-slate-400 hover:text-slate-200' }}">
-                            Modul Detail
+                        <a href="{{ route('superadmin.sub-jenis-ujian.index') }}"
+                           class="block px-3 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('superadmin.sub-jenis-ujian.*') ? 'font-bold text-white' : 'font-normal text-slate-400 hover:text-slate-200' }}">
+                            Sub Jenis Ujian
+                        </a>
+                        <a href="{{ route('superadmin.sub-indikator.index') }}"
+                           class="block px-3 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('superadmin.sub-indikator.*') ? 'font-bold text-white' : 'font-normal text-slate-400 hover:text-slate-200' }}">
+                            Sub Indikator
                         </a>
                     </div>
                 </div>
-                @endif
+
+                {{-- Bank Soal --}}
+                <a href="{{ route('superadmin.soal.index') }}"
+                   class="sidebar-link {{ request()->routeIs('superadmin.soal.*') ? 'active' : '' }}">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                    </svg>
+                    <span class="flex-1">Bank Soal</span>
+                </a>
+
+                {{-- Ujian --}}
+                <a href="{{ route('superadmin.ujian.index') }}"
+                   class="sidebar-link {{ request()->routeIs('superadmin.ujian.*') ? 'active' : '' }}">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="flex-1">Ujian</span>
+                </a>
+
+                {{-- Absensi --}}
+                <a href="{{ route('superadmin.absensi.index') }}"
+                   class="sidebar-link {{ request()->routeIs('superadmin.absensi.*') ? 'active' : '' }}">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                    </svg>
+                    <span class="flex-1">Absensi</span>
+                </a>
+
+                {{-- Manajemen Peserta --}}
+                <a href="{{ route('superadmin.peserta.index') }}"
+                   class="sidebar-link {{ request()->routeIs('superadmin.peserta.*') ? 'active' : '' }}">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 12H9m6 0a6 6 0 11-12 0 6 6 0 0112 0z"/>
+                    </svg>
+                    <span class="flex-1">Manajemen Peserta</span>
+                </a>
+
+                {{-- Manajemen Paket (Collapsible Tree) --}}
+                <div x-data="{ paketOpen: {{ request()->routeIs('superadmin.paket.*', 'superadmin.subscriptions.*') ? 'true' : 'false' }} }">
+                    <button type="button"
+                            @click="paketOpen = !paketOpen"
+                            class="sidebar-link {{ request()->routeIs('superadmin.paket.*', 'superadmin.subscriptions.*') ? 'active' : '' }}"
+                            style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                            <svg class="sidebar-icon flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                            </svg>
+                            <span class="truncate">Manajemen Paket</span>
+                        </div>
+                        <svg class="w-4 h-4 transition-transform flex-shrink-0 ml-2"
+                             :class="paketOpen ? 'rotate-180' : ''"
+                             fill="none"
+                             stroke="currentColor"
+                             viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+
+                    <div x-show="paketOpen"
+                         x-collapse
+                         style="margin-left: 1.5rem; padding-left: 0.75rem; border-left: 1px solid #334155;">
+                        <a href="{{ route('superadmin.paket.index') }}"
+                           class="block px-3 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('superadmin.paket.*') ? 'font-bold text-white' : 'font-normal text-slate-400 hover:text-slate-200' }}">
+                            Paket Member
+                        </a>
+                        <a href="{{ route('superadmin.subscriptions.index') }}"
+                           class="block px-3 py-2 text-sm rounded-lg transition-colors {{ request()->routeIs('superadmin.subscriptions.*') ? 'font-bold text-white' : 'font-normal text-slate-400 hover:text-slate-200' }}">
+                            Subscription
+                        </a>
+                    </div>
+                </div>
+
+                {{-- Manajemen User --}}
+                <div class="!mt-6 !mb-3 px-3">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Administrasi</span>
+                </div>
+
+                <a href="{{ route('superadmin.users.index') }}"
+                   class="sidebar-link {{ request()->routeIs('superadmin.users.*') ? 'active' : '' }}">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM9 20H4v-2a6 6 0 0112 0v2H9z"/>
+                    </svg>
+                    <span class="flex-1">Manajemen User</span>
+                </a>
+
+                <a href="{{ route('superadmin.change-password.index') }}"
+                   class="sidebar-link {{ request()->routeIs('superadmin.change-password.*') ? 'active' : '' }}">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                    <span class="flex-1">Ganti Password</span>
+                </a>
+
+                {{-- Security & System --}}
+                <div class="!mt-6 !mb-3 px-3">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Keamanan</span>
+                </div>
+
+                <a href="{{ route('superadmin.security.logs.index') }}"
+                   class="sidebar-link {{ request()->routeIs('superadmin.security.logs.*') ? 'active' : '' }}">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                    <span class="flex-1">Security Logs</span>
+                    @php($badge = $moduleBadges['security-logs'] ?? null)
+                    @if($badge && $badge['count'] > 0)
+                        <span class="{{ $badge['class'] }} text-white text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">{{ $badge['count'] }}</span>
+                    @endif
+                </a>
+
+                <a href="{{ route('superadmin.security.blocked-ips.index') }}"
+                   class="sidebar-link {{ request()->routeIs('superadmin.security.blocked-ips.*') ? 'active' : '' }}">
+                    <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                    <span class="flex-1">Blocked IPs</span>
+                    @php($badge = $moduleBadges['security-blocked-ips'] ?? null)
+                    @if($badge && $badge['count'] > 0)
+                        <span class="{{ $badge['class'] }} text-white text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">{{ $badge['count'] }}</span>
+                    @endif
+                </a>
+
             </nav>
 
             {{-- User Info + Logout --}}

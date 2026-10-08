@@ -71,6 +71,13 @@ class PesertaOfflineController extends Controller
         return Excel::download(new PesertaOfflineTemplateExport, 'template_peserta_offline.xlsx');
     }
 
+    public function importForm(Ujian $ujian): View
+    {
+        abort_unless($ujian->isOffline(), 404);
+
+        return view('superadmin.ujian.peserta-offline.import', compact('ujian'));
+    }
+
     public function import(ImportPesertaOfflineRequest $request, Ujian $ujian): RedirectResponse
     {
         abort_unless($ujian->isOffline(), 404);
@@ -95,6 +102,13 @@ class PesertaOfflineController extends Controller
         }
 
         return $redirect;
+    }
+
+    public function showPasswords(Ujian $ujian): View
+    {
+        $peserta = $ujian->pesertaOffline()->orderBy('nomor_peserta')->paginate(15);
+
+        return view('superadmin.ujian.peserta-offline.passwords', compact('ujian', 'peserta'));
     }
 
     public function export(Ujian $ujian): Response

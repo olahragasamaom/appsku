@@ -1,59 +1,61 @@
 @extends('superadmin.layouts.app')
 
-@section('title', 'Kelola Kehadiran')
+@section('title', 'Aktivasi Peserta')
 
 @section('breadcrumb')
-    <a href="{{ route('superadmin.ujian.index') }}" class="text-secondary-500 hover:text-secondary-700">Manajemen Ujian</a>
+    <a href="{{ route('superadmin.absensi.index') }}" class="text-secondary-500 hover:text-secondary-700">Kelola Absensi</a>
     <span class="mx-2 text-secondary-400">/</span>
-    <a href="{{ route('superadmin.ujian.peserta-offline.index', $ujian) }}" class="text-secondary-500 hover:text-secondary-700">Peserta Offline</a>
-    <span class="mx-2 text-secondary-400">/</span>
-    <span class="text-secondary-900 font-medium">Kelola Kehadiran</span>
+    <span class="text-secondary-900 font-medium">Aktivasi Peserta</span>
 @endsection
 
 @section('header')
     <div class="flex justify-between items-center">
         <div>
-            <h2 class="font-semibold text-xl text-secondary-800">Kelola Kehadiran</h2>
+            <h2 class="font-semibold text-xl text-secondary-800">Aktivasi Peserta</h2>
             <p class="text-sm text-secondary-500">{{ $ujian->nama_ujian }}</p>
         </div>
-        <div class="flex gap-2">
-            <a href="{{ route('superadmin.ujian.peserta-offline.index', $ujian) }}" class="btn btn-ghost">Kembali</a>
-        </div>
+        <a href="{{ route('superadmin.absensi.index') }}" class="btn btn-ghost">Kembali</a>
     </div>
 @endsection
 
 @section('content')
     <div class="max-w-5xl mx-auto space-y-6">
         @if(session('success'))
-            <x-alert type="success">{{ session('success') }}</x-alert>
+            <x-alert type="success" dismissible>{{ session('success') }}</x-alert>
         @endif
 
         @if(session('error'))
-            <x-alert type="danger">{{ session('error') }}</x-alert>
+            <x-alert type="danger" dismissible>{{ session('error') }}</x-alert>
         @endif
 
         <div class="card">
             <div class="card-body">
-                @if($pesertaOffline->isEmpty())
+                @if($peserta->isEmpty())
                     <div class="text-center py-8 text-secondary-500">
                         <p>Belum ada peserta untuk ujian ini.</p>
                     </div>
                 @else
-                    <form id="bulkForm" method="POST" action="{{ route('superadmin.ujian.peserta-offline.kehadiran.bulk', $ujian) }}" class="space-y-4">
+                    <form id="bulkForm" method="POST" action="{{ route('superadmin.absensi.bulk-toggle', $ujian) }}" class="space-y-4">
                         @csrf
-                        
+
                         <div class="flex justify-between items-center pb-4 border-b border-secondary-200">
                             <label class="flex items-center gap-2">
                                 <input type="checkbox" id="selectAll" class="w-4 h-4">
                                 <span class="text-sm font-medium">Pilih Semua</span>
                             </label>
-                            
+
                             <div class="flex gap-2">
-                                <button type="button" onclick="bulkUpdate('hadir')" class="btn btn-success btn-sm">
-                                    ✓ Set Hadir (Terpilih)
+                                <button type="button" onclick="bulkToggle('activate')" class="btn btn-success btn-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Aktifkan (Terpilih)
                                 </button>
-                                <button type="button" onclick="bulkUpdate('tidak_hadir')" class="btn btn-secondary btn-sm">
-                                    Set Tidak Hadir (Terpilih)
+                                <button type="button" onclick="bulkToggle('deactivate')" class="btn btn-secondary btn-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                    Nonaktifkan (Terpilih)
                                 </button>
                             </div>
                         </div>
@@ -72,54 +74,35 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($pesertaOffline as $peserta)
-                                        @php
-                                            $kehadiran = $peserta->kehadiran->first();
-                                            $isHadir = $kehadiran && $kehadiran->status_kehadiran === 'hadir';
-                                        @endphp
+                                    @foreach($peserta as $p)
                                         <tr class="border-b border-secondary-100 hover:bg-secondary-50">
                                             <td class="py-3 px-4">
-                                                <input type="checkbox" name="peserta_ids[]" value="{{ $peserta->id }}" class="w-4 h-4 itemCheckbox">
+                                                <input type="checkbox" name="ids[]" value="{{ $p->id }}" class="w-4 h-4 itemCheckbox">
                                             </td>
                                             <td class="py-3 px-4">
-                                                <strong class="text-secondary-800">{{ $peserta->nomor_peserta }}</strong>
+                                                <strong class="text-secondary-800">{{ $p->nomor_peserta }}</strong>
                                             </td>
                                             <td class="py-3 px-4 text-secondary-700">
-                                                {{ $peserta->nama_peserta }}
+                                                {{ $p->nama_peserta }}
                                             </td>
                                             <td class="py-3 px-4 text-center">
-                                                @if($isHadir)
-                                                    <x-badge type="success">✓ Hadir</x-badge>
+                                                @if($p->is_active)
+                                                    <x-badge type="success">Aktif</x-badge>
                                                 @else
-                                                    <x-badge type="secondary">Belum Hadir</x-badge>
+                                                    <x-badge type="secondary">Nonaktif</x-badge>
                                                 @endif
                                             </td>
                                             <td class="py-3 px-4 text-center">
-                                                <div class="inline-flex gap-2">
-                                                    <form method="POST"
-                                                          action="{{ route('superadmin.ujian.peserta-offline.kehadiran.update', [$ujian, $peserta]) }}"
-                                                          class="inline">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <input type="hidden" name="status_kehadiran" value="hadir">
-                                                        <button type="submit"
-                                                                class="btn btn-sm {{ $isHadir ? 'btn-success' : 'btn-ghost' }}">
-                                                            Hadir
-                                                        </button>
-                                                    </form>
-
-                                                    <form method="POST"
-                                                          action="{{ route('superadmin.ujian.peserta-offline.kehadiran.update', [$ujian, $peserta]) }}"
-                                                          class="inline">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <input type="hidden" name="status_kehadiran" value="tidak_hadir">
-                                                        <button type="submit"
-                                                                class="btn btn-sm {{ !$isHadir ? 'btn-secondary' : 'btn-ghost' }}">
-                                                            Tidak Hadir
-                                                        </button>
-                                                    </form>
-                                                </div>
+                                                <form method="POST"
+                                                      action="{{ route('superadmin.absensi.toggle', [$ujian, $p]) }}"
+                                                      class="inline">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit"
+                                                            class="btn btn-sm {{ $p->is_active ? 'btn-danger' : 'btn-success' }}">
+                                                        {{ $p->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                                    </button>
+                                                </form>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -127,9 +110,9 @@
                             </table>
                         </div>
 
-                        @if($pesertaOffline->hasPages())
+                        @if($peserta->hasPages())
                             <div class="mt-4">
-                                {{ $pesertaOffline->links() }}
+                                {{ $peserta->links() }}
                             </div>
                         @endif
                     </form>
@@ -150,8 +133,8 @@
                             });
                         });
 
-                        function bulkUpdate(status) {
-                            const checked = document.querySelectorAll('.itemCheckbox[name="peserta_ids[]"]:checked');
+                        function bulkToggle(action) {
+                            const checked = document.querySelectorAll('input[name="ids[]"]:checked');
                             if (checked.length === 0) {
                                 alert('Pilih minimal satu peserta');
                                 return;
@@ -160,8 +143,8 @@
                             const form = document.getElementById('bulkForm');
                             const input = document.createElement('input');
                             input.type = 'hidden';
-                            input.name = 'status_kehadiran';
-                            input.value = status;
+                            input.name = 'action';
+                            input.value = action;
                             form.appendChild(input);
                             form.submit();
                         }
