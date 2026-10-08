@@ -675,6 +675,18 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::delete('ujian/{ujian}/soal/{ujianSoal}/detach', [UjianSoalController::class, 'detach'])->name('ujian.soal.detach');
         Route::post('ujian/{ujian}/activate', [UjianController::class, 'activate'])->name('ujian.activate');
 
+        // hasil ujian management
+        Route::prefix('hasil-ujian')->name('hasil-ujian.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'index'])->name('index');
+            Route::get('/{ujian}', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'show'])->name('show');
+            Route::get('/{ujian}/live-score', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'liveScore'])->name('live-score');
+            Route::get('/{ujian}/final-score', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'finalScore'])->name('final-score');
+            Route::get('/{ujian}/soal-analysis', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'soalAnalysis'])->name('soal-analysis');
+            Route::get('/{ujian}/peserta', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'pesertaList'])->name('peserta-list');
+            Route::get('/{ujian}/peserta/{peserta}/review', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'reviewPeserta'])->name('review-peserta');
+            Route::post('/{ujian}/peserta/{peserta}/force-finalize', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'forceFinalize'])->name('force-finalize');
+        });
+
         // absensi management
         Route::get('absensi', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'index'])->name('absensi.index');
         Route::get('absensi/ujian/{ujian}/activation', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'activation'])->name('absensi.activation');
