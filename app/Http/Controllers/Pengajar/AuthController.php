@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Superadmin;
+namespace App\Http\Controllers\Pengajar;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -8,16 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
-class SuperadminAuthController extends Controller
+class AuthController extends Controller
 {
-    public function indexLoginRedirect(): View
-    {
-        return view('superadmin.auth.login');
-    }
-
     public function showLoginForm(): View
     {
-        return view('superadmin.auth.login');
+        return view('pengajar.auth.login');
     }
 
     public function login(Request $request): RedirectResponse
@@ -30,17 +25,17 @@ class SuperadminAuthController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
-            if (! $user->isSuperAdmin()) {
+            if (! $user->isPengajar()) {
                 Auth::logout();
 
                 return back()->withErrors([
-                    'username' => 'Akun ini tidak memiliki akses superadmin.',
+                    'username' => 'Akun ini tidak memiliki akses pengajar.',
                 ]);
             }
 
             $request->session()->regenerate();
 
-            return redirect()->route('superadmin.dashboard');
+            return redirect()->route('pengajar.dashboard');
         }
 
         return back()->withErrors([
@@ -55,6 +50,6 @@ class SuperadminAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('superadmin.login');
+        return redirect()->route('pengajar.login');
     }
 }

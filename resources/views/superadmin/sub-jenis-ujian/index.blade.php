@@ -24,35 +24,51 @@
 @endsection
 
 @section('content')
-    <div class="space-y-6">
+    <div class="card">
         @forelse($jenisUjians as $jenisUjian)
-            <div class="card">
-                <div class="card-header flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-100 text-primary-700">
+            <div x-data="{ open: false }" class="border-b last:border-b-0">
+                {{-- Accordion Header --}}
+                <button type="button"
+                        @click="open = !open"
+                        class="w-full flex items-center justify-between px-6 py-4 hover:bg-secondary-50 transition-colors"
+                        :class="open ? 'border-b border-secondary-200 bg-secondary-50' : ''">
+                    <div class="flex items-center gap-3 min-w-0 flex-1 text-left">
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-100 text-primary-700 flex-shrink-0">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                             </svg>
                         </span>
-                        <div>
-                            <h2 class="text-lg font-semibold text-secondary-900">{{ $jenisUjian->nama_jenis_ujian }}</h2>
+                        <div class="min-w-0">
+                            <h3 class="font-semibold text-secondary-900">{{ $jenisUjian->nama_jenis_ujian }}</h3>
                             <p class="text-sm text-secondary-500">{{ $jenisUjian->subJenisUjian->count() }} sub jenis ujian</p>
                         </div>
                     </div>
-                    <button type="button"
-                            @click="$dispatch('sub-jenis-ujian-form', {
-                                mode: 'create',
-                                data: { jenis_ujian_id: '{{ $jenisUjian->id }}' }
-                            })"
-                            class="btn btn-secondary btn-sm">
-                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                        Tambah Sub Jenis
-                    </button>
-                </div>
+                    <svg class="w-5 h-5 text-secondary-500 flex-shrink-0 ml-4 transition-transform"
+                         :class="open ? 'rotate-180' : ''"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                    </svg>
+                </button>
 
-                <div class="card-body-sm">
+                {{-- Accordion Content --}}
+                <div x-show="open"
+                     x-collapse
+                     class="px-6 py-4 bg-secondary-50 border-t border-secondary-200">
+                    <div class="mb-4 flex items-center justify-between">
+                        <p class="text-sm text-secondary-600">{{ $jenisUjian->subJenisUjian->count() }} sub jenis ujian</p>
+                        <button type="button"
+                                @click="$dispatch('sub-jenis-ujian-form', {
+                                    mode: 'create',
+                                    data: { jenis_ujian_id: '{{ $jenisUjian->id }}' }
+                                })"
+                                class="btn btn-primary btn-sm">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Tambah Sub Jenis
+                        </button>
+                    </div>
+
                     @if($jenisUjian->subJenisUjian->isNotEmpty())
                         <x-table>
                             <x-slot name="header">
@@ -66,7 +82,7 @@
                             </x-slot>
 
                             @foreach($jenisUjian->subJenisUjian as $subJenisUjian)
-                                <tr class="hover:bg-secondary-50">
+                                <tr class="hover:bg-white">
                                     <td class="px-6 py-4 text-center text-secondary-700">{{ $subJenisUjian->urutan }}</td>
                                     <td class="px-6 py-4">
                                         <p class="font-medium text-secondary-900">{{ $subJenisUjian->nama_sub_jenis_ujian }}</p>
@@ -111,15 +127,13 @@
                             @endforeach
                         </x-table>
                     @else
-                        <p class="px-6 py-8 text-center text-secondary-500">Belum ada sub jenis ujian pada jenis ini</p>
+                        <p class="text-center text-secondary-500 py-6">Belum ada sub jenis ujian</p>
                     @endif
                 </div>
             </div>
         @empty
-            <div class="card">
-                <div class="card-body py-12 text-center text-secondary-500">
-                    Belum ada jenis ujian. Buat jenis ujian terlebih dahulu.
-                </div>
+            <div class="px-6 py-12 text-center text-secondary-500">
+                Belum ada jenis ujian. Buat jenis ujian terlebih dahulu.
             </div>
         @endforelse
     </div>

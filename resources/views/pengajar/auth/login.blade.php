@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Superadmin Login - Panritta</title>
-    <meta name="description" content="Masuk ke panel Superadmin Panritta.">
+    <title>Pengajar Login - Panritta</title>
+    <meta name="description" content="Masuk ke portal Pengajar Panritta.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +21,7 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased" x-data="{ demoEmail: 'superadmin@panritta.com', demoPassword: 'password123' }">
+<body class="font-sans antialiased">
     <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative;">
         {{-- Background Decorations --}}
         <div style="position: absolute; inset: 0; overflow: hidden; pointer-events: none;">
@@ -35,21 +35,21 @@
                 <a href="{{ url('/') }}" style="display: inline-flex; align-items: center; gap: 12px; text-decoration: none;">
                     <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center;">
                         <svg style="width: 32px; height: 32px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                         </svg>
                     </div>
-                    <span style="font-size: 24px; font-weight: 700; color: white;">Superadmin</span>
+                    <span style="font-size: 24px; font-weight: 700; color: white;">Pengajar</span>
                 </a>
             </div>
 
             {{-- Login Card --}}
             <div style="background: white; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); padding: 32px;">
                 <div style="text-align: center; margin-bottom: 24px;">
-                    <h2 style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Superadmin Login</h2>
-                    <p style="color: #64748b;">Masuk ke panel administrasi</p>
+                    <h2 style="font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Login Pengajar</h2>
+                    <p style="color: #64748b;">Masuk ke portal pembuatan soal</p>
                 </div>
 
-                <form method="POST" action="{{ route('superadmin.login') }}">
+                <form method="POST" action="{{ route('pengajar.login') }}">
                     @csrf
 
                     {{-- Username --}}
@@ -96,28 +96,6 @@
                     </button>
                 </form>
 
-                {{-- Demo Account --}}
-                @if(config('app.show_demo_accounts', false))
-                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-                    <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-bottom: 12px;">Demo Account</p>
-                    <button type="button"
-                            @click="document.getElementById('email').value = demoEmail; document.getElementById('password').value = demoPassword;"
-                            style="width: 100%; text-align: left; padding: 12px 16px; background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%); border: 1px solid #f59e0b; border-radius: 12px; cursor: pointer; transition: all 0.2s;"
-                            onmouseover="this.style.borderColor='#d97706'; this.style.boxShadow='0 4px 12px rgba(245, 158, 11, 0.15)';"
-                            onmouseout="this.style.borderColor='#f59e0b'; this.style.boxShadow='none';">
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div>
-                                <span style="font-size: 14px; font-weight: 600; color: #92400e;">Super Admin</span>
-                                <p style="font-size: 12px; color: #b45309; margin-top: 2px;">superadmin@panritta.com</p>
-                            </div>
-                            <span style="font-size: 11px; background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: white; padding: 4px 10px; border-radius: 9999px; font-weight: 500;">
-                                Klik untuk isi
-                            </span>
-                        </div>
-                    </button>
-                </div>
-                @endif
-
                 {{-- Back to main site --}}
                 <div style="margin-top: 24px; text-align: center;">
                     <a href="{{ url('/') }}" style="font-size: 14px; color: #64748b; text-decoration: none;"
@@ -132,7 +110,7 @@
                 <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                 </svg>
-                <span>Akses terbatas untuk administrator</span>
+                <span>Akses terbatas untuk pengajar</span>
             </div>
         </div>
     </div>

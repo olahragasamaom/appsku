@@ -92,7 +92,7 @@ class WorkScheduleController extends Controller
         }
 
         // If this schedule is set as default, remove default from others
-        if ($request->boolean('is_default') && !$workSchedule->is_default) {
+        if ($request->boolean('is_default') && ! $workSchedule->is_default) {
             WorkSchedule::where('company_id', $tenant->id)
                 ->where('is_default', true)
                 ->update(['is_default' => false]);

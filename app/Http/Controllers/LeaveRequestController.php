@@ -128,7 +128,7 @@ class LeaveRequestController extends Controller
             abort(404);
         }
 
-        if (!$leaveRequest->isPending()) {
+        if (! $leaveRequest->isPending()) {
             return redirect()->route('leave-requests.show', $leaveRequest)
                 ->with('error', 'Pengajuan cuti yang sudah diproses tidak dapat diedit.');
         }
@@ -152,7 +152,7 @@ class LeaveRequestController extends Controller
             abort(404);
         }
 
-        if (!$leaveRequest->isPending()) {
+        if (! $leaveRequest->isPending()) {
             return redirect()->route('leave-requests.show', $leaveRequest)
                 ->with('error', 'Pengajuan cuti yang sudah diproses tidak dapat diedit.');
         }
@@ -242,7 +242,7 @@ class LeaveRequestController extends Controller
             abort(404);
         }
 
-        if (!$leaveRequest->canBeApproved()) {
+        if (! $leaveRequest->canBeApproved()) {
             return redirect()->back()
                 ->with('error', 'Pengajuan cuti ini tidak dapat disetujui.');
         }
@@ -265,7 +265,7 @@ class LeaveRequestController extends Controller
             'reason.required' => 'Alasan penolakan wajib diisi.',
         ]);
 
-        if (!$leaveRequest->canBeRejected()) {
+        if (! $leaveRequest->canBeRejected()) {
             return redirect()->back()
                 ->with('error', 'Pengajuan cuti ini tidak dapat ditolak.');
         }
@@ -282,7 +282,7 @@ class LeaveRequestController extends Controller
             abort(404);
         }
 
-        if (!$leaveRequest->canBeCancelled()) {
+        if (! $leaveRequest->canBeCancelled()) {
             return redirect()->back()
                 ->with('error', 'Pengajuan cuti ini tidak dapat dibatalkan.');
         }

@@ -132,23 +132,23 @@ class UjianScoringService
 
         return $peserta->ujian->ujianJenisUjians->map(function ($ujianJenis) use ($nilaiPerJenis, $peserta) {
             $nilai = $nilaiPerJenis->get($ujianJenis->jenis_ujian_id, 0.0);
-            
+
             // Priority 1: Use passing grade from ujian_jenis_ujian (admin-set per exam)
-            $passingGrade = $ujianJenis->passing_grade !== null 
-                ? (float) $ujianJenis->passing_grade 
+            $passingGrade = $ujianJenis->passing_grade !== null
+                ? (float) $ujianJenis->passing_grade
                 : null;
-            
+
             // Priority 2: Fallback ke sub jenis ujian passing_grade
             if ($passingGrade === null && $peserta->ujian->subJenisUjian && $peserta->ujian->subJenisUjian->passing_grade !== null) {
                 $passingGrade = (float) $peserta->ujian->subJenisUjian->passing_grade;
             }
-            
+
             // Priority 3: Auto-calculate jika masih null
             if ($passingGrade === null && $peserta->ujian->subJenisUjian) {
                 $totalSoalKategori = $peserta->ujian->ujianSoals()
                     ->where('jenis_ujian_id', $ujianJenis->jenis_ujian_id)
                     ->count();
-                
+
                 // Default passing: 60% dari total nilai kategori
                 if ($totalSoalKategori > 0) {
                     $nilaiPerSoal = $peserta->ujian->subJenisUjian->nilai_benar ?? 5;

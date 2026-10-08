@@ -3,6 +3,7 @@
 use App\Http\Middleware\CheckBlockedIp;
 use App\Http\Middleware\DetectAttack;
 use App\Http\Middleware\EnsureExamAccess;
+use App\Http\Middleware\EnsurePengajar;
 use App\Http\Middleware\EnsurePeserta;
 use App\Http\Middleware\EnsureSuperadmin;
 use App\Http\Middleware\EnsureUserIsEmployee;
@@ -30,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant' => SetTenant::class,
             'superadmin' => EnsureSuperadmin::class,
             'peserta' => EnsurePeserta::class,
+            'pengajar' => EnsurePengajar::class,
             'employee' => EnsureUserIsEmployee::class,
             'admin' => RedirectEmployeeToPortal::class,
             'offline.auth' => OfflineParticipantAuth::class,

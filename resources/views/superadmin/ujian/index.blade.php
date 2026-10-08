@@ -23,22 +23,26 @@
 
 @section('content')
     <div class="card mb-6">
-        <div class="card-body-sm">
-            <form method="GET" class="flex flex-col sm:flex-row gap-3">
-                <input type="text" name="search" value="{{ request('search') }}"
-                       class="input flex-1" placeholder="Cari nama ujian...">
-                <select name="tipe_ujian" class="input sm:w-48">
-                    <option value="">Semua Tipe</option>
-                    <option value="offline_kelas" @selected(request('tipe_ujian') === 'offline_kelas')>Offline di Kelas</option>
-                    <option value="online_paket" @selected(request('tipe_ujian') === 'online_paket')>Online Paket</option>
-                </select>
-                <select name="status" class="input sm:w-40">
-                    <option value="">Semua Status</option>
-                    <option value="draft" @selected(request('status') === 'draft')>Draft</option>
-                    <option value="aktif" @selected(request('status') === 'aktif')>Aktif</option>
-                    <option value="selesai" @selected(request('status') === 'selesai')>Selesai</option>
-                </select>
-                <button type="submit" class="btn btn-secondary">Filter</button>
+        <div class="card-body-sm space-y-3">
+            <form method="GET" class="space-y-3">
+                <div>
+                    <input type="text" name="search" value="{{ request('search') }}"
+                           class="input w-full" placeholder="Cari nama ujian...">
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <select name="tipe_ujian" class="input sm:w-48">
+                        <option value="">Semua Tipe</option>
+                        <option value="offline_kelas" @selected(request('tipe_ujian') === 'offline_kelas')>Offline di Kelas</option>
+                        <option value="online_paket" @selected(request('tipe_ujian') === 'online_paket')>Online Paket</option>
+                    </select>
+                    <select name="status" class="input sm:w-40">
+                        <option value="">Semua Status</option>
+                        <option value="draft" @selected(request('status') === 'draft')>Draft</option>
+                        <option value="aktif" @selected(request('status') === 'aktif')>Aktif</option>
+                        <option value="selesai" @selected(request('status') === 'selesai')>Selesai</option>
+                    </select>
+                    <button type="submit" class="btn btn-secondary whitespace-nowrap">Filter</button>
+                </div>
             </form>
         </div>
     </div>

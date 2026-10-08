@@ -28,12 +28,12 @@ class UjianMonitoringController extends Controller
     {
         // Calculate passing grade with priority logic
         $totalPassingGrade = (float) $ujian->ujianJenisUjians()->sum('passing_grade');
-        
+
         // Priority 2: Fallback ke sub jenis ujian jika ada
         if ($totalPassingGrade === 0.0 && $ujian->subJenisUjian && $ujian->subJenisUjian->passing_grade !== null) {
             $totalPassingGrade = (float) $ujian->subJenisUjian->passing_grade;
         }
-        
+
         // Priority 3: Auto-calculate jika masih 0
         if ($totalPassingGrade === 0.0 && $ujian->subJenisUjian) {
             $nilaiPerSoal = $ujian->subJenisUjian->nilai_benar ?? 5;
@@ -43,21 +43,21 @@ class UjianMonitoringController extends Controller
                 $totalPassingGrade = (float) round($totalNilai * 0.6, 2); // Default 60%
             }
         }
-        
+
         $peserta = $ujian->peserta()
             ->with('user', 'pesertaOffline', 'jawaban')
             ->get()
             ->map(function ($item) use ($totalPassingGrade) {
                 // Hitung skor real-time dari jawaban yang sudah tersimpan
                 $nilaiRealtime = $item->jawaban->sum('nilai');
-                
-                // Gunakan total_nilai jika sudah finalized (selesai), 
+
+                // Gunakan total_nilai jika sudah finalized (selesai),
                 // atau gunakan skor real-time dari jawaban yang tersimpan
                 $displayNilai = $item->total_nilai !== null ? (float) $item->total_nilai : (float) $nilaiRealtime;
-                
+
                 // Cek apakah nilai sudah mencapai passing grade
                 $isPass = $displayNilai >= $totalPassingGrade;
-                
+
                 return [
                     'id' => $item->id,
                     'nama' => $item->user?->name ?? $item->pesertaOffline?->nama_peserta ?? 'Peserta #'.$item->id,

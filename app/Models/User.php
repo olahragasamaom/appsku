@@ -28,6 +28,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_active',
         'is_superadmin',
         'is_peserta',
+        'is_pengajar',
         'user_level_id',
         'deletion_reason',
     ];
@@ -45,6 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'is_active' => 'boolean',
             'is_superadmin' => 'boolean',
             'is_peserta' => 'boolean',
+            'is_pengajar' => 'boolean',
             'user_level_id' => 'integer',
         ];
     }
@@ -99,6 +101,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isPeserta(): bool
     {
         return $this->is_peserta === true;
+    }
+
+    public function isPengajar(): bool
+    {
+        return $this->is_pengajar === true;
     }
 
     public function langgananAktif(): HasOne

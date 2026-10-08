@@ -55,7 +55,6 @@ class PayrollItemController extends Controller
         return view('payroll-items.index', compact('payrollItems', 'employees', 'years'));
     }
 
-
     public function show(PayrollItem $payrollItem)
     {
         // Ensure user can only view payroll items from their company
@@ -81,7 +80,7 @@ class PayrollItemController extends Controller
 
         $pdf = Pdf::loadView('payroll-items.pdf', compact('payrollItem', 'company'));
 
-        $filename = 'slip-gaji-' . $payrollItem->employee_number . '-' . $payrollItem->payroll->period_label . '.pdf';
+        $filename = 'slip-gaji-'.$payrollItem->employee_number.'-'.$payrollItem->payroll->period_label.'.pdf';
 
         return $pdf->download($filename);
     }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\PesertaWebhookController;
 use App\Http\Controllers\Api\V1\AnnouncementController;
 use App\Http\Controllers\Api\V1\ApprovalController;
 use App\Http\Controllers\Api\V1\AttendanceController;
@@ -14,7 +15,6 @@ use App\Http\Controllers\Api\V1\OvertimeController;
 use App\Http\Controllers\Api\V1\PayslipController;
 use App\Http\Controllers\Api\V1\ReimbursementController;
 use App\Http\Controllers\Api\V1\TaxFormController;
-use App\Http\Controllers\Api\PesertaWebhookController;
 use App\Http\Controllers\Api\WebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
