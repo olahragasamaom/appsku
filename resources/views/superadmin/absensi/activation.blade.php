@@ -92,18 +92,13 @@
                                                     <x-badge type="secondary">Nonaktif</x-badge>
                                                 @endif
                                             </td>
-                                            <td class="py-3 px-4 text-center">
-                                                <form method="POST"
-                                                      action="{{ route('superadmin.absensi.toggle', [$ujian, $p]) }}"
-                                                      class="inline">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <button type="submit"
-                                                            class="btn btn-sm {{ $p->is_active ? 'btn-danger' : 'btn-success' }}">
-                                                        {{ $p->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                                                    </button>
-                                                </form>
-                                            </td>
+                                             <td class="py-3 px-4 text-center">
+                                                 <button type="button"
+                                                         @click="toggleIndividual('{{ route('superadmin.absensi.toggle', [$ujian, $p]) }}', '{{ $p->is_active ? 'deactivate' : 'activate' }}')"
+                                                         class="btn btn-sm {{ $p->is_active ? 'btn-danger' : 'btn-success' }}">
+                                                     {{ $p->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                                 </button>
+                                             </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -117,44 +112,55 @@
                         @endif
                     </form>
 
-                    <script>
-                        const selectAllCheckbox = document.getElementById('selectAll');
-                        const itemCheckboxes = document.querySelectorAll('.itemCheckbox');
+                     <form id="individualToggleForm" method="POST" style="display: none;">
+                         @csrf
+                         @method('PATCH')
+                     </form>
 
-                        selectAllCheckbox?.addEventListener('change', function() {
-                            itemCheckboxes.forEach(cb => {
-                                cb.checked = this.checked;
-                            });
-                        });
+                     <script>
+                         const selectAllCheckbox = document.getElementById('selectAll');
+                         const itemCheckboxes = document.querySelectorAll('.itemCheckbox');
 
-                        itemCheckboxes.forEach(cb => {
-                            cb.addEventListener('change', function() {
-                                selectAllCheckbox.checked = Array.from(itemCheckboxes).every(c => c.checked);
-                            });
-                        });
+                         selectAllCheckbox?.addEventListener('change', function() {
+                             itemCheckboxes.forEach(cb => {
+                                 cb.checked = this.checked;
+                             });
+                         });
 
-                        function bulkToggle(action) {
-                            const checked = document.querySelectorAll('input[name="ids[]"]:checked');
-                            if (checked.length === 0) {
-                                alert('Pilih minimal satu peserta');
-                                return;
-                            }
+                         itemCheckboxes.forEach(cb => {
+                             cb.addEventListener('change', function() {
+                                 selectAllCheckbox.checked = Array.from(itemCheckboxes).every(c => c.checked);
+                             });
+                         });
 
-                            const form = document.getElementById('bulkForm');
-                            // Remove existing action input if any
-                            const existingAction = form.querySelector('input[name="action"]');
-                            if (existingAction) {
-                                existingAction.remove();
-                            }
-                            
-                            const input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = 'action';
-                            input.value = action;
-                            form.appendChild(input);
-                            form.submit();
-                        }
-                    </script>
+                         function toggleIndividual(actionUrl, action) {
+                             const form = document.getElementById('individualToggleForm');
+                             form.action = actionUrl;
+                             form.submit();
+                         }
+
+                         function bulkToggle(action) {
+                             const checked = document.querySelectorAll('input[name="ids[]"]:checked');
+                             if (checked.length === 0) {
+                                 alert('Pilih minimal satu peserta');
+                                 return;
+                             }
+
+                             const form = document.getElementById('bulkForm');
+                             // Remove existing action input if any
+                             const existingAction = form.querySelector('input[name="action"]');
+                             if (existingAction) {
+                                 existingAction.remove();
+                             }
+                             
+                             const input = document.createElement('input');
+                             input.type = 'hidden';
+                             input.name = 'action';
+                             input.value = action;
+                             form.appendChild(input);
+                             form.submit();
+                         }
+                     </script>
                 @endif
             </div>
         </div>
