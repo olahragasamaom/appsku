@@ -678,8 +678,11 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         // absensi management
         Route::get('absensi', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'index'])->name('absensi.index');
         Route::get('absensi/ujian/{ujian}/activation', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'activation'])->name('absensi.activation');
+        Route::get('absensi/ujian/{ujian}/kehadiran', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'kehadiran'])->name('absensi.kehadiran');
         Route::patch('absensi/ujian/{ujian}/peserta/{pesertaOffline}/toggle', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'toggleActivation'])->name('absensi.toggle');
         Route::post('absensi/ujian/{ujian}/bulk-toggle', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'bulkToggleActivation'])->name('absensi.bulk-toggle');
+        Route::patch('absensi/ujian/{ujian}/peserta/{pesertaOffline}/kehadiran', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'updateKehadiran'])->name('absensi.kehadiran.update');
+        Route::post('absensi/ujian/{ujian}/kehadiran/bulk', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'bulkUpdateKehadiran'])->name('absensi.kehadiran.bulk');
 
         // peserta offline management
         Route::get('ujian/{ujian}/peserta-offline/passwords', [PesertaOfflineController::class, 'showPasswords'])->name('ujian.peserta-offline.passwords');
