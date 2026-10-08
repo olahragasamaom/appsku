@@ -91,14 +91,19 @@ class OfflinePortalController extends Controller
 
         $peserta = PesertaOffline::findOrFail($pesertaId);
 
-        // Get all exams where peserta has a kehadiran record
-        $ujians = Ujian::whereHas('pesertaOfflineKehadiran', function ($query) use ($peserta) {
-            $query->where('peserta_offline_id', $peserta->id);
-        })
+        // Get all ujian offline where peserta is registered (ujian_id matches)
+        // and ujian is aktif with date range check
+        $ujians = Ujian::where('id', $peserta->ujian_id)
+            ->where('tipe_ujian', 'offline_kelas')
+            ->where('status', 'aktif')
+            ->where(function ($query) {
+                $query->whereDate('tanggal_ujian', '>=', now()->startOfDay())
+                    ->whereDate('tanggal_ujian', '<=', now()->addMonths(6)->endOfDay());
+            })
             ->with(['pesertaOfflineKehadiran' => function ($query) use ($peserta) {
                 $query->where('peserta_offline_id', $peserta->id);
             }])
-            ->where('tipe_ujian', 'offline_kelas')
+            ->orderBy('tanggal_ujian', 'asc')
             ->get();
 
         return view('peserta.ujian.offline.exams', compact('ujians', 'peserta'));
