@@ -160,6 +160,10 @@
         {{-- Header Exam --}}
         <header class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
             <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
+                @php
+                    $namaPeserta = $peserta->pesertaOffline?->nama_peserta ?? $peserta->user?->name ?? 'Peserta';
+                    $nomorPeserta = $peserta->pesertaOffline?->nomor_peserta ?? null;
+                @endphp
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     {{-- Left: Logo & Title --}}
                     <div class="flex items-center gap-3 flex-1 min-w-0">
@@ -168,7 +172,18 @@
                         </div>
                         <div class="flex-1 min-w-0">
                             <h1 class="font-bold text-base md:text-lg text-slate-900 line-clamp-1">{{ $ujian->nama_ujian }}</h1>
-                            <p class="text-xs text-slate-500">Seleksi Kompetensi Dasar (SKD)</p>
+                            <p class="text-xs text-slate-500 flex items-center gap-2 flex-wrap">
+                                <span class="inline-flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                    <span class="font-medium text-slate-700">{{ $namaPeserta }}</span>
+                                </span>
+                                @if($nomorPeserta)
+                                    <span class="text-slate-400">•</span>
+                                    <span>No: <span class="font-mono font-medium text-slate-700">{{ $nomorPeserta }}</span></span>
+                                @endif
+                            </p>
                         </div>
                     </div>
 
