@@ -93,6 +93,7 @@ class OfflinePortalController extends Controller
 
         // Get all ujian offline where peserta is registered (ujian_id matches)
         // and ujian is aktif with date range check
+        // Load kehadiran data if available (but don't require it to show exam)
         $ujians = Ujian::where('id', $peserta->ujian_id)
             ->where('tipe_ujian', 'offline_kelas')
             ->where('status', 'aktif')
