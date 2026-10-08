@@ -60,8 +60,9 @@
                     @php
                         $kehadiran = $ujian->pesertaOfflineKehadiran->first();
                         $isHadir = $kehadiran && $kehadiran->status_kehadiran === 'hadir';
-                        $isAktif = $ujian->status === 'aktif';
-                        $canStart = $isHadir && $isAktif;
+                        $isUjianAktif = $ujian->status === 'aktif';
+                        $isPesertaAktif = $peserta->is_active;
+                        $canStart = $isHadir && $isUjianAktif && $isPesertaAktif;
                     @endphp
                     
                     <div class="card border-l-4 {{ $canStart ? 'border-l-success-500' : 'border-l-slate-300' }}">
@@ -71,30 +72,40 @@
                                     <h3 class="font-semibold text-slate-800 mb-2">{{ $ujian->nama_ujian }}</h3>
                                     
                                     <div class="flex flex-wrap gap-2 mb-3">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary-100 text-secondary-700">
-                                            Offline
-                                        </span>
-                                        
-                                        @if($isAktif)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
-                                                Aktif
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning-100 text-warning-700">
-                                                {{ ucfirst($ujian->status) }}
-                                            </span>
-                                        @endif
+                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary-100 text-secondary-700">
+                                             Offline
+                                         </span>
+                                         
+                                         @if($isUjianAktif)
+                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
+                                                 Aktif
+                                             </span>
+                                         @else
+                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning-100 text-warning-700">
+                                                 {{ ucfirst($ujian->status) }}
+                                             </span>
+                                         @endif
 
-                                        @if($isHadir)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
-                                                ✓ Hadir
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
-                                                Belum Hadir
-                                            </span>
-                                        @endif
-                                    </div>
+                                         @if($isPesertaAktif)
+                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
+                                                 ✓ Diaktifkan
+                                             </span>
+                                         @else
+                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning-100 text-warning-700">
+                                                 ⏳ Menunggu Aktivasi
+                                             </span>
+                                         @endif
+
+                                         @if($isHadir)
+                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
+                                                 ✓ Hadir
+                                             </span>
+                                         @else
+                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+                                                 Belum Hadir
+                                             </span>
+                                         @endif
+                                     </div>
 
                                     <div class="text-sm text-slate-600 space-y-1">
                                         @if($ujian->tanggal_ujian)
@@ -107,14 +118,18 @@
                                     </div>
 
                                     @if(!$canStart)
-                                        <div class="mt-3 text-sm">
-                                            @if(!$isAktif)
-                                                <p class="text-warning-600">⚠️ Ujian belum diaktifkan oleh admin</p>
-                                            @elseif(!$isHadir)
-                                                <p class="text-slate-600">⚠️ Anda belum ditandai hadir oleh admin</p>
-                                            @endif
-                                        </div>
-                                    @endif
+                                         <div class="mt-3 text-sm space-y-1">
+                                             @if(!$isUjianAktif)
+                                                 <p class="text-warning-600">⚠️ Ujian belum diaktifkan oleh admin</p>
+                                             @endif
+                                             @if(!$isPesertaAktif)
+                                                 <p class="text-warning-600">⏳ Akun Anda belum diaktifkan. Hubungi admin untuk aktivasi.</p>
+                                             @endif
+                                             @if(!$isHadir)
+                                                 <p class="text-slate-600">ℹ️ Anda belum ditandai hadir oleh admin</p>
+                                             @endif
+                                         </div>
+                                     @endif
                                 </div>
 
                                 <div class="flex-shrink-0">

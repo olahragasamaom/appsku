@@ -120,10 +120,27 @@ class OfflinePortalController extends Controller
 
         $peserta = PesertaOffline::findOrFail($pesertaId);
 
+        // Validasi 1: Ujian harus aktif
         if ($ujian->status !== 'aktif') {
             abort(403, 'Ujian belum diaktifkan.');
         }
 
+        // Validasi 2: Ujian harus dalam rentang tanggal
+        if ($ujian->tanggal_ujian && $ujian->tanggal_ujian->isPast()) {
+            abort(403, 'Ujian ini sudah berakhir.');
+        }
+
+        // Validasi 3: Peserta harus terdaftar di ujian ini
+        if ($peserta->ujian_id !== $ujian->id) {
+            abort(403, 'Anda tidak terdaftar di ujian ini.');
+        }
+
+        // Validasi 4: Peserta harus diaktifkan (is_active = true)
+        if (! $peserta->is_active) {
+            abort(403, 'Akun Anda belum diaktifkan. Hubungi admin untuk aktivasi.');
+        }
+
+        // Validasi 5: Peserta harus ditandai hadir
         $kehadiran = $peserta->kehadiran()
             ->where('ujian_id', $ujian->id)
             ->first();
