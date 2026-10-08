@@ -141,6 +141,12 @@
                             }
 
                             const form = document.getElementById('bulkForm');
+                            // Remove existing action input if any
+                            const existingAction = form.querySelector('input[name="action"]');
+                            if (existingAction) {
+                                existingAction.remove();
+                            }
+                            
                             const input = document.createElement('input');
                             input.type = 'hidden';
                             input.name = 'action';
