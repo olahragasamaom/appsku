@@ -88,14 +88,40 @@ class AttemptService
     }
 
     /**
-     * Auto-submit every attempt past its snapshot deadline (AD-10 / C-AU-6).
+     * Auto-submit every attempt past its snapshot deadline (AD-10 / C-AU-6)
+     * OR yang sudah inactive terlalu lama (default 4 jam) tanpa aktivitas.
+     *
+     * Dua kondisi auto-finalize:
+     * 1. batas_waktu sudah lewat (deadline normal)
+     * 2. last_activity_at > inactivity_timeout_minutes (laptop mati, lupa, dll)
      */
     public function autoSubmitExpired(): void
     {
+        $inactivityMinutes = (int) config('ujian.inactivity_timeout_minutes', 240);
+        $inactivityThreshold = now()->subMinutes($inactivityMinutes);
+
         UjianPeserta::query()
             ->where('status', 'sedang_ujian')
-            ->whereNotNull('batas_waktu')
-            ->where('batas_waktu', '<=', now())
+            ->where(function ($query) use ($inactivityThreshold) {
+                // Kondisi 1: batas_waktu lewat
+                $query->where(function ($q) {
+                    $q->whereNotNull('batas_waktu')
+                        ->where('batas_waktu', '<=', now());
+                });
+
+                // Kondisi 2: inactive terlalu lama (last_activity_at < threshold)
+                // Fallback ke waktu_mulai jika last_activity_at belum pernah di-update
+                $query->orWhere(function ($q) use ($inactivityThreshold) {
+                    $q->where(function ($sub) use ($inactivityThreshold) {
+                        $sub->whereNotNull('last_activity_at')
+                            ->where('last_activity_at', '<=', $inactivityThreshold);
+                    })->orWhere(function ($sub) use ($inactivityThreshold) {
+                        $sub->whereNull('last_activity_at')
+                            ->whereNotNull('waktu_mulai')
+                            ->where('waktu_mulai', '<=', $inactivityThreshold);
+                    });
+                });
+            })
             ->get()
             ->each(function (UjianPeserta $peserta): void {
                 $peserta->forceFill(['auto_submitted' => true])->save();
@@ -112,6 +138,7 @@ class AttemptService
             'user_id' => $userId,
             'status' => 'sedang_ujian',
             'waktu_mulai' => now(),
+            'last_activity_at' => now(),
         ], $attributes));
     }
 

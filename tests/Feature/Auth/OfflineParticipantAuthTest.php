@@ -1,11 +1,16 @@
 <?php
 
 use App\Http\Middleware\OfflineParticipantAuth;
+use App\Models\OfflineParticipantSession;
+use App\Models\PesertaOffline;
 use App\Models\Ujian;
-use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Str;
+
+uses(RefreshDatabase::class);
 
 function runMiddleware(Request $request): \Symfony\Component\HttpFoundation\Response
 {
@@ -30,6 +35,42 @@ function makeSessionRequest(array $session = [], ?Ujian $ujian = null): Request
     return $request;
 }
 
+/**
+ * Helper: Create valid offline session with peserta, attempt, and participant session.
+ */
+function makeValidOfflineSession(Ujian $ujian, string $status = 'sedang_ujian'): array
+{
+    $peserta = PesertaOffline::factory()->create([
+        'ujian_id' => $ujian->id,
+        'is_active' => true,
+    ]);
+
+    $attempt = $ujian->peserta()->create([
+        'user_id' => null,
+        'status' => $status,
+        'waktu_mulai' => now(),
+        'waktu_selesai' => $status === 'selesai' ? now() : null,
+    ]);
+
+    $peserta->update(['ujian_peserta_id' => $attempt->id]);
+
+    $sessionToken = Str::random(40);
+    OfflineParticipantSession::create([
+        'peserta_offline_id' => $peserta->id,
+        'ujian_id' => $ujian->id,
+        'session_token' => $sessionToken,
+        'status' => 'sedang_ujian',
+        'login_at' => now(),
+        'last_activity_at' => now(),
+    ]);
+
+    return [
+        'peserta' => $peserta,
+        'attempt' => $attempt,
+        'sessionToken' => $sessionToken,
+    ];
+}
+
 describe('OfflineParticipantAuth middleware', function () {
     it('aborts 403 when offline_peserta_id session key is missing', function () {
         $request = makeSessionRequest([]);
@@ -41,9 +82,13 @@ describe('OfflineParticipantAuth middleware', function () {
         $ujian = Ujian::factory()->create(['tipe_ujian' => 'offline_kelas', 'status' => 'aktif']);
         $other = Ujian::factory()->create(['tipe_ujian' => 'offline_kelas', 'status' => 'aktif']);
 
+        $data = makeValidOfflineSession($other);
+
         $request = makeSessionRequest([
-            'offline_peserta_id' => 1,
+            'offline_peserta_id' => $data['peserta']->id,
+            'offline_session_token' => $data['sessionToken'],
             'offline_ujian_id' => $other->id,
+            'offline_attempt_id' => $data['attempt']->id,
         ], $ujian);
 
         expect(fn () => runMiddleware($request))->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);
@@ -51,16 +96,14 @@ describe('OfflineParticipantAuth middleware', function () {
 
     it('passes through when session is valid and attempt is active', function () {
         $ujian = Ujian::factory()->create(['tipe_ujian' => 'offline_kelas', 'status' => 'aktif']);
-        $user = User::factory()->create();
-        $attempt = $ujian->peserta()->create([
-            'user_id' => $user->id,
-            'status' => 'sedang_ujian',
-        ]);
+
+        $data = makeValidOfflineSession($ujian);
 
         $request = makeSessionRequest([
-            'offline_peserta_id' => 1,
+            'offline_peserta_id' => $data['peserta']->id,
+            'offline_session_token' => $data['sessionToken'],
             'offline_ujian_id' => $ujian->id,
-            'offline_attempt_id' => $attempt->id,
+            'offline_attempt_id' => $data['attempt']->id,
         ], $ujian);
 
         $response = runMiddleware($request);
@@ -74,17 +117,14 @@ describe('OfflineParticipantAuth middleware', function () {
             'status' => 'aktif',
             'tampilkan_hasil' => true,
         ]);
-        $user = User::factory()->create();
-        $attempt = $ujian->peserta()->create([
-            'user_id' => $user->id,
-            'status' => 'selesai',
-            'waktu_selesai' => now(),
-        ]);
+
+        $data = makeValidOfflineSession($ujian, 'selesai');
 
         $request = makeSessionRequest([
-            'offline_peserta_id' => 1,
+            'offline_peserta_id' => $data['peserta']->id,
+            'offline_session_token' => $data['sessionToken'],
             'offline_ujian_id' => $ujian->id,
-            'offline_attempt_id' => $attempt->id,
+            'offline_attempt_id' => $data['attempt']->id,
         ], $ujian);
 
         $response = runMiddleware($request);
@@ -98,17 +138,14 @@ describe('OfflineParticipantAuth middleware', function () {
             'status' => 'aktif',
             'tampilkan_hasil' => false,
         ]);
-        $user = User::factory()->create();
-        $attempt = $ujian->peserta()->create([
-            'user_id' => $user->id,
-            'status' => 'selesai',
-            'waktu_selesai' => now(),
-        ]);
+
+        $data = makeValidOfflineSession($ujian, 'selesai');
 
         $request = makeSessionRequest([
-            'offline_peserta_id' => 1,
+            'offline_peserta_id' => $data['peserta']->id,
+            'offline_session_token' => $data['sessionToken'],
             'offline_ujian_id' => $ujian->id,
-            'offline_attempt_id' => $attempt->id,
+            'offline_attempt_id' => $data['attempt']->id,
         ], $ujian);
 
         expect(fn () => runMiddleware($request))->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);

@@ -79,7 +79,7 @@ class OfflineParticipantAuth
             abort(403, 'Status ujian tidak valid.');
         }
 
-        // 6. Validate attendance is still 'hadir'
+        // 6. Validate activation is still active (admin dapat menonaktifkan mid-exam)
         $peserta = $attempt->pesertaOffline;
         if ($peserta) {
             // Check if peserta is blocked (bisa diblokir mid-exam)
@@ -93,15 +93,9 @@ class OfflineParticipantAuth
                 abort(403, 'Akun Anda telah diblokir oleh pengawas. Alasan: '.($peserta->blocked_reason ?? 'Tidak dijelaskan'));
             }
 
-            $ujianForAttendance = $attempt->ujian ?? null;
-            $ujianId = $ujianForAttendance ? $ujianForAttendance->id : $offlineUjianId;
-
-            $kehadiran = $peserta->kehadiran()
-                ->where('ujian_id', $ujianId)
-                ->first();
-
-            if (! $kehadiran || $kehadiran->status_kehadiran !== 'hadir') {
-                abort(403, 'Status kehadiran tidak valid.');
+            // Jika admin menonaktifkan peserta mid-exam, hentikan akses ujian
+            if (! $peserta->is_active) {
+                abort(403, 'Ujian Anda dinonaktifkan oleh pengawas. Silakan hubungi pengawas.');
             }
         }
 

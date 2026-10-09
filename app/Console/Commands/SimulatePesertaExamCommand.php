@@ -6,7 +6,6 @@ use App\Models\PesertaOffline;
 use App\Models\Ujian;
 use App\Models\UjianJawaban;
 use App\Models\UjianPeserta;
-use App\Services\Ujian\OfflineParticipantService;
 use App\Services\Ujian\UjianScoringService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -21,10 +20,8 @@ class SimulatePesertaExamCommand extends Command
 
     protected $description = 'Simulasi penginputan jawaban ujian untuk peserta offline';
 
-    public function handle(
-        OfflineParticipantService $participantService,
-        UjianScoringService $scoringService
-    ): void {
+    public function handle(UjianScoringService $scoringService): void
+    {
         $ujianId = $this->argument('ujian_id');
         $pesertaIds = $this->option('peserta-ids');
         $count = (int) $this->option('count');
@@ -72,33 +69,27 @@ class SimulatePesertaExamCommand extends Command
         foreach ($pesertaList as $peserta) {
             $this->info("→ Memproses: {$peserta->nomor_peserta} - {$peserta->nama_peserta}");
 
-            DB::transaction(function () use ($peserta, $ujian, $correctRate, $scoringService, $participantService, &$results) {
+            DB::transaction(function () use ($peserta, $ujian, $correctRate, $scoringService, &$results) {
                 // 1. Aktifkan peserta jika belum
                 if (! $peserta->is_active) {
                     $peserta->update(['is_active' => true]);
                     $this->line('  ✓ Peserta diaktifkan');
                 }
 
-                // 2. Mark hadir jika belum
-                $kehadiran = $peserta->kehadiran()->where('ujian_id', $ujian->id)->first();
-                if (! $kehadiran || $kehadiran->status_kehadiran !== 'hadir') {
-                    $participantService->markAttendance($peserta, $ujian, 'hadir');
-                    $this->line('  ✓ Peserta ditandai hadir');
-                }
-
-                // 3. Hapus attempt existing jika ada (untuk re-simulasi)
+                // 2. Hapus attempt existing jika ada (untuk re-simulasi)
                 if ($peserta->ujian_peserta_id) {
                     UjianJawaban::where('ujian_peserta_id', $peserta->ujian_peserta_id)->delete();
                     UjianPeserta::where('id', $peserta->ujian_peserta_id)->delete();
                     $peserta->update(['ujian_peserta_id' => null]);
                 }
 
-                // 4. Buat attempt baru
+                // 3. Buat attempt baru
                 $attempt = UjianPeserta::create([
                     'ujian_id' => $ujian->id,
                     'user_id' => null,
                     'status' => 'sedang_ujian',
                     'waktu_mulai' => now()->subMinutes($ujian->durasi_ujian ?? 90),
+                    'last_activity_at' => now(),
                     'batas_waktu' => now()->addMinutes(10),
                 ]);
 

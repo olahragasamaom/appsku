@@ -14,15 +14,7 @@
             <h2 class="font-semibold text-xl text-secondary-800">Aktivasi Peserta</h2>
             <p class="text-sm text-secondary-500">{{ $ujian->nama_ujian }}</p>
         </div>
-        <div class="flex gap-2">
-            <a href="{{ route('superadmin.absensi.kehadiran', $ujian) }}" class="btn btn-primary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                </svg>
-                Kelola Kehadiran
-            </a>
-            <a href="{{ route('superadmin.absensi.index') }}" class="btn btn-ghost">Kembali</a>
-        </div>
+        <a href="{{ route('superadmin.absensi.index') }}" class="btn btn-ghost">Kembali</a>
     </div>
 @endsection
 

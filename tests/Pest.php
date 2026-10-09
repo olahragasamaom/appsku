@@ -129,12 +129,7 @@ function createOfflineParticipantSessionForTest(\App\Models\Ujian $ujian, ?strin
     $peserta = \App\Models\PesertaOffline::factory()->create([
         'ujian_id' => $ujian->id,
         'nomor_peserta' => $nomor_peserta ?? fake()->unique()->numerify('###'),
-    ]);
-
-    $kehadiran = \App\Models\PesertaOfflineKehadiran::factory()->create([
-        'peserta_offline_id' => $peserta->id,
-        'ujian_id' => $ujian->id,
-        'status_kehadiran' => 'hadir',
+        'is_active' => true,
     ]);
 
     $attempt = $ujian->peserta()->create([
@@ -159,6 +154,5 @@ function createOfflineParticipantSessionForTest(\App\Models\Ujian $ujian, ?strin
         'peserta' => $peserta,
         'attempt' => $attempt,
         'sessionToken' => $sessionToken,
-        'kehadiran' => $kehadiran,
     ];
 }

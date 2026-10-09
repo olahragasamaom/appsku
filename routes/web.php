@@ -687,14 +687,11 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
             Route::post('/{ujian}/peserta/{peserta}/force-finalize', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'forceFinalize'])->name('force-finalize');
         });
 
-        // absensi management
+        // absensi management (activation only, no attendance)
         Route::get('absensi', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'index'])->name('absensi.index');
         Route::get('absensi/ujian/{ujian}/activation', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'activation'])->name('absensi.activation');
-        Route::get('absensi/ujian/{ujian}/kehadiran', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'kehadiran'])->name('absensi.kehadiran');
         Route::patch('absensi/ujian/{ujian}/peserta/{pesertaOffline}/toggle', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'toggleActivation'])->name('absensi.toggle');
         Route::post('absensi/ujian/{ujian}/bulk-toggle', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'bulkToggleActivation'])->name('absensi.bulk-toggle');
-        Route::patch('absensi/ujian/{ujian}/peserta/{pesertaOffline}/kehadiran', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'updateKehadiran'])->name('absensi.kehadiran.update');
-        Route::post('absensi/ujian/{ujian}/kehadiran/bulk', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'bulkUpdateKehadiran'])->name('absensi.kehadiran.bulk');
 
         // peserta offline management
         Route::get('ujian/{ujian}/peserta-offline/passwords', [PesertaOfflineController::class, 'showPasswords'])->name('ujian.peserta-offline.passwords');
@@ -706,14 +703,6 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::resource('ujian.peserta-offline', PesertaOfflineController::class)
             ->only(['index', 'store', 'destroy'])
             ->parameters(['peserta-offline' => 'pesertaOffline']);
-
-        // peserta offline attendance/kehadiran management (P5-T9)
-        Route::get('ujian/{ujian}/peserta-offline/kehadiran', [\App\Http\Controllers\Superadmin\PesertaOfflineKehadiranController::class, 'index'])
-            ->name('ujian.peserta-offline.kehadiran.index');
-        Route::post('ujian/{ujian}/peserta-offline/kehadiran/bulk', [\App\Http\Controllers\Superadmin\PesertaOfflineKehadiranController::class, 'bulkUpdate'])
-            ->name('ujian.peserta-offline.kehadiran.bulk');
-        Route::patch('ujian/{ujian}/peserta-offline/{pesertaOffline}/kehadiran', [\App\Http\Controllers\Superadmin\PesertaOfflineKehadiranController::class, 'update'])
-            ->name('ujian.peserta-offline.kehadiran.update');
 
         // monitoring pengawas offline (real-time) - P8-T1
         Route::get('ujian/{ujian}/pengawas', [\App\Http\Controllers\Superadmin\OfflineMonitoringController::class, 'index'])
@@ -736,16 +725,6 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
             ->name('ujian.peserta-offline.reset-kode');
         Route::post('ujian/{ujian}/peserta-offline/bulk-reset-kode', [\App\Http\Controllers\Superadmin\PesertaOfflineKodeAksesController::class, 'bulkReset'])
             ->name('ujian.peserta-offline.bulk-reset-kode');
-
-        // assign peserta ke multiple ujian
-        Route::get('ujian/{ujian}/peserta-offline/assign', [\App\Http\Controllers\Superadmin\PesertaOfflineAssignController::class, 'index'])
-            ->name('ujian.peserta-offline.assign.index');
-        Route::post('ujian/{ujian}/peserta-offline/assign', [\App\Http\Controllers\Superadmin\PesertaOfflineAssignController::class, 'assign'])
-            ->name('ujian.peserta-offline.assign.store');
-        Route::delete('ujian/{ujian}/peserta-offline/{pesertaOffline}/unassign', [\App\Http\Controllers\Superadmin\PesertaOfflineAssignController::class, 'unassign'])
-            ->name('ujian.peserta-offline.assign.unassign');
-        Route::post('ujian/{ujian}/peserta-offline/copy-from', [\App\Http\Controllers\Superadmin\PesertaOfflineAssignController::class, 'copyFromUjian'])
-            ->name('ujian.peserta-offline.assign.copy');
 
         // paket member management
         Route::resource('paket', PaketController::class)

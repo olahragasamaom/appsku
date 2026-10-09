@@ -43,11 +43,7 @@ class OfflineController extends Controller
 
         $peserta = PesertaOffline::findOrFail($pesertaId);
 
-        $ujians = Ujian::where('tipe_ujian', 'offline_kelas')
-            ->with(['pesertaOfflineKehadiran' => function ($query) use ($peserta) {
-                $query->where('peserta_offline_id', $peserta->id);
-            }])
-            ->get();
+        $ujians = Ujian::where('tipe_ujian', 'offline_kelas')->get();
 
         return view('peserta.ujian.offline.exams', compact('ujians', 'peserta'));
     }
@@ -66,12 +62,8 @@ class OfflineController extends Controller
             abort(403, 'Ujian belum diaktifkan.');
         }
 
-        $kehadiran = $peserta->kehadiran()
-            ->where('ujian_id', $ujian->id)
-            ->first();
-
-        if (! $kehadiran || $kehadiran->status_kehadiran !== 'hadir') {
-            abort(403, 'Anda belum dimarkir hadir.');
+        if (! $peserta->is_active) {
+            abort(403, 'Anda belum diaktifkan oleh admin. Silakan hubungi pengawas untuk aktivasi.');
         }
 
         $attempt = $this->attemptService->startOffline($peserta->nomor_peserta, $peserta->kode_akses, $ujian);

@@ -150,14 +150,6 @@ class Ujian extends Model
     }
 
     /**
-     * RELASI (One-to-Many): Data kehadiran peserta offline per ujian.
-     */
-    public function pesertaOfflineKehadiran(): HasMany
-    {
-        return $this->hasMany(PesertaOfflineKehadiran::class, 'ujian_id');
-    }
-
-    /**
      * Cek apakah ujian ini adalah tipe offline (dikerjakan serentak di kelas).
      */
     public function isOffline(): bool

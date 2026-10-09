@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-describe('Offline participant login flow (P5-T6)', function () {
+describe('Offline participant login flow (is_active based)', function () {
     beforeEach(function () {
         $this->service = new OfflineParticipantService;
     });
@@ -46,7 +46,6 @@ describe('Offline participant login flow (P5-T6)', function () {
                 'kode_akses' => 'WRONGCODE',
             ]);
 
-            // ValidationException is caught and returns 302 redirect
             expect($response->status())->toBe(302);
             expect(session('offline_peserta_id'))->toBeNull();
         });
@@ -63,16 +62,14 @@ describe('Offline participant login flow (P5-T6)', function () {
     });
 
     describe('exam list', function () {
-        it('shows all offline exams after login', function () {
-            $ujian1 = Ujian::factory()->offline()->active()->create();
-            $ujian2 = Ujian::factory()->offline()->draft()->create();
+        it('shows offline exams after login', function () {
+            $ujian = Ujian::factory()->offline()->active()->create();
 
-            $result = $this->service->create($ujian1, [
+            $result = $this->service->create($ujian, [
                 'nomor_peserta' => 'P001',
                 'nama_peserta' => 'John Doe',
             ]);
 
-            $peserta = $result['peserta'];
             $plaintext = $result['kode_akses'];
 
             $this->post('/peserta/ujian-offline/login', [
@@ -84,38 +81,11 @@ describe('Offline participant login flow (P5-T6)', function () {
 
             $response->assertStatus(200);
             $response->assertViewHas('ujians');
-        });
-
-        it('shows attendance status (hadir/tidak_hadir) for each exam', function () {
-            $ujian = Ujian::factory()->offline()->active()->create();
-
-            $result = $this->service->create($ujian, [
-                'nomor_peserta' => 'P001',
-                'nama_peserta' => 'John Doe',
-            ]);
-
-            $peserta = $result['peserta'];
-            $plaintext = $result['kode_akses'];
-
-            $this->post('/peserta/ujian-offline/login', [
-                'nomor_peserta' => 'P001',
-                'kode_akses' => $plaintext,
-            ]);
-
-            $response = $this->get('/peserta/offline/daftar');
-
-            $response->assertViewHas('ujians');
-            $ujians = $response->viewData('ujians');
-            // kehadiran adalah collection via whereHas eager loading
-            expect($ujians->count())->toBeGreaterThan(0);
-            $firstUjian = $ujians->first();
-            expect($firstUjian->pesertaOfflineKehadiran)->not->toBeNull();
-            expect($firstUjian->pesertaOfflineKehadiran->count())->toBeGreaterThan(0);
         });
     });
 
     describe('start exam', function () {
-        it('button is enabled when ujian aktif AND kehadiran hadir', function () {
+        it('allows start when ujian aktif AND peserta is_active=true', function () {
             $ujian = Ujian::factory()->offline()->active()->create();
 
             $result = $this->service->create($ujian, [
@@ -126,30 +96,8 @@ describe('Offline participant login flow (P5-T6)', function () {
             $peserta = $result['peserta'];
             $plaintext = $result['kode_akses'];
 
-            $this->service->markAttendance($peserta, $ujian, 'hadir');
-
-            $this->post('/peserta/ujian-offline/login', [
-                'nomor_peserta' => 'P001',
-                'kode_akses' => $plaintext,
-            ]);
-
-            $response = $this->get('/peserta/offline/daftar');
-
-            $response->assertStatus(200);
-        });
-
-        it('creates attempt and sets session keys when starting', function () {
-            $ujian = Ujian::factory()->offline()->active()->create();
-
-            $result = $this->service->create($ujian, [
-                'nomor_peserta' => 'P001',
-                'nama_peserta' => 'John Doe',
-            ]);
-
-            $peserta = $result['peserta'];
-            $plaintext = $result['kode_akses'];
-
-            $this->service->markAttendance($peserta, $ujian, 'hadir');
+            // Peserta dibuat dengan is_active = true (default dari service)
+            expect($peserta->is_active)->toBeTrue();
 
             $this->post('/peserta/ujian-offline/login', [
                 'nomor_peserta' => 'P001',
@@ -163,7 +111,7 @@ describe('Offline participant login flow (P5-T6)', function () {
             expect(session('offline_attempt_id'))->not->toBeNull();
         });
 
-        it('rejects start if peserta tidak_hadir', function () {
+        it('rejects start if peserta is_active=false', function () {
             $ujian = Ujian::factory()->offline()->active()->create();
 
             $result = $this->service->create($ujian, [
@@ -173,6 +121,9 @@ describe('Offline participant login flow (P5-T6)', function () {
 
             $peserta = $result['peserta'];
             $plaintext = $result['kode_akses'];
+
+            // Nonaktifkan peserta
+            $peserta->update(['is_active' => false]);
 
             $this->post('/peserta/ujian-offline/login', [
                 'nomor_peserta' => 'P001',
@@ -193,10 +144,7 @@ describe('Offline participant login flow (P5-T6)', function () {
                 'nama_peserta' => 'John Doe',
             ]);
 
-            $peserta = $result['peserta'];
             $plaintext = $result['kode_akses'];
-
-            $this->service->markAttendance($peserta, $ujian, 'hadir');
 
             $this->post('/peserta/ujian-offline/login', [
                 'nomor_peserta' => 'P001',

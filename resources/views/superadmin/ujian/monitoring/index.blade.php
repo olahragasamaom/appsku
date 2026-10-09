@@ -50,10 +50,10 @@
                     <div class="text-2xl font-bold text-secondary-800 mt-1" x-text="stats.total_peserta">-</div>
                 </div>
             </div>
-            <div class="card">
+                <div class="card">
                 <div class="card-body">
-                    <div class="text-xs text-secondary-500 uppercase font-medium">Ditandai Hadir</div>
-                    <div class="text-2xl font-bold text-success-600 mt-1" x-text="stats.total_hadir">-</div>
+                    <div class="text-xs text-secondary-500 uppercase font-medium">Diaktifkan</div>
+                    <div class="text-2xl font-bold text-success-600 mt-1" x-text="stats.total_aktif">-</div>
                 </div>
             </div>
             <div class="card">
@@ -115,14 +115,14 @@
                                     <td class="py-3 px-4 text-sm text-secondary-700" x-text="p.nama_peserta"></td>
                                     <td class="py-3 px-4 text-center">
                                         <div class="inline-flex flex-col gap-1">
-                                            <template x-if="p.status_kehadiran === 'hadir'">
+                                            <template x-if="p.is_active">
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
-                                                    Hadir
+                                                    Aktif
                                                 </span>
                                             </template>
-                                            <template x-if="p.status_kehadiran !== 'hadir'">
+                                            <template x-if="!p.is_active">
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary-100 text-secondary-600">
-                                                    Belum Hadir
+                                                    Nonaktif
                                                 </span>
                                             </template>
                                             <template x-if="p.is_blocked">
@@ -298,7 +298,7 @@
             return {
                 stats: {
                     total_peserta: 0,
-                    total_hadir: 0,
+                    total_aktif: 0,
                     logged_in: 0,
                     sedang_ujian: 0,
                     selesai: 0,

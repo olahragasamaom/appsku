@@ -53,7 +53,8 @@ class StoreJawabanRequest extends FormRequest
 
     /**
      * Validasi tambahan: status attempt & batas waktu snapshot (M-AU-8/AD-10).
-     * Juga validasi attendance untuk offline participants (P5-T8).
+     * Juga validasi aktivasi untuk offline participants (admin dapat
+     * menonaktifkan di tengah ujian jika ada keanehan).
      */
     public function withValidator($validator): void
     {
@@ -78,19 +79,12 @@ class StoreJawabanRequest extends FormRequest
                 ]);
             }
 
-            // Attendance validation for offline participants (P5-T8 revised)
-            if ($peserta->pesertaOffline) {
-                /** @var Ujian $ujian */
-                $ujian = $this->route('ujian');
-                $kehadiran = $peserta->pesertaOffline->kehadiran()
-                    ->where('ujian_id', $ujian->id)
-                    ->first();
-
-                if (! $kehadiran || $kehadiran->status_kehadiran !== 'hadir') {
-                    throw ValidationException::withMessages([
-                        'attempt' => 'Status kehadiran tidak valid untuk mengerjakan ujian.',
-                    ]);
-                }
+            // Activation validation for offline participants
+            // Jika admin menonaktifkan di tengah ujian, peserta tidak bisa simpan jawaban lagi.
+            if ($peserta->pesertaOffline && ! $peserta->pesertaOffline->is_active) {
+                throw ValidationException::withMessages([
+                    'attempt' => 'Status aktivasi tidak valid untuk mengerjakan ujian. Hubungi pengawas.',
+                ]);
             }
         });
     }

@@ -58,11 +58,9 @@
             <div class="grid grid-cols-1 gap-4">
                 @foreach($ujians as $ujian)
                     @php
-                        $kehadiran = $ujian->pesertaOfflineKehadiran->first();
-                        $isHadir = $kehadiran && $kehadiran->status_kehadiran === 'hadir';
                         $isUjianAktif = $ujian->status === 'aktif';
-                        $isPesertaAktif = $peserta->is_active;
-                        $canStart = $isHadir && $isUjianAktif && $isPesertaAktif;
+                        $isPesertaAktif = (bool) $peserta->is_active;
+                        $canStart = $isUjianAktif && $isPesertaAktif;
                     @endphp
                     
                     <div class="card border-l-4 {{ $canStart ? 'border-l-success-500' : 'border-l-slate-300' }}">
@@ -95,16 +93,6 @@
                                                  ⏳ Menunggu Aktivasi
                                              </span>
                                          @endif
-
-                                         @if($isHadir)
-                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
-                                                 ✓ Hadir
-                                             </span>
-                                         @else
-                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
-                                                 Belum Hadir
-                                             </span>
-                                         @endif
                                      </div>
 
                                     <div class="text-sm text-slate-600 space-y-1">
@@ -123,10 +111,7 @@
                                                  <p class="text-warning-600">⚠️ Ujian belum diaktifkan oleh admin</p>
                                              @endif
                                              @if(!$isPesertaAktif)
-                                                 <p class="text-warning-600">⏳ Akun Anda belum diaktifkan. Hubungi admin untuk aktivasi.</p>
-                                             @endif
-                                             @if(!$isHadir)
-                                                 <p class="text-slate-600">ℹ️ Anda belum ditandai hadir oleh admin</p>
+                                                 <p class="text-warning-600">⏳ Akun Anda belum diaktifkan. Silakan hubungi pengawas untuk aktivasi.</p>
                                              @endif
                                          </div>
                                      @endif

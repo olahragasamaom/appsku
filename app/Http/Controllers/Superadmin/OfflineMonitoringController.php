@@ -26,9 +26,6 @@ class OfflineMonitoringController extends Controller
         }
 
         $pesertaOffline = PesertaOffline::where('ujian_id', $ujian->id)
-            ->with(['kehadiran' => function ($query) use ($ujian) {
-                $query->where('ujian_id', $ujian->id);
-            }])
             ->orderBy('nomor_peserta')
             ->get();
 
@@ -41,11 +38,7 @@ class OfflineMonitoringController extends Controller
             abort(404);
         }
 
-        $pesertaOffline = PesertaOffline::where('ujian_id', $ujian->id)
-            ->with(['kehadiran' => function ($query) use ($ujian) {
-                $query->where('ujian_id', $ujian->id);
-            }])
-            ->get();
+        $pesertaOffline = PesertaOffline::where('ujian_id', $ujian->id)->get();
 
         // Get all active sessions for this ujian's peserta
         $pesertaIds = $pesertaOffline->pluck('id');
@@ -56,7 +49,6 @@ class OfflineMonitoringController extends Controller
             ->keyBy('peserta_offline_id');
 
         $participants = $pesertaOffline->map(function ($peserta) use ($activeSessions) {
-            $kehadiran = $peserta->kehadiran->first();
             $session = $activeSessions->get($peserta->id);
 
             $statusUjian = 'offline';
@@ -86,7 +78,7 @@ class OfflineMonitoringController extends Controller
                 'peserta_offline_id' => $peserta->id,
                 'nomor_peserta' => $peserta->nomor_peserta,
                 'nama_peserta' => $peserta->nama_peserta,
-                'status_kehadiran' => $kehadiran?->status_kehadiran ?? 'tidak_hadir',
+                'is_active' => (bool) $peserta->is_active,
                 'status_ujian' => $statusUjian,
                 'is_online' => $isOnline,
                 'last_activity' => $lastActivity,
@@ -100,7 +92,7 @@ class OfflineMonitoringController extends Controller
 
         // Statistics
         $totalPeserta = $pesertaOffline->count();
-        $totalHadir = $pesertaOffline->filter(fn ($p) => $p->kehadiran->first()?->status_kehadiran === 'hadir')->count();
+        $totalAktif = $pesertaOffline->filter(fn ($p) => (bool) $p->is_active)->count();
         $loggedIn = $activeSessions->count();
         $sedangUjian = $activeSessions->filter(fn ($s) => $s->status === 'sedang_ujian')->count();
         $selesai = OfflineParticipantSession::whereIn('peserta_offline_id', $pesertaIds)
@@ -113,7 +105,7 @@ class OfflineMonitoringController extends Controller
             'ujian_status' => $ujian->status,
             'stats' => [
                 'total_peserta' => $totalPeserta,
-                'total_hadir' => $totalHadir,
+                'total_aktif' => $totalAktif,
                 'logged_in' => $loggedIn,
                 'sedang_ujian' => $sedangUjian,
                 'selesai' => $selesai,

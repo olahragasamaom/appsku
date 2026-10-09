@@ -93,7 +93,6 @@ class OfflinePortalController extends Controller
 
         // Get all ujian offline where peserta is registered (ujian_id matches)
         // and ujian is aktif with date range check
-        // Load kehadiran data if available (but don't require it to show exam)
         $ujians = Ujian::where('id', $peserta->ujian_id)
             ->where('tipe_ujian', 'offline_kelas')
             ->where('status', 'aktif')
@@ -101,9 +100,6 @@ class OfflinePortalController extends Controller
                 $query->whereDate('tanggal_ujian', '>=', now()->startOfDay())
                     ->whereDate('tanggal_ujian', '<=', now()->addMonths(6)->endOfDay());
             })
-            ->with(['pesertaOfflineKehadiran' => function ($query) use ($peserta) {
-                $query->where('peserta_offline_id', $peserta->id);
-            }])
             ->orderBy('tanggal_ujian', 'asc')
             ->get();
 
@@ -136,24 +132,16 @@ class OfflinePortalController extends Controller
             abort(403, 'Anda tidak terdaftar di ujian ini.');
         }
 
-        // Validasi 4: Peserta harus diaktifkan (is_active = true)
+        // Validasi 4: Peserta harus diaktifkan oleh admin/pengawas (is_active = true)
         if (! $peserta->is_active) {
-            abort(403, 'Akun Anda belum diaktifkan. Hubungi admin untuk aktivasi.');
-        }
-
-        // Validasi 5: Peserta harus ditandai hadir
-        $kehadiran = $peserta->kehadiran()
-            ->where('ujian_id', $ujian->id)
-            ->first();
-
-        if (! $kehadiran || $kehadiran->status_kehadiran !== 'hadir') {
-            abort(403, 'Anda belum dimarkir hadir.');
+            abort(403, 'Anda belum diaktifkan oleh admin. Silakan hubungi pengawas untuk aktivasi.');
         }
 
         $attempt = UjianPeserta::create([
             'ujian_id' => $ujian->id,
             'status' => 'sedang_ujian',
             'waktu_mulai' => now(),
+            'last_activity_at' => now(),
             'batas_waktu' => now()->addMinutes($ujian->durasi_ujian ?? 90),
         ]);
 

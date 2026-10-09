@@ -163,12 +163,16 @@ class UjianController extends Controller
             ]
         );
 
+        // Update last_activity_at untuk tracking inactivity timeout
+        $peserta->forceFill(['last_activity_at' => now()])->save();
+
         return response()->json(['saved' => true]);
     }
 
     /**
      * Heartbeat endpoint: client calls this periodically to verify deadline.
      * If deadline passed, backend will auto-finalize and return expired=true.
+     * Juga update last_activity_at untuk tracking inactivity timeout.
      */
     public function heartbeat(Request $request, Ujian $ujian): JsonResponse
     {
@@ -202,6 +206,9 @@ class UjianController extends Controller
             ]);
         }
 
+        // Update last_activity_at (tracking inactivity timeout)
+        $peserta->forceFill(['last_activity_at' => now()])->save();
+
         return response()->json([
             'expired' => false,
             'sisa_detik' => $this->sisaDetik($ujian, $peserta),
@@ -221,15 +228,9 @@ class UjianController extends Controller
             abort(404);
         }
 
-        // P5-T7 revised: Check attendance for offline participants before submit
-        if ($peserta->pesertaOffline) {
-            $kehadiran = $peserta->pesertaOffline->kehadiran()
-                ->where('ujian_id', $ujian->id)
-                ->first();
-
-            if (! $kehadiran || $kehadiran->status_kehadiran !== 'hadir') {
-                abort(403, 'Status kehadiran tidak valid untuk menyelesaikan ujian.');
-            }
+        // Check activation status for offline participants before submit
+        if ($peserta->pesertaOffline && ! $peserta->pesertaOffline->is_active) {
+            abort(403, 'Status aktivasi tidak valid untuk menyelesaikan ujian.');
         }
 
         if ($peserta->status !== 'selesai') {
