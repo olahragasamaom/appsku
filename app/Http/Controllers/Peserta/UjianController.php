@@ -126,6 +126,26 @@ class UjianController extends Controller
             abort(401);
         }
 
+        // Guard: reject save jika deadline sudah lewat atau status sudah selesai
+        if ($peserta->status === 'selesai') {
+            return response()->json([
+                'saved' => false,
+                'expired' => true,
+                'message' => 'Ujian sudah selesai.',
+            ], 403);
+        }
+
+        if ($this->deadlinePassed($ujian, $peserta)) {
+            $this->autoSubmit($peserta);
+
+            return response()->json([
+                'saved' => false,
+                'expired' => true,
+                'message' => 'Batas waktu ujian telah habis.',
+                'redirect' => route('peserta.ujian.hasil', $ujian),
+            ], 403);
+        }
+
         $validated = $request->validated();
 
         $ujianSoal = $ujian->ujianSoals()->with('soal')->findOrFail($validated['ujian_soal_id']);
@@ -144,6 +164,49 @@ class UjianController extends Controller
         );
 
         return response()->json(['saved' => true]);
+    }
+
+    /**
+     * Heartbeat endpoint: client calls this periodically to verify deadline.
+     * If deadline passed, backend will auto-finalize and return expired=true.
+     */
+    public function heartbeat(Request $request, Ujian $ujian): JsonResponse
+    {
+        $peserta = $this->resolvePeserta($request, $ujian);
+
+        if ($peserta instanceof RedirectResponse || ! $peserta) {
+            return response()->json([
+                'expired' => true,
+                'message' => 'Sesi tidak valid.',
+                'redirect' => route('peserta.login'),
+            ], 401);
+        }
+
+        // Jika sudah selesai, redirect ke hasil
+        if ($peserta->status === 'selesai') {
+            return response()->json([
+                'expired' => true,
+                'message' => 'Ujian sudah selesai.',
+                'redirect' => route('peserta.ujian.hasil', $ujian),
+            ]);
+        }
+
+        // Jika deadline sudah lewat, auto-finalize
+        if ($this->deadlinePassed($ujian, $peserta)) {
+            $this->autoSubmit($peserta);
+
+            return response()->json([
+                'expired' => true,
+                'message' => 'Batas waktu ujian telah habis. Ujian otomatis diselesaikan.',
+                'redirect' => route('peserta.ujian.hasil', $ujian),
+            ]);
+        }
+
+        return response()->json([
+            'expired' => false,
+            'sisa_detik' => $this->sisaDetik($ujian, $peserta),
+            'server_time' => now()->timestamp,
+        ]);
     }
 
     public function submit(Request $request, Ujian $ujian): RedirectResponse

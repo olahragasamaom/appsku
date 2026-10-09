@@ -12,7 +12,12 @@
         function examEngine(config) {
             return {
                 saveUrl: config.saveUrl,
-                sisaDetik: config.sisaDetik,
+                heartbeatUrl: config.heartbeatUrl,
+                hasilUrl: config.hasilUrl,
+                deadlineTimestamp: config.deadlineTimestamp, // unix timestamp (seconds) saat deadline
+                serverTimestamp: config.serverTimestamp,     // unix timestamp (seconds) saat page dirender di server
+                clientBaseTimestamp: Math.floor(Date.now() / 1000), // unix timestamp (seconds) saat page diload di client
+                sisaDetik: null,
                 submitFormId: config.submitFormId,
                 jawaban: config.initialJawaban || {},
                 ragu: {},
@@ -22,6 +27,8 @@
                 saving: false,
                 lastSaved: false,
                 timer: null,
+                heartbeatTimer: null,
+                expired: false,
 
                 init() {
                     try {
@@ -34,14 +41,37 @@
                         this.ragu = {};
                     }
 
-                    if (this.sisaDetik !== null) {
+                    // Hitung sisa detik awal dari deadline timestamp
+                    this.recalculateSisaDetik();
+
+                    if (this.deadlineTimestamp !== null) {
+                        // Timer tick setiap 1 detik - recalculate dari timestamp absolut
+                        // Ini akan tetap akurat meskipun browser di-sleep/suspend
                         this.timer = setInterval(() => {
-                            this.sisaDetik--;
-                            if (this.sisaDetik <= 0) {
+                            this.recalculateSisaDetik();
+                            if (this.sisaDetik <= 0 && !this.expired) {
+                                this.expired = true;
                                 clearInterval(this.timer);
                                 this.autoSubmitOnTimeout();
                             }
                         }, 1000);
+
+                        // Heartbeat ke server setiap 30 detik - verifikasi deadline + sinkronisasi waktu
+                        this.heartbeatTimer = setInterval(() => this.heartbeat(), 30000);
+
+                        // Recalculate saat tab aktif lagi (setelah sleep/switch tab)
+                        document.addEventListener('visibilitychange', () => {
+                            if (document.visibilityState === 'visible') {
+                                this.recalculateSisaDetik();
+                                this.heartbeat();
+                            }
+                        });
+
+                        // Recalculate saat window focus kembali
+                        window.addEventListener('focus', () => {
+                            this.recalculateSisaDetik();
+                            this.heartbeat();
+                        });
                     }
 
                     this.$watch('currentSoalIndex', () => {
@@ -56,6 +86,66 @@
                             this.currentSoalIndex = Math.min(this.totalSoal - 1, this.currentSoalIndex + 1);
                         }
                     });
+                },
+
+                /**
+                 * Recalculate sisa detik berdasarkan timestamp absolut.
+                 * Formula: deadline - (serverTime + elapsedSinceLoad)
+                 * elapsedSinceLoad = waktu yang berlalu di client sejak page load (akurat untuk pause/sleep)
+                 */
+                recalculateSisaDetik() {
+                    if (this.deadlineTimestamp === null) {
+                        this.sisaDetik = null;
+                        return;
+                    }
+                    const nowClient = Math.floor(Date.now() / 1000);
+                    const elapsedClient = nowClient - this.clientBaseTimestamp;
+                    const estimatedServerNow = this.serverTimestamp + elapsedClient;
+                    const sisa = this.deadlineTimestamp - estimatedServerNow;
+                    this.sisaDetik = Math.max(0, sisa);
+                },
+
+                /**
+                 * Heartbeat ke server untuk verifikasi deadline dan sinkronisasi waktu.
+                 * Jika server bilang expired, redirect ke halaman hasil.
+                 */
+                async heartbeat() {
+                    if (this.expired || !this.heartbeatUrl) return;
+                    try {
+                        const res = await fetch(this.heartbeatUrl, {
+                            headers: { 'Accept': 'application/json' },
+                            cache: 'no-store',
+                        });
+                        if (!res.ok) {
+                            const data = await res.json().catch(() => ({}));
+                            if (data.redirect) {
+                                this.expired = true;
+                                clearInterval(this.timer);
+                                clearInterval(this.heartbeatTimer);
+                                window.location.href = data.redirect;
+                            }
+                            return;
+                        }
+                        const data = await res.json();
+                        if (data.expired) {
+                            this.expired = true;
+                            clearInterval(this.timer);
+                            clearInterval(this.heartbeatTimer);
+                            if (data.redirect) {
+                                window.location.href = data.redirect;
+                            }
+                            return;
+                        }
+                        // Sinkronisasi waktu server (koreksi clock drift)
+                        if (data.server_time && data.sisa_detik !== undefined && data.sisa_detik !== null) {
+                            this.serverTimestamp = data.server_time;
+                            this.clientBaseTimestamp = Math.floor(Date.now() / 1000);
+                            this.deadlineTimestamp = data.server_time + data.sisa_detik;
+                            this.recalculateSisaDetik();
+                        }
+                    } catch (e) {
+                        console.warn('Heartbeat gagal:', e);
+                    }
                 },
 
                 toggleRagu(ujianSoalId) {
@@ -75,7 +165,7 @@
                     this.saving = true;
                     this.lastSaved = false;
                     try {
-                        await fetch(this.saveUrl, {
+                        const res = await fetch(this.saveUrl, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -84,6 +174,20 @@
                             },
                             body: JSON.stringify({ ujian_soal_id: ujianSoalId, jawaban: jawaban }),
                         });
+
+                        if (!res.ok) {
+                            const data = await res.json().catch(() => ({}));
+                            if (data.expired) {
+                                this.expired = true;
+                                clearInterval(this.timer);
+                                clearInterval(this.heartbeatTimer);
+                                alert(data.message || 'Batas waktu ujian telah habis.');
+                                if (data.redirect) {
+                                    window.location.href = data.redirect;
+                                }
+                                return;
+                            }
+                        }
                         this.lastSaved = true;
                     } finally {
                         this.saving = false;
@@ -145,9 +249,19 @@
         });
     @endphp
 
+    @php
+        $deadlineTimestamp = null;
+        if ($sisaDetik !== null) {
+            $deadlineTimestamp = now()->addSeconds($sisaDetik)->timestamp;
+        }
+    @endphp
+
     <div x-data="examEngine({
             saveUrl: '{{ route('peserta.ujian.jawaban', $ujian) }}',
-            sisaDetik: {{ $sisaDetik === null ? 'null' : $sisaDetik }},
+            heartbeatUrl: '{{ route('peserta.ujian.heartbeat', $ujian) }}',
+            hasilUrl: '{{ route('peserta.ujian.hasil', $ujian) }}',
+            deadlineTimestamp: {{ $deadlineTimestamp === null ? 'null' : $deadlineTimestamp }},
+            serverTimestamp: {{ now()->timestamp }},
             submitFormId: 'submit-form',
             initialJawaban: {{ Js::from($jawaban) }},
             currentSoalIndex: 0,

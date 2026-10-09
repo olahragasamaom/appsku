@@ -925,6 +925,7 @@ Route::prefix('peserta')->name('peserta.')->group(function () {
     Route::middleware('exam.access')->group(function () {
         Route::get('ujian/{ujian}/kerjakan', [PesertaUjianController::class, 'kerjakan'])->name('ujian.kerjakan');
         Route::post('ujian/{ujian}/jawaban', [PesertaUjianController::class, 'saveAnswer'])->name('ujian.jawaban');
+        Route::get('ujian/{ujian}/heartbeat', [PesertaUjianController::class, 'heartbeat'])->name('ujian.heartbeat');
         Route::post('ujian/{ujian}/submit', [PesertaUjianController::class, 'submit'])->name('ujian.submit');
         Route::get('ujian/{ujian}/hasil', [PesertaUjianController::class, 'hasil'])->name('ujian.hasil');
         Route::get('ujian/{ujian}/pembahasan', [PesertaUjianController::class, 'pembahasan'])->name('ujian.pembahasan');
