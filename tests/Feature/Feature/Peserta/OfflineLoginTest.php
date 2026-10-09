@@ -86,7 +86,11 @@ describe('Offline participant login flow (is_active based)', function () {
 
     describe('start exam', function () {
         it('allows start when ujian aktif AND peserta is_active=true', function () {
-            $ujian = Ujian::factory()->offline()->active()->create();
+            // Ujian aktif, sudah dimulai (1 jam lalu), belum lewat batas keterlambatan
+            $ujian = Ujian::factory()->offline()->active()->create([
+                'tanggal_ujian' => now()->subHour(),
+                'batas_keterlambatan' => now()->addDays(7),
+            ]);
 
             $result = $this->service->create($ujian, [
                 'nomor_peserta' => 'P001',

@@ -91,14 +91,23 @@ class OfflinePortalController extends Controller
 
         $peserta = PesertaOffline::findOrFail($pesertaId);
 
-        // Get all ujian offline where peserta is registered (ujian_id matches)
-        // and ujian is aktif with date range check
+        // Get ujian offline yang peserta terdaftar di dalamnya.
+        // Rentang akses: tanggal_ujian <= now() <= batas_keterlambatan
+        // Jika batas_keterlambatan null, fallback ke tanggal_ujian + durasi.
+        $now = now();
+
         $ujians = Ujian::where('id', $peserta->ujian_id)
             ->where('tipe_ujian', 'offline_kelas')
             ->where('status', 'aktif')
-            ->where(function ($query) {
-                $query->whereDate('tanggal_ujian', '>=', now()->startOfDay())
-                    ->whereDate('tanggal_ujian', '<=', now()->addMonths(6)->endOfDay());
+            ->where(function ($query) use ($now) {
+                // tanggal_ujian harus sudah dimulai (atau null = tidak dibatasi)
+                $query->whereNull('tanggal_ujian')
+                    ->orWhere('tanggal_ujian', '<=', $now);
+            })
+            ->where(function ($query) use ($now) {
+                // belum lewat batas_keterlambatan (atau null = tidak dibatasi)
+                $query->whereNull('batas_keterlambatan')
+                    ->orWhere('batas_keterlambatan', '>=', $now);
             })
             ->orderBy('tanggal_ujian', 'asc')
             ->get();
@@ -122,9 +131,13 @@ class OfflinePortalController extends Controller
             abort(403, 'Ujian belum diaktifkan.');
         }
 
-        // Validasi 2: Ujian harus dalam rentang tanggal
-        if ($ujian->tanggal_ujian && $ujian->tanggal_ujian->isPast()) {
-            abort(403, 'Ujian ini sudah berakhir.');
+        // Validasi 2: Ujian harus dalam rentang akses (tanggal_ujian s/d batas_keterlambatan)
+        $now = now();
+        if ($ujian->tanggal_ujian && $ujian->tanggal_ujian->greaterThan($now)) {
+            abort(403, 'Ujian belum dimulai.');
+        }
+        if ($ujian->batas_keterlambatan && $ujian->batas_keterlambatan->lessThan($now)) {
+            abort(403, 'Ujian ini sudah berakhir (lewat batas keterlambatan).');
         }
 
         // Validasi 3: Peserta harus terdaftar di ujian ini
