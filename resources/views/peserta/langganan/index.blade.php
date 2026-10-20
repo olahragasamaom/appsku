@@ -53,12 +53,12 @@
                             Sedang Aktif
                         </div>
                     @elseif($loop->iteration === 2)
-                        <div class="absolute top-0 inset-x-0 bg-primary-500 text-white text-center text-[10px] font-bold uppercase tracking-wider py-1.5 shadow-sm">
+                        <div class="absolute top-0 inset-x-0 bg-primary-500 text-white text-center text-[10px] font-bold uppercase tracking-wider py-2 px-4 shadow-sm">
                             Paling Populer
                         </div>
                     @endif
                     
-                    <div class="card-body p-6 lg:p-8 flex flex-col flex-1 {{ $loop->iteration === 2 ? 'pt-10' : '' }}">
+                    <div class="card-body p-6 lg:p-8 flex flex-col flex-1 {{ $loop->iteration === 2 ? 'pt-14' : '' }}">
                         <h3 class="text-lg lg:text-xl font-bold text-slate-900 mb-2">{{ $paket->nama_paket }}</h3>
                         <p class="text-sm text-slate-500 mb-6 min-h-[40px]">{{ $paket->deskripsi ?? 'Akses persiapan ujian lengkap.' }}</p>
                         
