@@ -49,16 +49,16 @@
                 <div class="card flex flex-col shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden border-2 {{ $isAktif ? 'border-success-500 ring-4 ring-success-50' : ($loop->iteration === 2 ? 'border-primary-500 lg:scale-105 z-10' : 'border-transparent') }}">
                     
                     @if($isAktif)
-                        <div class="absolute top-0 right-0 bg-success-500 text-white text-[10px] font-bold uppercase tracking-wider py-1 px-3 rounded-bl-lg shadow-sm">
+                        <div class="bg-success-500 text-white text-[10px] font-bold uppercase tracking-wider py-1.5 px-3 shadow-sm">
                             Sedang Aktif
                         </div>
                     @elseif($loop->iteration === 2)
-                        <div class="absolute top-0 inset-x-0 bg-primary-500 text-white text-center text-[10px] font-bold uppercase tracking-wider py-2 px-4 shadow-sm">
+                        <div class="bg-primary-500 text-white text-center text-[10px] font-bold uppercase tracking-wider py-2.5 px-4 shadow-sm">
                             Paling Populer
                         </div>
                     @endif
                     
-                    <div class="card-body p-6 lg:p-8 flex flex-col flex-1 {{ $loop->iteration === 2 ? 'pt-14' : '' }}">
+                    <div class="card-body p-6 lg:p-8 flex flex-col flex-1">
                         <h3 class="text-lg lg:text-xl font-bold text-slate-900 mb-2">{{ $paket->nama_paket }}</h3>
                         <p class="text-sm text-slate-500 mb-6 min-h-[40px]">{{ $paket->deskripsi ?? 'Akses persiapan ujian lengkap.' }}</p>
                         
