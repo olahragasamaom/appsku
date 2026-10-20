@@ -84,4 +84,29 @@ class LanggananController extends Controller
 
         return view('peserta.langganan.status', compact('bayar'));
     }
+
+    public function uploadBukti(Request $request, int $pembayaran): RedirectResponse
+    {
+        $bayar = \App\Models\PesertaPembayaran::where('user_id', $request->user()->id)
+            ->findOrFail($pembayaran);
+
+        abort_unless($bayar->status === 'pending', 404);
+
+        $validated = $request->validate([
+            'bukti_pembayaran' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120'],
+            'catatan_peserta' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $file = $request->file('bukti_pembayaran');
+        $filename = 'pembayaran_'.$bayar->id.'_'.time().'.'.$file->getClientOriginalExtension();
+        $path = $file->storeAs('pembayaran', $filename, 'public');
+
+        $bayar->update([
+            'bukti_pembayaran' => $path,
+            'catatan_peserta' => $validated['catatan_peserta'] ?? null,
+        ]);
+
+        return redirect()->route('peserta.langganan.status', $pembayaran)
+            ->with('success', 'Bukti pembayaran berhasil diupload. Menunggu verifikasi admin.');
+    }
 }

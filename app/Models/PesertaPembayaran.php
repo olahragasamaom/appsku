@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PesertaPembayaran extends Model
 {
+    use HasFactory;
+
     protected $table = 'panritta_peserta_pembayaran';
 
     public const STATUS_PENDING = 'pending';
@@ -31,6 +34,11 @@ class PesertaPembayaran extends Model
         'gateway_response',
         'dibayar_pada',
         'kedaluwarsa_pada',
+        'bukti_pembayaran',
+        'catatan_peserta',
+        'bukti_pembayaran_verified_by',
+        'catatan_verifikasi',
+        'diverifikasi_pada',
     ];
 
     protected function casts(): array
@@ -44,6 +52,7 @@ class PesertaPembayaran extends Model
             'gateway_response' => 'array',
             'dibayar_pada' => 'datetime',
             'kedaluwarsa_pada' => 'datetime',
+            'diverifikasi_pada' => 'datetime',
         ];
     }
 
@@ -83,5 +92,41 @@ class PesertaPembayaran extends Model
     public function isSuccess(): bool
     {
         return $this->status === self::STATUS_SUCCESS;
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    public function isFailed(): bool
+    {
+        return $this->status === self::STATUS_FAILED;
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->status === self::STATUS_EXPIRED;
+    }
+
+    public function verifikasiPembayaran(string $verifiedBy, string $catatan = ''): void
+    {
+        $this->update([
+            'status' => self::STATUS_SUCCESS,
+            'dibayar_pada' => now(),
+            'bukti_pembayaran_verified_by' => $verifiedBy,
+            'catatan_verifikasi' => $catatan,
+            'diverifikasi_pada' => now(),
+        ]);
+    }
+
+    public function tolakPembayaran(string $verifiedBy, string $alasan = ''): void
+    {
+        $this->update([
+            'status' => self::STATUS_FAILED,
+            'bukti_pembayaran_verified_by' => $verifiedBy,
+            'catatan_verifikasi' => $alasan,
+            'diverifikasi_pada' => now(),
+        ]);
     }
 }

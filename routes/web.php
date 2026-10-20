@@ -632,6 +632,12 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::patch('plans/{plan}/toggle-status', [PlanController::class, 'toggleStatus'])->name('plans.toggle-status');
         Route::resource('plans', PlanController::class);
 
+        // Pembayaran Peserta
+        Route::get('pembayaran', [\App\Http\Controllers\Superadmin\PembayaranController::class, 'index'])->name('pembayaran.index');
+        Route::get('pembayaran/{pembayaran}', [\App\Http\Controllers\Superadmin\PembayaranController::class, 'show'])->name('pembayaran.show');
+        Route::post('pembayaran/{pembayaran}/verifikasi', [\App\Http\Controllers\Superadmin\PembayaranController::class, 'verifikasi'])->name('pembayaran.verifikasi');
+        Route::post('pembayaran/{pembayaran}/tolak', [\App\Http\Controllers\Superadmin\PembayaranController::class, 'tolak'])->name('pembayaran.tolak');
+
         // jenis ujian management
         Route::resource('jenis-ujian', JenisUjianController::class)
             ->only(['index', 'store', 'update', 'destroy'])
@@ -894,6 +900,7 @@ Route::prefix('peserta')->name('peserta.')->group(function () {
         Route::get('langganan', [PesertaLanggananController::class, 'index'])->name('langganan.index');
         Route::post('langganan/{paket}/pilih', [PesertaLanggananController::class, 'pilih'])->name('langganan.pilih');
         Route::get('langganan/bayar/{pembayaran}', [PesertaLanggananController::class, 'bayar'])->name('langganan.bayar');
+        Route::post('langganan/bayar/{pembayaran}/upload', [PesertaLanggananController::class, 'uploadBukti'])->name('langganan.upload-bukti');
         Route::get('langganan/status/{pembayaran}', [PesertaLanggananController::class, 'statusPembayaran'])->name('langganan.status');
 
         Route::get('ujian/{ujian}', [PesertaUjianController::class, 'show'])->name('ujian.show');
