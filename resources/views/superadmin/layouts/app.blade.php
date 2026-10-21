@@ -330,16 +330,8 @@
                 {{-- Right: Notifications + Logout --}}
                 <div class="flex items-center gap-3">
                     {{-- Notifikasi Pembayaran --}}
-                    @php
-                        try {
-                            $pendingPayments = \Illuminate\Support\Facades\Schema::hasTable('panritta_peserta_pembayaran')
-                                ? \App\Models\PesertaPembayaran::where('status', 'pending')->count()
-                                : 0;
-                        } catch (\Throwable $e) {
-                            $pendingPayments = 0;
-                        }
-                    @endphp
-                    @if($pendingPayments > 0)
+                    @php($badge = $moduleBadges['pembayaran-pending'] ?? null)
+                    @if($badge && $badge['count'] > 0)
                         <a href="{{ route('superadmin.pembayaran.index') }}"
                            class="relative inline-flex items-center justify-center w-10 h-10 rounded-lg bg-warning-100 text-warning-600 hover:bg-warning-200 transition-colors"
                            title="Pembayaran menunggu verifikasi">
@@ -347,7 +339,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0a2 2 0 11-4 0 2 2 0 014 0zm14 0a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
                             <span class="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 bg-danger-500 text-white text-xs font-bold rounded-full">
-                                {{ $pendingPayments }}
+                                {{ $badge['count'] }}
                             </span>
                         </a>
                     @endif
