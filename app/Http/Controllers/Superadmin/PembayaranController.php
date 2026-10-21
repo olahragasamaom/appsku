@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\PaymentRejectedMail;
+use App\Mail\PaymentVerifiedMail;
+use App\Models\PaymentNotification;
 use App\Models\PesertaLangganan;
 use App\Models\PesertaPembayaran;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class PembayaranController extends Controller
@@ -62,6 +66,22 @@ class PembayaranController extends Controller
             ]);
         }
 
+        // Send in-app notification
+        PaymentNotification::create([
+            'user_id' => $pembayaran->user_id,
+            'pembayaran_id' => $pembayaran->id,
+            'type' => 'verified',
+            'title' => 'Pembayaran Berhasil Diverifikasi',
+            'message' => 'Paket '.$pembayaran->paket->nama_paket.' sudah diaktifkan. Selamat belajar!',
+            'data' => [
+                'paket_id' => $pembayaran->paket_id,
+                'paket_nama' => $pembayaran->paket->nama_paket,
+            ],
+        ]);
+
+        // Send email
+        Mail::to($pembayaran->user->email)->send(new PaymentVerifiedMail($pembayaran));
+
         return redirect()->route('superadmin.pembayaran.show', $pembayaran)
             ->with('success', 'Pembayaran berhasil diverifikasi dan langganan diaktifkan.');
     }
@@ -77,6 +97,23 @@ class PembayaranController extends Controller
         $pembayaran->tolakPembayaran(
             $request->user()->email,
             $validated['alasan']
+        );
+
+        // Send in-app notification
+        PaymentNotification::create([
+            'user_id' => $pembayaran->user_id,
+            'pembayaran_id' => $pembayaran->id,
+            'type' => 'rejected',
+            'title' => 'Pembayaran Perlu Diverifikasi Ulang',
+            'message' => 'Bukti pembayaran Anda tidak sesuai. Silakan upload bukti yang benar.',
+            'data' => [
+                'alasan' => $validated['alasan'],
+            ],
+        ]);
+
+        // Send email
+        Mail::to($pembayaran->user->email)->send(
+            new PaymentRejectedMail($pembayaran, $validated['alasan'])
         );
 
         return redirect()->route('superadmin.pembayaran.show', $pembayaran)

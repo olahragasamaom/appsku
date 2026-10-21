@@ -903,6 +903,11 @@ Route::prefix('peserta')->name('peserta.')->group(function () {
         Route::post('langganan/bayar/{pembayaran}/upload', [PesertaLanggananController::class, 'uploadBukti'])->name('langganan.upload-bukti');
         Route::get('langganan/status/{pembayaran}', [PesertaLanggananController::class, 'statusPembayaran'])->name('langganan.status');
 
+        // Notifikasi Peserta
+        Route::get('notifications', [\App\Http\Controllers\Peserta\NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('notifications/{notification}', [\App\Http\Controllers\Peserta\NotificationController::class, 'show'])->name('notifications.show');
+        Route::post('notifications/mark-all-read', [\App\Http\Controllers\Peserta\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+
         Route::get('ujian/{ujian}', [PesertaUjianController::class, 'show'])->name('ujian.show');
         Route::post('ujian/{ujian}/start', [PesertaUjianController::class, 'start'])->name('ujian.start');
     });
