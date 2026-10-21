@@ -331,7 +331,13 @@
                 <div class="flex items-center gap-3">
                     {{-- Notifikasi Pembayaran --}}
                     @php
-                        $pendingPayments = \App\Models\PesertaPembayaran::where('status', 'pending')->count();
+                        try {
+                            $pendingPayments = \Illuminate\Support\Facades\Schema::hasTable('panritta_peserta_pembayaran')
+                                ? \App\Models\PesertaPembayaran::where('status', 'pending')->count()
+                                : 0;
+                        } catch (\Throwable $e) {
+                            $pendingPayments = 0;
+                        }
                     @endphp
                     @if($pendingPayments > 0)
                         <a href="{{ route('superadmin.pembayaran.index') }}"
