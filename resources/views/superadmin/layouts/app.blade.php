@@ -11,6 +11,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -61,6 +63,12 @@
                 $sidebarUser = auth()->user();
 
                 $moduleBadges = [
+                    'pembayaran-pending' => ['count' => (function () {
+                        try {
+                            return \Illuminate\Support\Facades\Schema::hasTable('panritta_peserta_pembayaran')
+                                ? \App\Models\PesertaPembayaran::where('status', 'pending')->count() : 0;
+                        } catch (\Throwable $e) { return 0; }
+                    })(), 'class' => 'bg-warning-500'],
                     'security-logs' => ['count' => (function () {
                         try {
                             return \Illuminate\Support\Facades\Schema::hasTable('security_logs')
@@ -211,6 +219,22 @@
                     </div>
                 </div>
 
+                {{-- Verifikasi Pembayaran --}}
+                <a href="{{ route('superadmin.pembayaran.index') }}"
+                   class="sidebar-link {{ request()->routeIs('superadmin.pembayaran.*') ? 'active' : '' }}"
+                   style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
+                        <svg class="sidebar-icon flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0a2 2 0 11-4 0 2 2 0 014 0zm14 0a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <span class="truncate">Verifikasi Pembayaran</span>
+                    </div>
+                    @php($badge = $moduleBadges['pembayaran-pending'] ?? null)
+                    @if($badge && $badge['count'] > 0)
+                        <span class="{{ $badge['class'] }} text-white text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">{{ $badge['count'] }}</span>
+                    @endif
+                </a>
+
                 {{-- Manajemen User --}}
                 <div class="!mt-6 !mb-3 px-3">
                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Administrasi</span>
@@ -303,8 +327,25 @@
                     </nav>
                 </div>
 
-                {{-- Right: Logout --}}
+                {{-- Right: Notifications + Logout --}}
                 <div class="flex items-center gap-3">
+                    {{-- Notifikasi Pembayaran --}}
+                    @php
+                        $pendingPayments = \App\Models\PesertaPembayaran::where('status', 'pending')->count();
+                    @endphp
+                    @if($pendingPayments > 0)
+                        <a href="{{ route('superadmin.pembayaran.index') }}"
+                           class="relative inline-flex items-center justify-center w-10 h-10 rounded-lg bg-warning-100 text-warning-600 hover:bg-warning-200 transition-colors"
+                           title="Pembayaran menunggu verifikasi">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0a2 2 0 11-4 0 2 2 0 014 0zm14 0a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <span class="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 bg-danger-500 text-white text-xs font-bold rounded-full">
+                                {{ $pendingPayments }}
+                            </span>
+                        </a>
+                    @endif
+
                     <form method="POST" action="{{ route('superadmin.logout') }}">
                         @csrf
                         <button type="submit" class="btn btn-ghost btn-sm text-slate-600">
