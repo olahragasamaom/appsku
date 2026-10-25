@@ -258,6 +258,10 @@ class SoalController extends Controller
      */
     public function uploadGambarEditor(Request $request): JsonResponse
     {
+        if (! $request->user()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $request->validate([
             'gambar' => ['required', 'image', 'max:2048'],
         ]);
