@@ -69,9 +69,9 @@
                                class="w-5 h-5 text-primary-600 border-slate-300 focus:ring-primary-600">
                     </div>
                     
-                    <div class="flex-1 pt-0.5">
-                        <span class="text-base font-bold" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-700' : 'text-slate-700'">{{ $opsi }}.</span>
-                        <span class="text-base ml-2" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-900 font-medium' : 'text-slate-700'">{!! app('App\Services\FormulaRenderer')->render(app('App\Services\FormulaRenderer')->stripParagraphTags($opsiText)) !!}</span>
+                    <div class="flex-1 pt-0.5 flex flex-wrap gap-2">
+                        <span class="text-base font-bold flex-shrink-0" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-700' : 'text-slate-700'">{{ $opsi }}.</span>
+                        <span class="text-base flex-1" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-900 font-medium' : 'text-slate-700'">{!! app('App\Services\FormulaRenderer')->render(app('App\Services\FormulaRenderer')->stripParagraphTags($opsiText)) !!}</span>
                         
                         @if($gambarOpsi)
                             <img src="{{ \Illuminate\Support\Facades\Storage::url($gambarOpsi) }}" 
