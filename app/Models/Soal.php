@@ -103,11 +103,38 @@ class Soal extends Model
     public function hasImages(): bool
     {
         foreach (['soal', 'opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'opsi_e', 'pembahasan'] as $field) {
-            if ($this->$field && str_contains($this->$field, '<img')) {
+            if (! $this->$field) {
+                continue;
+            }
+            if (str_contains($this->$field, '<img') || str_contains($this->$field, '&lt;img')) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $model): void {
+            $fields = ['soal', 'opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'opsi_e', 'pembahasan'];
+            foreach ($fields as $field) {
+                if ($model->isDirty($field) && $model->$field) {
+                    $model->$field = self::normalizeHtml($model->$field);
+                }
+            }
+        });
+    }
+
+    private static function normalizeHtml(string $content): string
+    {
+        // Decode until stable to fix any double/triple-escaping
+        $prev = null;
+        while ($prev !== $content) {
+            $prev = $content;
+            $content = html_entity_decode($content, ENT_QUOTES, 'UTF-8');
+        }
+
+        return $content;
     }
 }

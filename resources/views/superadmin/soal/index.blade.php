@@ -103,7 +103,7 @@
                     <tr class="hover:bg-secondary-50">
                         <td class="px-6 py-4">
                             <div class="space-y-2">
-                                <p class="text-secondary-900 line-clamp-2">{{ \Illuminate\Support\Str::limit(strip_tags($soal->soal), 90) }}</p>
+                                <p class="text-secondary-900 line-clamp-2">{{ \Illuminate\Support\Str::limit(strip_tags(html_entity_decode($soal->soal ?? '', ENT_QUOTES, 'UTF-8')), 90) }}</p>
                                 @if($soal->hasImages())
                                     <x-badge type="info">Soal bergambar</x-badge>
                                 @endif

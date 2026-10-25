@@ -281,7 +281,12 @@
 @php
     $editorId = 'editor_' . uniqid();
     $cleanValue = (string) $value;
-    $cleanValue = html_entity_decode($cleanValue, ENT_QUOTES, 'UTF-8');
+    // Decode until stable (handle double-escaped content from past bugs)
+    $prev = null;
+    while ($prev !== $cleanValue) {
+        $prev = $cleanValue;
+        $cleanValue = html_entity_decode($cleanValue, ENT_QUOTES, 'UTF-8');
+    }
     $cleanValue = trim($cleanValue);
     if (str_starts_with($cleanValue, '<p>') && str_ends_with($cleanValue, '</p>')) {
         $cleanValue = substr($cleanValue, 3, -4);
@@ -294,7 +299,7 @@
          data-upload-url="{{ route('superadmin.soal.upload-editor') }}"
          data-initial-value="{{ e($cleanValue) }}"
          style="min-height: {{ max(6, (int) $rows) * 1.5 }}rem;"></div>
-    <input type="hidden" name="{{ $name }}" data-editor-id="{{ $editorId }}" value="{{ e((string) $value) }}" {{ $required ? 'required' : '' }}>
+    <input type="hidden" name="{{ $name }}" data-editor-id="{{ $editorId }}" value="{{ e($cleanValue) }}" {{ $required ? 'required' : '' }}>
 </div>
 
 {{-- Preview Modal --}}
