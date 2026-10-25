@@ -34,14 +34,14 @@
                              class="w-16 h-16 sm:w-20 sm:h-20 rounded-md border border-slate-200 object-cover group-hover:border-slate-400">
                     @else
                         <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-md border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50">
-                            <span class="text-xs text-slate-400 text-center px-1">{{ \Illuminate\Support\Str::limit($opsiText, 20) }}</span>
+                            <span class="text-xs text-slate-400 text-center px-1">{{ \Illuminate\Support\Str::limit(strip_tags($opsiText), 20) }}</span>
                         </div>
                     @endif
                     
                     <span class="text-sm font-bold" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-700' : 'text-slate-700'">{{ $opsi }}</span>
                     
                     @if($opsiText && !$gambarOpsi)
-                        <span class="text-xs text-slate-600 text-center line-clamp-2">{{ $opsiText }}</span>
+                        <span class="text-xs text-slate-600 text-center line-clamp-2">{!! app('App\Services\FormulaRenderer')->render($opsiText) !!}</span>
                     @endif
                 </label>
             @endif
@@ -71,7 +71,7 @@
                     
                     <div class="flex-1 pt-0.5">
                         <span class="text-base font-bold mr-2" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-700' : 'text-slate-700'">{{ $opsi }}.</span>
-                        <span class="text-base" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-900 font-medium' : 'text-slate-700'">{{ $opsiText }}</span>
+                        <span class="text-base inline-block" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-900 font-medium' : 'text-slate-700'">{!! app('App\Services\FormulaRenderer')->render($opsiText) !!}</span>
                         
                         @if($gambarOpsi)
                             <img src="{{ \Illuminate\Support\Facades\Storage::url($gambarOpsi) }}" 

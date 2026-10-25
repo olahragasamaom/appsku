@@ -1,0 +1,380 @@
+================================================================================
+                   PANDUAN MIGRASI GAJIPRO KE HOSTINGER
+                           INDEX & QUICK GUIDE
+================================================================================
+
+🎯 PROJECT: GajiPro (Laravel 12 + Tailwind CSS 4 + Alpine.js)
+🌐 TARGET: Hostinger Shared Hosting (tanpa akses SSH)
+📅 CREATED: Oktober 2026
+
+================================================================================
+📚 FILE-FILE DOKUMENTASI YANG TERSEDIA
+================================================================================
+
+Tersedia 5 file dokumentasi untuk panduan migrasi:
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. README_MIGRASI.md (6.1 KB)                                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ DESKRIPSI:                                                                  │
+│ - Overview semua file dokumentasi                                          │
+│ - Rekomendasi penggunaan file                                              │
+│ - Checklist sebelum mulai                                                  │
+│                                                                             │
+│ KAPAN GUNAKAN:                                                              │
+│ - Pertama kali membaca dokumentasi                                         │
+│ - Butuh overview cepat                                                     │
+│                                                                             │
+│ FORMAT: Markdown (.md)                                                      │
+│ TOOLS: Text editor, GitHub, Browser                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2. PANDUAN_MIGRASI_HOSTINGER.md (16.1 KB) ⭐ RECOMMENDED                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ DESKRIPSI:                                                                  │
+│ - Panduan lengkap step-by-step untuk migrasi                               │
+│ - Detail setiap step dengan penjelasan                                      │
+│ - Troubleshooting & FAQ                                                     │
+│ - Quick reference commands                                                  │
+│                                                                             │
+│ KAPAN GUNAKAN:                                                              │
+│ - Referensi utama saat melakukan migrasi                                   │
+│ - Butuh penjelasan detail setiap langkah                                    │
+│ - Cari solusi untuk error yang dihadapi                                     │
+│                                                                             │
+│ FORMAT: Markdown (.md)                                                      │
+│ TOOLS: Text editor (VS Code, Sublime), GitHub preview, Browser             │
+│                                                                             │
+│ STRUKTUR:                                                                   │
+│ ✓ Persiapan & Persyaratan                                                  │
+│ ✓ Step 1-7: Backup, Build, Upload, Config, Verify                         │
+│ ✓ Troubleshooting                                                           │
+│ ✓ Quick Reference                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3. PANDUAN_MIGRASI_HOSTINGER.html (40.1 KB)                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ DESKRIPSI:                                                                  │
+│ - Versi HTML dari panduan lengkap                                          │
+│ - Print-friendly dengan formatting yang rapi                               │
+│ - Bisa langsung dibuka di browser                                          │
+│ - Mudah di-convert ke PDF                                                  │
+│                                                                             │
+│ KAPAN GUNAKAN:                                                              │
+│ - Ingin print dokumentasi ke kertas                                        │
+│ - Ingin convert ke PDF                                                     │
+│ - Prefer format HTML dibanding Markdown                                    │
+│                                                                             │
+│ FORMAT: HTML (.html)                                                        │
+│ TOOLS: Browser (Chrome, Firefox, Edge, Safari)                             │
+│ CARA PRINT KE PDF: Buka file → Ctrl+P → Save as PDF                        │
+│                                                                             │
+│ ISI: Sama dengan PANDUAN_MIGRASI_HOSTINGER.md (dalam format HTML)          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4. COMMANDS_MIGRASI.md (7.8 KB)                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ DESKRIPSI:                                                                  │
+│ - Daftar lengkap commands untuk migrasi                                     │
+│ - Penjelasan setiap command                                                │
+│ - Contoh penggunaan                                                         │
+│ - Quick cheatsheet                                                          │
+│                                                                             │
+│ KAPAN GUNAKAN:                                                              │
+│ - Butuh copy-paste command yang tepat                                       │
+│ - Ingin lihat semua commands dalam satu file                               │
+│ - Reference untuk database/npm/composer commands                            │
+│                                                                             │
+│ FORMAT: Markdown (.md)                                                      │
+│ TOOLS: Text editor                                                          │
+│                                                                             │
+│ COMMANDS YANG DICAKUP:                                                      │
+│ ✓ Database backup/restore                                                  │
+│ ✓ NPM build & assets                                                       │
+│ ✓ Laravel artisan                                                           │
+│ ✓ Git commands                                                              │
+│ ✓ PHP commands                                                              │
+│ ✓ Quick cheatsheet                                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 5. CHECKLIST_MIGRASI_HOSTINGER.txt (9.5 KB)                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ DESKRIPSI:                                                                  │
+│ - Checklist praktis untuk tracking progress                                │
+│ - Field untuk isi credentials & informasi                                  │
+│ - 6 fase: Persiapan, Setup DB, Konfigurasi, Testing, Troubleshooting,     │
+│   Finalisasi                                                                │
+│ - Bisa di-print langsung ke kertas                                         │
+│                                                                             │
+│ KAPAN GUNAKAN:                                                              │
+│ - Sedang melakukan migrasi (tracking progress)                             │
+│ - Ingin print checklist ke kertas                                          │
+│ - Dokumentasi formal untuk client/manager                                  │
+│                                                                             │
+│ FORMAT: Plain Text (.txt) - Print Friendly                                 │
+│ TOOLS: Text editor, Notepad                                                │
+│ CARA PRINT: Buka file → Ctrl+P atau File → Print                          │
+│                                                                             │
+│ ISI:                                                                        │
+│ ✓ Fase 1: Persiapan (Di Lokal)                                             │
+│ ✓ Fase 2: Setup Hostinger (Di cPanel)                                      │
+│ ✓ Fase 3: Konfigurasi (.env, permissions, database)                       │
+│ ✓ Fase 4: Verifikasi & Testing                                             │
+│ ✓ Fase 5: Troubleshooting (JIKA ADA ERROR)                                 │
+│ ✓ Fase 6: Finalisasi & Go-Live                                             │
+│ ✓ Checklist Final                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+🎯 REKOMENDASI PENGGUNAAN BERDASARKAN SKENARIO
+================================================================================
+
+SCENARIO A: Saya baru pertama kali & butuh overview
+➜ Baca README_MIGRASI.md → Lihat checklist & rekomendasi
+
+SCENARIO B: Saya ingin membaca dokumentasi lengkap secara detail
+➜ Buka PANDUAN_MIGRASI_HOSTINGER.md di text editor (VS Code, Sublime, dll)
+➜ Baca step-by-step sambil mengikuti prosesnya
+
+SCENARIO C: Saya sedang migrasi & butuh tracking progress
+➜ Print CHECKLIST_MIGRASI_HOSTINGER.txt ke kertas
+➜ Check satu-satu setiap item saat melakukan migrasi
+
+SCENARIO D: Saya butuh copy-paste command yang tepat
+➜ Buka COMMANDS_MIGRASI.md
+➜ Cari command yang dibutuhkan & copy-paste
+
+SCENARIO E: Saya ingin print dokumentasi
+➜ Buka PANDUAN_MIGRASI_HOSTINGER.html di browser
+➜ Tekan Ctrl+P → Save as PDF (atau Print to Paper)
+
+SCENARIO F: Ada error & saya tidak tahu solusinya
+➜ Buka PANDUAN_MIGRASI_HOSTINGER.md
+➜ Cari section "Troubleshooting"
+➜ Cari error message yang sesuai
+
+================================================================================
+🚀 QUICK START GUIDE
+================================================================================
+
+LANGKAH 1: PERSIAPAN (DI LOKAL - 15 MENIT)
+─────────────────────────────────────────
+[ ] Backup database lokal:
+    mysqldump -u root -p database_name > backup_gajipro.sql
+
+[ ] Build assets:
+    npm install
+    npm run build
+
+[ ] Generate APP_KEY:
+    php artisan key:generate
+    (catat nilai APP_KEY)
+
+[ ] Siapkan credentials:
+    - cPanel username & password
+    - Domain name
+    - FTP credentials (jika pakai FTP)
+
+LANGKAH 2: UPLOAD KE HOSTINGER (30-60 MENIT)
+─────────────────────────────────────────────
+[ ] Login ke cPanel Hostinger
+
+[ ] Buat database baru:
+    - cPanel → MySQL Databases
+    - Catat: Database Name, Username, Password
+
+[ ] Upload files:
+    - File Manager atau FTP
+    - Upload ke public_html/ (exclude node_modules & vendor)
+    - Tunggu upload selesai
+
+LANGKAH 3: KONFIGURASI (15-30 MENIT)
+─────────────────────────────────────
+[ ] Buat file .env di public_html/:
+    - Isi dengan database credentials
+    - Isi dengan APP_KEY
+    - Isi dengan domain URL
+
+[ ] Set folder permissions:
+    - storage/ → 755
+    - bootstrap/cache/ → 755
+
+[ ] Point domain ke public/:
+    - cPanel → Domains
+    - Document Root: public_html/public
+    - (Atau buat .htaccess jika tidak bisa)
+
+[ ] Restore database:
+    - phpMyAdmin
+    - Import backup_gajipro.sql
+    - Tunggu selesai
+
+LANGKAH 4: VERIFIKASI (10 MENIT)
+────────────────────────────────
+[ ] Akses domain di browser
+[ ] Halaman muncul? (bukan blank/error)
+[ ] Coba login
+[ ] Cek error logs (jika ada)
+
+TOTAL WAKTU: 70-135 MENIT
+
+================================================================================
+📋 TIPS & BEST PRACTICES
+================================================================================
+
+✅ DO:
+  • Backup database sebelum migrasi
+  • Jalankan npm build lokal sebelum upload
+  • Test di lokal dulu sebelum production
+  • Cek error logs jika ada masalah
+  • Print checklist & track progress
+  • Catat semua credentials di tempat aman
+  • Communicate dengan client/team
+
+❌ DON'T:
+  • Upload node_modules/ (terlalu besar)
+  • Upload vendor/ (kecuali perlu)
+  • Upload .env lokal (buat baru di Hostinger)
+  • Jalankan destructive commands di production
+  • Lupa backup database
+  • Lupa generate APP_KEY
+  • Upload & run tanpa testing
+
+⚠️ IMPORTANT:
+  • Hostinger tidak punya SSH → semua compile di lokal
+  • .env JANGAN di-commit ke git
+  • APP_KEY HARUS di-generate
+  • public/ folder HARUS menjadi web root
+  • storage/ & bootstrap/cache/ HARUS writable
+
+================================================================================
+🔍 TROUBLESHOOTING QUICK REFERENCE
+================================================================================
+
+ERROR 500?
+→ Check APP_KEY & database credentials di .env
+→ Check storage/logs/laravel.log
+
+Database connection error?
+→ Verify database credentials di .env
+→ Check database exist di phpMyAdmin
+
+Assets (CSS/JS) tidak muncul?
+→ Check public/build/ folder ada
+→ npm run build belum dijalankan?
+
+404 Not Found untuk semua route?
+→ Document Root belum pointing ke public/
+
+Permission denied pada storage/?
+→ Set folder permission ke 755
+
+Untuk lebih detail → Lihat PANDUAN_MIGRASI_HOSTINGER.md (Troubleshooting section)
+
+================================================================================
+📞 SUPPORT & RESOURCES
+================================================================================
+
+DOCUMENTATION:
+  • Laravel Docs: https://laravel.com/docs/12
+  • Hostinger Support: https://support.hostinger.com/
+  • Tailwind CSS: https://tailwindcss.com/docs
+  • MySQL Docs: https://dev.mysql.com/doc/
+  • PHP Docs: https://www.php.net/manual/
+
+ERROR CODES:
+  • 500 Internal Server Error → Server configuration/app error
+  • 503 Service Unavailable → Server down/maintenance
+  • 404 Not Found → Route/file not found
+  • 403 Forbidden → Permission denied
+  • 502 Bad Gateway → Server/PHP issue
+
+GETTING HELP:
+  1. Check documentation di file-file yang tersedia
+  2. Search error message di Google + "laravel"
+  3. Check Laravel StackOverflow: stackoverflow.com/questions/tagged/laravel
+  4. Contact Hostinger Support (jika server issue)
+
+================================================================================
+📊 FILE STATISTICS
+================================================================================
+
+Total Files: 5
+Total Size: ~80 KB
+Total Pages (when printed): ~25 pages
+
+README_MIGRASI.md ..................... 6.1 KB (overview)
+PANDUAN_MIGRASI_HOSTINGER.md ......... 16.1 KB (main guide) ⭐
+PANDUAN_MIGRASI_HOSTINGER.html ....... 40.1 KB (print-friendly)
+COMMANDS_MIGRASI.md .................. 7.8 KB (command reference)
+CHECKLIST_MIGRASI_HOSTINGER.txt ...... 9.5 KB (tracking checklist)
+
+================================================================================
+✅ PERSIAPAN SEBELUM MULAI
+================================================================================
+
+SYSTEM CHECK:
+  [ ] PHP 8.3+ terinstall di lokal
+  [ ] MySQL/MariaDB terinstall & running
+  [ ] Node.js & npm terinstall
+  [ ] Composer terinstall
+  [ ] Text editor siap (VS Code, Sublime, dll)
+  [ ] Browser siap (Chrome, Firefox, dll)
+
+PROJECT CHECK:
+  [ ] Project sudah berjalan normal di lokal
+  [ ] npm run build sudah berhasil
+  [ ] Database lokal ada & siap di-backup
+  [ ] .env lokal sudah configured dengan benar
+
+HOSTINGER CHECK:
+  [ ] Account Hostinger sudah aktif
+  [ ] cPanel bisa diakses
+  [ ] Domain sudah setup di Hostinger
+  [ ] phpMyAdmin bisa diakses
+  [ ] Quota storage cukup (~200MB minimal)
+
+DOCUMENTATION CHECK:
+  [ ] Semua 5 file dokumentasi sudah available
+  [ ] Baca README_MIGRASI.md dulu
+  [ ] Siap untuk memulai proses migrasi
+
+================================================================================
+🎯 NEXT STEPS
+================================================================================
+
+1. Baca README_MIGRASI.md (5 menit)
+   → Untuk overview & rekomendasi file mana yang digunakan
+
+2. Buka CHECKLIST_MIGRASI_HOSTINGER.txt
+   → Print atau isi digital untuk tracking progress
+
+3. Ikuti PANDUAN_MIGRASI_HOSTINGER.md step-by-step
+   → Referensi detail untuk setiap langkah migrasi
+
+4. Reference COMMANDS_MIGRASI.md
+   → Saat membutuhkan copy-paste command
+
+5. Jika ada error:
+   → Lihat section Troubleshooting di PANDUAN_MIGRASI_HOSTINGER.md
+
+================================================================================
+                              GOOD LUCK! 🚀
+================================================================================
+
+Panduan lengkap sudah siap. Ambil file yang Anda butuhkan & mulai proses migrasi.
+
+Waktu estimasi untuk keseluruhan proses: 2-3 jam
+Kesulitan level: MODERATE (cocok untuk developer yang sudah punya experience)
+
+Pertanyaan? Lihat dokumentasi atau hubungi support Hostinger.
+
+Created: Oktober 2026
+For: GajiPro Migration to Hostinger Shared Hosting
+Status: READY TO USE ✅
+
+================================================================================

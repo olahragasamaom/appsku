@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {!! app('App\Services\FormulaRenderer')->getKaTeXScripts() !!}
 </head>
 <body class="font-sans antialiased bg-slate-50 min-h-screen">
     {{-- Header Tiruan --}}
@@ -62,7 +63,7 @@
 
                             {{-- Teks Soal & Gambar --}}
                             <div class="prose prose-slate max-w-none text-slate-800 text-base leading-relaxed">
-                                {!! $soal->soal !!}
+                                {!! app('App\Services\FormulaRenderer')->render($soal->soal) !!}
                             </div>
                             @if($soal->gambar_soal)
                                 <img src="{{ \Illuminate\Support\Facades\Storage::url($soal->gambar_soal) }}" alt="Gambar soal" class="mt-4 max-h-80 rounded-xl border border-slate-200 shadow-sm">
@@ -84,14 +85,14 @@
                                                 <input type="radio" name="simulasi_opsi" value="{{ $opsi }}" x-model="terpilih" class="w-5 h-5 text-primary-600 border-slate-300 focus:ring-primary-600">
                                             </div>
                                             
-                                            <div class="flex-1 pt-0.5">
-                                                <span class="text-base font-bold mr-2" :class="terpilih === '{{ $opsi }}' ? 'text-primary-700' : 'text-slate-700'">{{ $opsi }}.</span>
-                                                <span class="text-base" :class="terpilih === '{{ $opsi }}' ? 'text-primary-900 font-medium' : 'text-slate-700'">{{ $opsiText }}</span>
-                                                
-                                                @if($gambarOpsi)
-                                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($gambarOpsi) }}" alt="Opsi {{ $opsi }}" class="mt-3 max-h-40 rounded-lg border border-slate-200">
-                                                @endif
-                                            </div>
+                                             <div class="flex-1 pt-0.5">
+                                                 <span class="text-base font-bold mr-2" :class="terpilih === '{{ $opsi }}' ? 'text-primary-700' : 'text-slate-700'">{{ $opsi }}.</span>
+                                                 <span class="text-base inline-block" :class="terpilih === '{{ $opsi }}' ? 'text-primary-900 font-medium' : 'text-slate-700'">{!! app('App\Services\FormulaRenderer')->render($opsiText) !!}</span>
+                                                 
+                                                 @if($gambarOpsi)
+                                                     <img src="{{ \Illuminate\Support\Facades\Storage::url($gambarOpsi) }}" alt="Opsi {{ $opsi }}" class="mt-3 max-h-40 rounded-lg border border-slate-200">
+                                                 @endif
+                                             </div>
                                         </label>
                                     @endif
                                 @endforeach

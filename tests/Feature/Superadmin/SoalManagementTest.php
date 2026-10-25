@@ -40,8 +40,8 @@ describe('Soal Index & Create Pages', function () {
         $response = $this->get('/superadmin/soal/create');
 
         $response->assertSuccessful();
-        $response->assertSee('ckeditorSoal(', false);
-        $response->assertSee('x-ref="editor"', false);
+        $response->assertSee('data-ckeditor-soal', false);
+        $response->assertSee('createSoalEditor', false);
     });
 
     it('prefills category when opened with sub_indikator_id in url', function () {

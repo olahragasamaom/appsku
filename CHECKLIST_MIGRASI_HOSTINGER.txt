@@ -1,0 +1,263 @@
+================================================================================
+                    CHECKLIST MIGRASI GAJIPRO KE HOSTINGER
+================================================================================
+
+Tanggal Migrasi: _____________________
+Domain Hostinger: _____________________
+cPanel Username: _____________________
+
+================================================================================
+FASE 1: PERSIAPAN (Di Mesin Lokal)
+================================================================================
+
+BACKUP & SETUP DATABASE
+  [ ] Backup database lokal: mysqldump -u root -p database_name > backup_gajipro.sql
+  [ ] File backup disimpan di lokasi aman: _____________________
+  [ ] Verifikasi file backup ada & ukuran normal
+
+BUILD ASSETS
+  [ ] Jalankan npm install
+  [ ] Jalankan npm run build
+  [ ] Verifikasi folder public/build/ ada
+  [ ] Verifikasi file public/build/manifest.json ada
+
+GENERATE APP_KEY
+  [ ] Jalankan php artisan key:generate
+  [ ] Catat nilai APP_KEY: _____________________
+
+PERSIAPAN FILE UPLOAD
+  [ ] Persiapkan folder untuk upload (exclude node_modules & vendor)
+  [ ] Zip folder project (atau siapkan untuk upload dengan FTP)
+  [ ] Catat struktur folder yang akan di-upload
+
+================================================================================
+FASE 2: SETUP HOSTINGER (Di cPanel Hostinger)
+================================================================================
+
+SETUP DATABASE
+  [ ] Login ke cPanel Hostinger
+  [ ] Buat database baru (atau catat nama database existing)
+      Database Name: _____________________
+  [ ] Buat database user baru (atau catat username existing)
+      Username: _____________________
+  [ ] Set password database user
+      Password: _____________________
+  [ ] Assign user ke database di cPanel
+  [ ] Verifikasi di phpMyAdmin (bisa login dengan credentials?)
+
+UPLOAD FILES
+  [ ] Buka File Manager atau FTP Client
+  [ ] Navigasi ke public_html/
+  [ ] Upload semua file/folder project (kecuali node_modules & vendor)
+  [ ] Verifikasi struktur folder sudah benar:
+      [ ] app/
+      [ ] bootstrap/
+      [ ] config/
+      [ ] database/
+      [ ] lang/
+      [ ] public/
+      [ ] resources/
+      [ ] routes/
+      [ ] storage/
+      [ ] composer.json & composer.lock
+      [ ] artisan
+
+================================================================================
+FASE 3: KONFIGURASI (Di cPanel Hostinger)
+================================================================================
+
+BUAT FILE .env
+  [ ] Buat file .env di public_html/ (root aplikasi)
+  [ ] Isi konfigurasi .env:
+      [ ] APP_NAME=GajiPro
+      [ ] APP_ENV=production
+      [ ] APP_KEY=base64:_____________________
+      [ ] APP_DEBUG=false
+      [ ] APP_URL=https://nama-domain.com
+      [ ] DB_HOST=localhost
+      [ ] DB_DATABASE=_____________________
+      [ ] DB_USERNAME=_____________________
+      [ ] DB_PASSWORD=_____________________
+      [ ] DB_CONNECTION=mysql
+      [ ] SESSION_DRIVER=database
+      [ ] CACHE_STORE=database
+      [ ] QUEUE_CONNECTION=database
+  [ ] Save file .env
+
+SET PERMISSIONS
+  [ ] Folder storage/ → Permission 755
+  [ ] Folder bootstrap/cache/ → Permission 755
+
+SETUP DOCUMENT ROOT
+  [ ] Login ke cPanel → Addon Domains / Domains
+  [ ] Ubah Document Root untuk domain:
+      Dari: public_html
+      Menjadi: public_html/public
+  [ ] Jika tidak bisa ubah document root:
+      [ ] Buat file .htaccess di public_html/
+      [ ] Isi dengan rewrite rules ke public/index.php
+
+RESTORE DATABASE
+  [ ] Login ke cPanel → phpMyAdmin
+  [ ] Pilih database yang baru dibuat
+  [ ] Tab "Import" → Upload file backup_gajipro.sql
+  [ ] Tunggu proses import selesai
+  [ ] Verifikasi data di phpMyAdmin (ada tables & data?)
+
+================================================================================
+FASE 4: VERIFIKASI & TESTING
+================================================================================
+
+TESTING APLIKASI
+  [ ] Buka browser → akses https://nama-domain.com
+  [ ] Halaman muncul? (bukan blank/error)
+  [ ] Cek console browser (DevTools → Console) - ada error JS?
+  [ ] Cek Network tab (DevTools → Network) - CSS & JS assets dimuat?
+
+LOGIN & DATABASE
+  [ ] Halaman login muncul dengan benar
+  [ ] Coba login dengan akun test
+  [ ] Login berhasil? (Database query bekerja?)
+  [ ] Setelah login, bisa akses dashboard?
+
+TESTING FEATURES
+  [ ] Navigasi antar halaman (menu bekerja?)
+  [ ] Form submission bekerja?
+  [ ] Database insert/update/delete bekerja?
+  [ ] File upload bekerja (jika ada)?
+  [ ] Pagination bekerja (jika ada)?
+  [ ] Filter/search bekerja (jika ada)?
+
+ERROR CHECKING
+  [ ] cPanel → Error Log (ada error?)
+  [ ] File storage/logs/laravel.log (ada error?)
+  [ ] DevTools Console (ada error JS?)
+
+================================================================================
+FASE 5: TROUBLESHOOTING (JIKA ADA ERROR)
+================================================================================
+
+ERROR: 500 Internal Server Error
+  [ ] Ubah APP_DEBUG=true di .env sementara
+  [ ] Reload halaman, lihat error detail
+  [ ] Cek file storage/logs/laravel.log
+  [ ] Cek cPanel Error Log
+  [ ] Kemungkinan: APP_KEY kosong, database config salah, permission issue
+  Solusi:
+    [ ] Verifikasi APP_KEY di .env
+    [ ] Verifikasi DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD
+    [ ] Verifikasi folder permissions
+
+ERROR: SQLSTATE[HY000]: General error / Can't connect to database
+  [ ] Verifikasi database exist di cPanel phpMyAdmin
+  [ ] Verifikasi database username & password
+  [ ] Cek .env: DB_HOST biasanya 'localhost'
+  [ ] Verifikasi database user punya akses ke database
+  Solusi:
+    [ ] Buka phpMyAdmin, test login dengan credentials di .env
+    [ ] Jika gagal, recreate database user di cPanel
+
+ERROR: Assets CSS/JS tidak dimuat (halaman tidak punya style)
+  [ ] Verifikasi folder public/build/ ada (via File Manager)
+  [ ] Verifikasi file public/build/manifest.json ada
+  [ ] Cek DevTools → Network (public/build/* status berapa?)
+  Solusi:
+    [ ] Jalankan ulang npm run build di lokal
+    [ ] Re-upload folder public/ ke Hostinger
+    [ ] Clear browser cache (Ctrl+Shift+Del)
+    [ ] Coba akses dengan Incognito mode
+
+ERROR: 404 Not Found untuk semua route
+  [ ] Verifikasi domain pointing ke public_html/public
+  [ ] Jika pakai .htaccess, verifikasi rewrite rules benar
+  [ ] cPanel → Error Log (ada error Apache/mod_rewrite?)
+  Solusi:
+    [ ] cPanel → Domain settings, ubah document root ke public_html/public
+    [ ] Atau update .htaccess rewrite rules
+
+ERROR: Blank page (tanpa pesan error)
+  [ ] Ubah APP_DEBUG=true di .env
+  [ ] Reload halaman
+  [ ] Cek error detail di browser
+  [ ] Cek storage/logs/laravel.log
+  Solusi:
+    [ ] Lihat error message detail setelah enable APP_DEBUG
+
+ERROR: Permission denied pada storage/ atau bootstrap/cache/
+  [ ] File Manager → folder storage → Properties
+  [ ] Set permission ke 755
+  [ ] Folder bootstrap/cache → Set permission ke 755
+  Solusi:
+    [ ] Ubah folder permission via File Manager cPanel
+
+================================================================================
+FASE 6: FINALISASI
+================================================================================
+
+PRODUCTION SETUP
+  [ ] Ubah APP_DEBUG=false di .env
+  [ ] Ubah APP_ENV=production di .env
+  [ ] Set LOG_LEVEL=error di .env
+  [ ] Test ulang aplikasi (pastikan tetap berjalan normal)
+
+SECURITY CHECK
+  [ ] .env file sudah di-protect (tidak bisa diakses via browser)
+  [ ] File permissions sudah benar
+  [ ] Tidak ada debug info yang terlihat di browser
+  [ ] Tidak ada secrets/API keys di log files
+
+BACKUP & DOCUMENTATION
+  [ ] Buat backup database Hostinger pertama kali
+  [ ] Dokumentasi cara akses cPanel Hostinger
+  [ ] Dokumentasi database credentials (simpan aman!)
+  [ ] Dokumentasi FTP credentials (jika pakai FTP)
+
+HANDOVER
+  [ ] Catat semua credentials di tempat aman
+  [ ] Buat dokumentasi untuk tim lain (jika ada)
+  [ ] Setup monitoring/alerts (jika tersedia di Hostinger)
+
+================================================================================
+CHECKLIST FINAL (Sebelum Go-Live)
+================================================================================
+
+SECURITY & PERFORMANCE
+  [ ] APP_DEBUG=false
+  [ ] APP_ENV=production
+  [ ] LOG_LEVEL=error
+  [ ] Cache bekerja (CACHE_STORE=database)
+  [ ] Session bekerja (SESSION_DRIVER=database)
+
+FUNCTIONALITY
+  [ ] Semua menu bekerja
+  [ ] Database queries berjalan normal (tidak ada N+1 query)
+  [ ] Asset CSS & JS dimuat dengan benar
+  [ ] Form submission & validation bekerja
+  [ ] CRUD operations (create/read/update/delete) bekerja
+
+ERROR MONITORING
+  [ ] Cek storage/logs/laravel.log (tidak ada error?)
+  [ ] Cek cPanel Error Log (tidak ada error?)
+  [ ] Cek DevTools Console (tidak ada error JS?)
+
+BACKUP & RECOVERY
+  [ ] Database backup recent tersimpan
+  [ ] Tahu cara restore database (jika diperlukan)
+  [ ] Tahu cara akses File Manager/FTP untuk emergency fix
+
+================================================================================
+                              MIGRASI SELESAI! 🎉
+================================================================================
+
+Tanggal Selesai: _____________________
+Catatan/Issues yang ditemukan:
+_______________________________________________________________________
+_______________________________________________________________________
+_______________________________________________________________________
+
+Contact Support:
+- Hostinger: https://support.hostinger.com/
+- Laravel Docs: https://laravel.com/docs/12
+- Email Tim Dev: _____________________
+
+================================================================================

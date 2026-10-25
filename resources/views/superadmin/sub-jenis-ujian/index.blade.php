@@ -26,7 +26,11 @@
 @section('content')
     <div class="card">
         @forelse($jenisUjians as $jenisUjian)
-            <div x-data="{ open: false }" class="border-b last:border-b-0">
+            <div x-data="{ 
+                open: window.location.hash === '#jenis-{{ $jenisUjian->id }}'
+            }" 
+            :id="'jenis-{{ $jenisUjian->id }}'"
+            class="border-b last:border-b-0">
                 {{-- Accordion Header --}}
                 <button type="button"
                         @click="open = !open"
@@ -274,14 +278,14 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-secondary-700 mb-1">Passing Grade (Opsional)</label>
-                        <p class="text-xs text-secondary-500 mb-2">Jika kosong, akan otomatis dihitung 60% dari total nilai. Contoh: 60, 90, 75</p>
-                        <input type="number" step="0.01" name="passing_grade" x-model="form.passing_grade"
-                               class="input w-full @error('passing_grade') border-danger-500 @enderror"
-                               placeholder="Kosongkan untuk auto-calculate (60%)">
-                        @error('passing_grade')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
-                    </div>
+                     <div>
+                         <label class="block text-sm font-medium text-secondary-700 mb-1">Passing Grade (Opsional)</label>
+                         <p class="text-xs text-secondary-500 mb-2">Jika kosong, akan otomatis dihitung 60% dari total nilai. Contoh: 60, 90, 75</p>
+                         <input type="text" inputmode="decimal" name="passing_grade" x-model="form.passing_grade"
+                                class="input w-full @error('passing_grade') border-danger-500 @enderror"
+                                placeholder="Kosongkan untuk auto-calculate (60%)">
+                         @error('passing_grade')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
+                     </div>
                 </div>
 
                 <div class="modal-footer flex items-center justify-end gap-3">

@@ -99,4 +99,15 @@ class Soal extends Model
     {
         return $this->belongsTo(User::class, 'pembuat_soal_id');
     }
+
+    public function hasImages(): bool
+    {
+        foreach (['soal', 'opsi_a', 'opsi_b', 'opsi_c', 'opsi_d', 'opsi_e', 'pembahasan'] as $field) {
+            if ($this->$field && str_contains($this->$field, '<img')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

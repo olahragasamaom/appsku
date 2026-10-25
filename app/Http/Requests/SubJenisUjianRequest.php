@@ -35,6 +35,7 @@ class SubJenisUjianRequest extends FormRequest
             'sistem_penilaian' => ['required', 'in:benar_salah,tiap_jawaban_ada_poin'],
             'jumlah_jawaban_pilihan_ganda' => ['required', 'in:4,5'],
             'nilai_benar' => ['required', 'numeric', 'min:0'],
+            'passing_grade' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 
@@ -56,6 +57,8 @@ class SubJenisUjianRequest extends FormRequest
             'jumlah_jawaban_pilihan_ganda.in' => 'Jumlah jawaban pilihan ganda harus 4 atau 5.',
             'nilai_benar.required' => 'Nilai benar wajib diisi.',
             'nilai_benar.numeric' => 'Nilai benar harus berupa angka.',
+            'passing_grade.numeric' => 'Passing grade harus berupa angka.',
+            'passing_grade.min' => 'Passing grade minimal 0.',
         ];
     }
 }

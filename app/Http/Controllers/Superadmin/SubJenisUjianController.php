@@ -55,9 +55,9 @@ class SubJenisUjianController extends Controller
      */
     public function store(SubJenisUjianRequest $request): RedirectResponse
     {
-        SubJenisUjian::create($request->validated());
+        $subJenisUjian = SubJenisUjian::create($request->validated());
 
-        return redirect()->route('superadmin.sub-jenis-ujian.index')
+        return redirect(route('superadmin.sub-jenis-ujian.index').'#jenis-'.$subJenisUjian->jenis_ujian_id)
             ->with('success', 'Sub jenis ujian berhasil dibuat.');
     }
 
@@ -69,7 +69,7 @@ class SubJenisUjianController extends Controller
     {
         $subJenisUjian->update($request->validated());
 
-        return redirect()->route('superadmin.sub-jenis-ujian.index')
+        return redirect(route('superadmin.sub-jenis-ujian.index').'#jenis-'.$subJenisUjian->jenis_ujian_id)
             ->with('success', 'Sub jenis ujian berhasil diupdate.');
     }
 
@@ -78,9 +78,10 @@ class SubJenisUjianController extends Controller
      */
     public function destroy(SubJenisUjian $subJenisUjian): RedirectResponse
     {
+        $jenisUjianId = $subJenisUjian->jenis_ujian_id;
         $subJenisUjian->delete();
 
-        return redirect()->route('superadmin.sub-jenis-ujian.index')
+        return redirect(route('superadmin.sub-jenis-ujian.index').'#jenis-'.$jenisUjianId)
             ->with('success', 'Sub jenis ujian berhasil dihapus.');
     }
 }

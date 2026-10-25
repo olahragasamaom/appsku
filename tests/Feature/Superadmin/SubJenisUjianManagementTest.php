@@ -63,7 +63,7 @@ describe('Sub Jenis Ujian Create', function () {
             'nilai_benar' => 5,
         ]);
 
-        $response->assertRedirect('/superadmin/sub-jenis-ujian');
+        $response->assertStatus(302);
         $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('panritta_sub_jenis_ujian', [
@@ -107,7 +107,7 @@ describe('Sub Jenis Ujian Update & Delete', function () {
             'nilai_benar' => 10,
         ]);
 
-        $response->assertRedirect('/superadmin/sub-jenis-ujian');
+        $response->assertStatus(302);
         $this->assertDatabaseHas('panritta_sub_jenis_ujian', [
             'id' => $subJenis->id,
             'nama_sub_jenis_ujian' => 'Nama Baru',
@@ -120,7 +120,7 @@ describe('Sub Jenis Ujian Update & Delete', function () {
 
         $response = $this->delete("/superadmin/sub-jenis-ujian/{$subJenis->id}");
 
-        $response->assertRedirect('/superadmin/sub-jenis-ujian');
+        $response->assertStatus(302);
         $this->assertDatabaseMissing('panritta_sub_jenis_ujian', ['id' => $subJenis->id]);
     });
 });

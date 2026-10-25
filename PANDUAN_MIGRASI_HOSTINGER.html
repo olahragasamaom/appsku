@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panduan Migrasi GajiPro ke Hostinger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            page-break-after: avoid;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            color: #1e40af;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .date {
+            color: #999;
+            font-size: 12px;
+        }
+
+        h2 {
+            color: #1e40af;
+            font-size: 22px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3b82f6;
+            page-break-after: avoid;
+        }
+
+        h3 {
+            color: #2563eb;
+            font-size: 16px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            page-break-after: avoid;
+        }
+
+        .toc {
+            background: #f0f9ff;
+            padding: 20px;
+            border-left: 4px solid #2563eb;
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+
+        .toc-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1e40af;
+        }
+
+        .toc-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .toc-list li {
+            margin-bottom: 5px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .toc-list li:before {
+            content: "→ ";
+            position: absolute;
+            left: 0;
+            color: #2563eb;
+        }
+
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+
+        .important {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .warning {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #dcfce7;
+            border-left: 4px solid #22c55e;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info {
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .important strong,
+        .warning strong,
+        .success strong,
+        .info strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #dc2626;
+        }
+
+        .code-block {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            page-break-inside: avoid;
+        }
+
+        .code-block-title {
+            background: #374151;
+            margin: -15px -15px 10px -15px;
+            padding: 10px 15px;
+            border-radius: 6px 6px 0 0;
+            font-weight: bold;
+            font-size: 12px;
+            color: #fbbf24;
+        }
+
+        .step-box {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            page-break-inside: avoid;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            margin-right: 10px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .step-title {
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        ul li {
+            margin-bottom: 6px;
+        }
+
+        ol {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        ol li {
+            margin-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+
+        th {
+            background: #2563eb;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            border: 1px solid #e5e7eb;
+            padding: 10px;
+        }
+
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .file-path {
+            background: #f3f4f6;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .page-break {
+            page-break-after: always;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .footer-note {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        .checklist {
+            list-style: none;
+            padding-left: 0;
+            margin: 15px 0;
+        }
+
+        .checklist li {
+            padding: 8px 0 8px 30px;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .checklist li:before {
+            content: "☐";
+            position: absolute;
+            left: 0;
+            color: #2563eb;
+            font-size: 18px;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                max-width: 100%;
+                padding: 0;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚀 Panduan Migrasi GajiPro ke Hostinger</h1>
+            <p class="subtitle">Migrasi Project Laravel 12 tanpa akses SSH</p>
+            <p class="date">Dibuat: Oktober 2026</p>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="toc">
+            <div class="toc-title">📑 Daftar Isi:</div>
+            <ul class="toc-list">
+                <li>Persiapan & Persyaratan</li>
+                <li>Langkah 1: Backup Database</li>
+                <li>Langkah 2: Build NPM & Assets</li>
+                <li>Langkah 3: Persiapan File untuk Upload</li>
+                <li>Langkah 4: Upload ke Hostinger</li>
+                <li>Langkah 5: Konfigurasi .env</li>
+                <li>Langkah 6: Konfigurasi cPanel & Database</li>
+                <li>Langkah 7: Verifikasi & Testing</li>
+                <li>Troubleshooting</li>
+            </ul>
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- === PERSIAPAN & PERSYARATAN === -->
+        <h2>📋 Persiapan & Persyaratan</h2>
+
+        <h3>Yang Anda Butuhkan:</h3>
+        <ul>
+            <li>Akses cPanel Hostinger (admin username & password)</li>
+            <li>File Manager atau FTP Client (FileZilla, WinSCP, dll)</li>
+            <li>MySQL/MariaDB Management (phpMyAdmin di cPanel)</li>
+            <li>Text Editor untuk mengedit file .env</li>
+            <li>Backup lengkap dari project lokal</li>
+        </ul>
+
+        <div class="warning">
+            <strong>⚠️ Penting:</strong> Hostinger shared hosting TIDAK memiliki akses SSH, sehingga Anda tidak bisa menjalankan <code>php artisan</code> commands secara langsung di server. Semua persiapan harus dilakukan di mesin lokal Anda terlebih dahulu.
+        </div>
+
+        <div class="info">
+            <strong>ℹ️ Catatan:</strong> Pastikan Hostinger Anda mendukung:
+            <ul style="margin-top: 10px;">
+                <li>PHP 8.3 atau lebih tinggi</li>
+                <li>MySQL 5.7+ atau MariaDB</li>
+                <li>Node.js (untuk build npm - jika tersedia)</li>
+                <li>Composer (untuk install dependencies - jika tersedia)</li>
+            </ul>
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- === LANGKAH 1: BACKUP DATABASE === -->
+        <h2>Step 1️⃣ Backup Database</h2>
+
+        <p>Backup database lokal Anda sebelum migrasi untuk keamanan data.</p>
+
+        <h3>Opsi A: Menggunakan cPanel (Hostinger) - Jika sudah punya database di Hostinger</h3>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">1</span> Login ke cPanel Hostinger
+            </div>
+            <p>Buka <code>https://nama-domain.com:2083</code> atau URL cPanel yang diberikan Hostinger.</p>
+            <ul>
+                <li>Masukkan username & password cPanel</li>
+                <li>Cari "phpMyAdmin" di dashboard cPanel</li>
+            </ul>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">2</span> Export Database
+            </div>
+            <p>Di phpMyAdmin:</p>
+            <ul>
+                <li>Pilih database aplikasi di panel kiri</li>
+                <li>Klik tab "Export"</li>
+                <li>Format: SQL (default)</li>
+                <li>Klik "Go" untuk download file .sql</li>
+            </ul>
+            <p style="margin-top: 10px;"><strong>Simpan file backup ini di folder aman!</strong></p>
+        </div>
+
+        <h3>Opsi B: Menggunakan MySQL Dump (Windows/Local)</h3>
+
+        <div class="code-block">
+            <div class="code-block-title">Windows Command Prompt / PowerShell</div>
+            mysqldump -u root -p database_name > backup_gajipro.sql
+        </div>
+
+        <p style="margin-top: 10px;">Ganti <code>database_name</code> dengan nama database lokal Anda. Password akan diminta setelah menjalankan command.</p>
+
+        <div class="success">
+            <strong>✅ Backup Complete:</strong> Anda sudah memiliki file <code>backup_gajipro.sql</code> yang siap di-restore.
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- === LANGKAH 2: BUILD NPM & ASSETS === -->
+        <h2>Step 2️⃣ Build NPM & Assets</h2>
+
+        <p>Karena Hostinger tidak punya akses SSH, Anda harus mengcompile semua assets (CSS, JS) di mesin lokal SEBELUM upload.</p>
+
+        <h3>Build Frontend Assets</h3>
+
+        <div class="code-block">
+            <div class="code-block-title">Terminal / PowerShell (di folder project)</div>
+npm install
+npm run build
+        </div>
+
+        <p style="margin-top: 10px;">Perintah ini akan:</p>
+        <ul>
+            <li>Install dependencies dari <code>package.json</code></li>
+            <li>Build Tailwind CSS v4</li>
+            <li>Build Vite assets</li>
+            <li>Generate manifest file</li>
+        </ul>
+
+        <div class="important">
+            <strong>⚠️ Penting:</strong> Verifikasi folder <span class="file-path">public/build</span> sudah berisi hasil build sebelum upload. Jika kosong, build gagal.
+        </div>
+
+        <h3>Verifikasi Build Assets</h3>
+
+        <p>Setelah build, pastikan folder berikut ada:</p>
+
+        <ul>
+            <li><span class="file-path">public/build/</span> - Folder CSS & JS yang sudah di-compile</li>
+            <li><span class="file-path">public/build/manifest.json</span> - File manifest untuk Vite</li>
+        </ul>
+
+        <div class="success">
+            <strong>✅ Assets Ready:</strong> Semua assets sudah siap di-upload ke Hostinger.
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- === LANGKAH 3: PERSIAPAN FILE === -->
+        <h2>Step 3️⃣ Persiapan File untuk Upload</h2>
+
+        <h3>File & Folder yang HARUS Di-Upload</h3>
+
+        <table>
+            <tr>
+                <th>File/Folder</th>
+                <th>Keterangan</th>
+                <th>Upload?</th>
+            </tr>
+            <tr>
+                <td><code>app/</code></td>
+                <td>Source code aplikasi</td>
+                <td>✅ Ya</td>
+            </tr>
+            <tr>
+                <td><code>bootstrap/</code></td>
+                <td>Bootstrap files Laravel</td>
+                <td>✅ Ya</td>
+            </tr>
+            <tr>
+                <td><code>config/</code></td>
+                <td>Konfigurasi aplikasi</td>
+                <td>✅ Ya</td>
+            </tr>
+            <tr>
+                <td><code>database/</code></td>
+                <td>Migrations & Seeders</td>
+                <td>✅ Ya</td>
+            </tr>
+            <tr>
+                <td><code>lang/</code></td>
+                <td>Language files</td>
+                <td>✅ Ya</td>
+            </tr>
+            <tr>
+                <td><code>public/</code></td>
+                <td>Public assets (termasuk build/)</td>
+                <td>✅ Ya</td>
+            </tr>
+            <tr>
+                <td><code>resources/</code></td>
+                <td>Views & CSS source</td>
+                <td>✅ Ya</td>
+            </tr>
+            <tr>
+                <td><code>routes/</code></td>
+                <td>Route definitions</td>
+                <td>✅ Ya</td>
+            </tr>
+            <tr>
+                <td><code>storage/</code></td>
+                <td>Logs & uploads</td>
+                <td>✅ Ya</td>
+            </tr>
+            <tr>
+                <td><code>vendor/</code></td>
+                <td>Composer dependencies</td>
+                <td>⚠️ Optional*</td>
+            </tr>
+            <tr>
+                <td><code>node_modules/</code></td>
+                <td>NPM dependencies</td>
+                <td>❌ JANGAN</td>
+            </tr>
+            <tr>
+                <td><code>.env</code></td>
+                <td>Environment variables</td>
+                <td>❌ JANGAN (buat baru)</td>
+            </tr>
+            <tr>
+                <td><code>composer.json</code>, <code>composer.lock</code></td>
+                <td>Dependency definitions</td>
+                <td>✅ Ya</td>
+            </tr>
+            <tr>
+                <td><code>artisan</code></td>
+                <td>Artisan CLI</td>
+                <td>✅ Ya</td>
+            </tr>
+        </table>
+
+        <p style="margin-top: 15px;"><strong>*vendor/</strong> bersifat optional karena ukurannya sangat besar (~100MB+). Jika Hostinger punya Composer, lebih baik upload hanya composer.json dan jalankan <code>composer install</code> melalui cPanel.</p>
+
+        <h3>File yang HARUS DI-ABAIKAN</h3>
+
+        <ul>
+            <li><code>node_modules/</code> - JANGAN UPLOAD (terlalu besar, rebuild di server jika perlu)</li>
+            <li><code>.env</code> - JANGAN UPLOAD (buat baru di Hostinger)</li>
+            <li><code>.git/</code> - JANGAN UPLOAD (kontrol versi lokal)</li>
+            <li><code>tests/</code> - Tidak perlu (testing files)</li>
+            <li><code>.editorconfig</code>, <code>.gitignore</code> - Tidak perlu</li>
+        </ul>
+
+        <h3>Struktur Upload ke Hostinger</h3>
+
+        <p>Jika domain Anda <code>gajipro.hostinger.com</code>, upload semua file ke:</p>
+
+        <div class="code-block">
+            <div class="code-block-title">cPanel - Public HTML Path</div>
+public_html/
+
+├── app/
+├── bootstrap/
+├── config/
+├── database/
+├── lang/
+├── public/          (ini adalah root web)
+├── resources/
+├── routes/
+├── storage/
+├── vendor/          (optional)
+├── composer.json
+├── composer.lock
+├── artisan
+├── package.json
+└── .env.example     (untuk referensi)
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- === LANGKAH 4: UPLOAD KE HOSTINGER === -->
+        <h2>Step 4️⃣ Upload ke Hostinger</h2>
+
+        <h3>Opsi A: Menggunakan File Manager cPanel (Recommended - Termudah)</h3>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">1</span> Login ke cPanel Hostinger
+            </div>
+            <p>Buka <code>https://nama-domain.com:2083</code> dengan username & password cPanel.</p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">2</span> Buka File Manager
+            </div>
+            <p>Di dashboard cPanel, cari & klik "File Manager".</p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">3</span> Navigasi ke public_html
+            </div>
+            <p>Klik "public_html" di panel kiri untuk membuka folder root aplikasi.</p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">4</span> Upload Files
+            </div>
+            <p>Gunakan fitur "Upload" untuk upload file/folder. Untuk folder besar, lebih baik zip terlebih dahulu:</p>
+            <ul>
+                <li>Zip folder project lokal (exclude node_modules & vendor)</li>
+                <li>Upload file .zip</li>
+                <li>Extract di File Manager cPanel</li>
+            </ul>
+        </div>
+
+        <h3>Opsi B: Menggunakan FTP Client (FileZilla)</h3>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">1</span> Dapatkan FTP Credentials
+            </div>
+            <p>Di cPanel Hostinger:</p>
+            <ul>
+                <li>Cari "FTP Accounts"</li>
+                <li>Lihat FTP username & password untuk akun default</li>
+                <li>Host: <code>ftp.nama-domain.com</code></li>
+            </ul>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">2</span> Setup FileZilla
+            </div>
+            <p>Open FileZilla:</p>
+            <ul>
+                <li>Host: <code>ftp.nama-domain.com</code></li>
+                <li>Username: FTP username dari cPanel</li>
+                <li>Password: FTP password</li>
+                <li>Port: 21</li>
+                <li>Klik "Quickconnect"</li>
+            </ul>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">3</span> Upload via FileZilla
+            </div>
+            <p>Di panel kanan (remote), navigasi ke <code>/public_html</code>. Drag & drop folder project dari local ke remote panel.</p>
+        </div>
+
+        <div class="important">
+            <strong>⏱️ Upload Time:</strong> Upload bisa memakan waktu lama tergantung ukuran file & kecepatan internet. Pastikan koneksi stabil.
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- === LANGKAH 5: KONFIGURASI .env === -->
+        <h2>Step 5️⃣ Konfigurasi .env di Hostinger</h2>
+
+        <h3>Buat File .env Baru</h3>
+
+        <p>Menggunakan File Manager cPanel:</p>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">1</span> Buka File Manager
+            </div>
+            <p>Navigasi ke folder <code>public_html</code> (root aplikasi).</p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">2</span> Create File
+            </div>
+            <p>Klik kanan di area kosong → "Create New File" → Beri nama <code>.env</code>.</p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">3</span> Edit .env
+            </div>
+            <p>Klik file <code>.env</code> → "Edit" → Copy-paste konfigurasi di bawah:</p>
+        </div>
+
+        <div class="code-block">
+            <div class="code-block-title">.env Configuration untuk Hostinger</div>
+APP_NAME=GajiPro
+APP_ENV=production
+APP_KEY=
+APP_DEBUG=false
+APP_URL=https://nama-domain.com
+
+APP_LOCALE=id
+APP_FALLBACK_LOCALE=id
+APP_FAKER_LOCALE=id_ID
+
+BCRYPT_ROUNDS=12
+
+LOG_CHANNEL=stack
+LOG_LEVEL=error
+
+# Database (sesuaikan dengan database Hostinger)
+DB_CONNECTION=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=nama_database
+DB_USERNAME=username_database
+DB_PASSWORD=password_database
+
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+
+BROADCAST_CONNECTION=log
+FILESYSTEM_DISK=local
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.hostinger.com
+MAIL_PORT=587
+MAIL_USERNAME=email@domain.com
+MAIL_PASSWORD=password_email
+MAIL_FROM_ADDRESS="noreply@domain.com"
+MAIL_FROM_NAME="${APP_NAME}"
+
+VITE_APP_NAME="${APP_NAME}"
+        </div>
+
+        <h3>Konfigurasi Database Hostinger</h3>
+
+        <p>Dapatkan database credentials dari cPanel:</p>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">1</span> Buka cPanel → MySQL Databases
+            </div>
+            <p>Lihat database yang sudah dibuat atau buat database baru di sini.</p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">2</span> Catat Database Credentials
+            </div>
+            <p>Catat informasi:</p>
+            <ul>
+                <li>Database Name</li>
+                <li>Database User</li>
+                <li>Database Password</li>
+                <li>Host (biasanya <code>localhost</code>)</li>
+            </ul>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">3</span> Update .env
+            </div>
+            <p>Isi <code>DB_DATABASE</code>, <code>DB_USERNAME</code>, <code>DB_PASSWORD</code> di file .env dengan info dari cPanel.</p>
+        </div>
+
+        <h3>Generate APP_KEY</h3>
+
+        <p>Untuk generate APP_KEY, ada 2 opsi:</p>
+
+        <h4>Opsi A: Generate Lokal (Recommended)</h4>
+
+        <div class="code-block">
+            <div class="code-block-title">Terminal (project lokal)</div>
+php artisan key:generate
+        </div>
+
+        <p style="margin-top: 10px;">Copy nilai <code>APP_KEY</code> dari <code>.env</code> lokal Anda dan paste ke <code>.env</code> di Hostinger.</p>
+
+        <h4>Opsi B: Generate Manual</h4>
+
+        <p>Jika tidak bisa generate lokal, gunakan value yang di-generate secara random:</p>
+
+        <div class="code-block">
+            <div class="code-block-title">APP_KEY format</div>
+base64:8hP9GbJ2k3L4mN5oP6qR7sT8uV9wX0yZ1aB2cD3eF4gH5iJ
+        </div>
+
+        <p style="margin-top: 10px;">Bisa generate dengan membuka: <code>https://www.random.org/strings/</code> dan ambil random string 32 karakter, lalu format menjadi <code>base64:</code> + string.</p>
+
+        <div class="important">
+            <strong>⚠️ Penting:</strong> Ganti semua placeholder di .env dengan informasi sebenarnya:
+            <ul style="margin-top: 10px;">
+                <li><code>APP_URL</code> → URL domain Anda di Hostinger</li>
+                <li><code>DB_HOST</code>, <code>DB_DATABASE</code>, <code>DB_USERNAME</code>, <code>DB_PASSWORD</code> → credentials database</li>
+                <li><code>APP_KEY</code> → base64 key (jangan kosong!)</li>
+                <li><code>MAIL_*</code> → konfigurasi email dari Hostinger</li>
+            </ul>
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- === LANGKAH 6: KONFIGURASI cPANEL & DATABASE === -->
+        <h2>Step 6️⃣ Konfigurasi cPanel & Database</h2>
+
+        <h3>Set Permissions Folder</h3>
+
+        <p>Laravel membutuhkan folder tertentu bisa write oleh web server. Di File Manager cPanel:</p>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">1</span> Ubah Permission storage/
+            </div>
+            <p>Klik folder <code>storage</code> → Properties → Set permission ke <code>755</code> (atau biarkan default).</p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">2</span> Ubah Permission bootstrap/cache/
+            </div>
+            <p>Klik folder <code>bootstrap/cache</code> → Properties → Set permission ke <code>755</code>.</p>
+        </div>
+
+        <h3>Setup Public Folder sebagai Root</h3>
+
+        <p>Di cPanel, web server harus point ke folder <code>public</code>:</p>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">1</span> Buka cPanel → Addon Domains atau Domains
+            </div>
+            <p>Cari domain Anda di list.</p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">2</span> Edit Document Root
+            </div>
+            <p>Ubah Document Root dari <code>public_html</code> menjadi <code>public_html/public</code>.</p>
+            <div class="warning" style="margin-top: 10px;">
+                <strong>⚠️ Penting:</strong> Jika cPanel tidak memiliki opsi mengubah document root, gunakan .htaccess di folder public_html untuk redirect ke public/index.php.
+            </div>
+        </div>
+
+        <h3>Restore Database</h3>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">1</span> Buka phpMyAdmin
+            </div>
+            <p>Di cPanel, klik "phpMyAdmin".</p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">2</span> Pilih Database
+            </div>
+            <p>Klik database yang sudah dibuat di panel kiri.</p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">3</span> Import Data
+            </div>
+            <p>Klik tab "Import" → Pilih file <code>backup_gajipro.sql</code> → Klik "Go".</p>
+            <p style="margin-top: 10px;">Tunggu proses import selesai (bisa beberapa menit untuk database besar).</p>
+        </div>
+
+        <div class="success">
+            <strong>✅ Database Restored:</strong> Data sudah di-restore ke database Hostinger.
+        </div>
+
+        <h3>Optional: Jalankan Database Migrations</h3>
+
+        <p>Jika ada migration baru yang belum dijalankan:</p>
+
+        <div class="important">
+            <strong>⚠️ Catatan:</strong> Karena tidak punya akses SSH, Anda tidak bisa menjalankan <code>php artisan migrate</code> di Hostinger. Solusi alternatif:
+            <ul style="margin-top: 10px;">
+                <li><strong>Opsi A:</strong> Jalankan migration di lokal, lalu backup & restore database.</li>
+                <li><strong>Opsi B:</strong> Hubungi Hostinger support untuk menjalankan command artisan (beberapa paket menyediakan fitur ini).</li>
+                <li><strong>Opsi C:</strong> Buat route khusus untuk menjalankan migration (tidak recommended untuk production).</li>
+            </ul>
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- === LANGKAH 7: VERIFIKASI & TESTING === -->
+        <h2>Step 7️⃣ Verifikasi & Testing</h2>
+
+        <h3>Cek Apakah Aplikasi Running</h3>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">1</span> Akses Domain
+            </div>
+            <p>Buka browser dan akses domain Anda: <code>https://nama-domain.com</code></p>
+            <p style="margin-top: 10px;">Jika melihat halaman default Laravel atau landing page aplikasi → ✅ Aplikasi running!</p>
+        </div>
+
+        <div class="step-box">
+            <div class="step-title">
+                <span class="step-number">2</span> Cek Error Logs
+            </div>
+            <p>Jika ada error, cek file log di cPanel:</p>
+            <ul>
+                <li>cPanel → "Error" atau "Error Log"</li>
+                <li>Atau buka file: <span class="file-path">storage/logs/laravel.log</span> via File Manager</li>
+            </ul>
+        </div>
+
+        <h3>Testing Features</h3>
+
+        <div class="checklist">
+            <li>Login page muncul dengan benar</li>
+            <li>Database query berjalan (cek di phpMyAdmin)</li>
+            <li>Assets CSS & JS dimuat (check browser DevTools → Network tab)</li>
+            <li>Form submission bekerja</li>
+            <li>Database insert/update/delete bekerja</li>
+            <li>Email notification terkirim (jika ada)</li>
+            <li>File upload bekerja (jika ada feature upload)</li>
+        </div>
+
+        <h3>Common Issues & Solutions</h3>
+
+        <table>
+            <tr>
+                <th>Error</th>
+                <th>Penyebab</th>
+                <th>Solusi</th>
+            </tr>
+            <tr>
+                <td>500 Internal Server Error</td>
+                <td>APP_KEY kosong atau config error</td>
+                <td>Cek .env, pastikan APP_KEY ada. Cek error log.</td>
+            </tr>
+            <tr>
+                <td>SQLSTATE[HY000]: General error</td>
+                <td>Database tidak tersambung</td>
+                <td>Cek DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD di .env</td>
+            </tr>
+            <tr>
+                <td>Assets (CSS/JS) tidak dimuat</td>
+                <td>public/build/ tidak ada atau manifest error</td>
+                <td>Pastikan npm run build sudah dijalankan lokal sebelum upload</td>
+            </tr>
+            <tr>
+                <td>Blank page (no error)</td>
+                <td>APP_DEBUG=false tapi tidak ada error log</td>
+                <td>Ubah APP_DEBUG=true sementara, cek error message di browser</td>
+            </tr>
+            <tr>
+                <td>Permission denied pada storage/</td>
+                <td>Folder permission terlalu ketat</td>
+                <td>Set folder permission ke 755, file ke 644</td>
+            </tr>
+        </table>
+
+        <div class="page-break"></div>
+
+        <!-- === TROUBLESHOOTING === -->
+        <h2>🔧 Troubleshooting</h2>
+
+        <h3>Error: "No 'Access-Control-Allow-Origin' header"</h3>
+
+        <p><strong>Penyebab:</strong> CORS issue (jarang untuk single-domain app)</p>
+
+        <p><strong>Solusi:</strong></p>
+        <ul>
+            <li>Pastikan <code>APP_URL</code> di .env sesuai dengan domain yang diakses</li>
+            <li>Jika ada API endpoint, tambahkan CORS middleware di <code>app/Http/Kernel.php</code></li>
+        </ul>
+
+        <h3>Error: "Class not found"</h3>
+
+        <p><strong>Penyebab:</strong> Autoloader tidak ter-refresh atau vendor belum ada</p>
+
+        <p><strong>Solusi:</strong></p>
+        <ul>
+            <li>Upload folder <code>vendor/</code> (jika belum)</li>
+            <li>Atau minta Hostinger support menjalankan <code>composer install</code></li>
+        </ul>
+
+        <h3>Error: "Symfony\Component\Debug\Exception\FlattenException"</h3>
+
+        <p><strong>Penyebab:</strong> Error saat runtime, lihat detail error di log</p>
+
+        <p><strong>Solusi:</strong></p>
+        <ul>
+            <li>Ubah APP_DEBUG=true untuk melihat detail error</li>
+            <li>Cek <span class="file-path">storage/logs/laravel.log</span></li>
+            <li>Cek cPanel Error Log</li>
+        </ul>
+
+        <h3>Database tidak connect</h3>
+
+        <p><strong>Penyebab:</strong> Credentials database salah atau database belum ter-create</p>
+
+        <p><strong>Solusi Checklist:</strong></p>
+        <ul>
+            <li>☐ Buka phpMyAdmin di cPanel</li>
+            <li>☐ Verifikasi database exist (lihat di panel kiri)</li>
+            <li>☐ Verifikasi database user ada permission (cPanel → MySQL Databases → MySQL Users)</li>
+            <li>☐ Cek .env: <code>DB_HOST</code> biasanya <code>localhost</code></li>
+            <li>☐ Test connection via phpMyAdmin (bisa login?)</li>
+        </ul>
+
+        <h3>Build assets hilang (CSS/JS tidak muncul)</h3>
+
+        <p><strong>Penyebab:</strong> <code>npm run build</code> tidak dijalankan lokal sebelum upload</p>
+
+        <p><strong>Solusi:</strong></p>
+        <ol>
+            <li>Buka project lokal</li>
+            <li>Jalankan <code>npm install && npm run build</code></li>
+            <li>Verifikasi folder <code>public/build/</code> ada</li>
+            <li>Re-upload folder <code>public/</code> (atau gunakan FTP sync)</li>
+            <li>Clear browser cache (Ctrl+Shift+Del) atau gunakan Incognito mode</li>
+        </ol>
+
+        <h3>Storage folder tidak bisa write</h3>
+
+        <p><strong>Penyebab:</strong> Permission folder terlalu ketat</p>
+
+        <p><strong>Solusi:**</p>
+        <ul>
+            <li>File Manager → folder <code>storage</code> → Properties → Permission 755</li>
+            <li>Folder <code>bootstrap/cache</code> → Properties → Permission 755</li>
+        </ul>
+
+        <h3>404 Not Found untuk semua route</h3>
+
+        <p><strong>Penyebab:</strong> Document root tidak pointing ke <code>public</code> folder</p>
+
+        <p><strong>Solusi:</strong></p>
+        <ul>
+            <li>cPanel → Addon Domains → Edit Domain → Ubah Document Root ke <code>public_html/public</code></li>
+            <li>Atau gunakan .htaccess rewrite rules (lihat di bawah)</li>
+        </ul>
+
+        <h3>.htaccess untuk URL Rewrite (Jika Tidak Bisa Ubah Document Root)</h3>
+
+        <p>Jika cPanel tidak mengizinkan ubah document root, buat file <span class="file-path">.htaccess</span> di <code>public_html/</code>:</p>
+
+        <div class="code-block">
+            <div class="code-block-title">public_html/.htaccess</div>
+&lt;IfModule mod_rewrite.c&gt;
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+&lt;/IfModule&gt;
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- === CHECKLIST FINAL === -->
+        <h2>✅ Checklist Final Migrasi</h2>
+
+        <p>Sebelum menganggap migrasi selesai, pastikan semua item di bawah sudah dicek:</p>
+
+        <div class="checklist">
+            <li>Database backup sudah dibuat & disimpan aman</li>
+            <li><code>npm run build</code> sudah dijalankan lokal</li>
+            <li>Folder <code>public/build/</code> ada & berisi assets</li>
+            <li>Semua file sudah di-upload ke public_html (kecuali node_modules & vendor jika dipilih)</li>
+            <li>File <code>.env</code> sudah dibuat dengan config yang benar</li>
+            <li><code>APP_KEY</code> sudah di-set di .env</li>
+            <li>Database sudah di-create & database user sudah ada di cPanel</li>
+            <li>Database credentials di .env sudah sesuai</li>
+            <li>Database backup sudah di-restore via phpMyAdmin</li>
+            <li>Permission <code>storage/</code> & <code>bootstrap/cache/</code> sudah di-set ke 755</li>
+            <li>Domain sudah pointing ke <code>public_html/public</code> (atau .htaccess sudah dibuat)</li>
+            <li>Domain bisa diakses & halaman muncul</li>
+            <li>Login berhasil & dapat mengakses data dari database</li>
+            <li>CSS & JS assets sudah dimuat dengan benar</li>
+            <li>Form submission & CRUD operations bekerja</li>
+        </div>
+
+        <div class="success">
+            <strong>🎉 Selesai!</strong> Aplikasi GajiPro sudah berhasil di-migrasi ke Hostinger!
+        </div>
+
+        <!-- === QUICK REFERENCE === -->
+        <h2>📌 Quick Reference</h2>
+
+        <h3>Commands yang Penting (Jalankan Lokal)</h3>
+
+        <table>
+            <tr>
+                <th>Perintah</th>
+                <th>Tujuan</th>
+            </tr>
+            <tr>
+                <td><code>composer install</code></td>
+                <td>Install dependencies PHP</td>
+            </tr>
+            <tr>
+                <td><code>npm install</code></td>
+                <td>Install dependencies JavaScript</td>
+            </tr>
+            <tr>
+                <td><code>npm run build</code></td>
+                <td>Build CSS & JS untuk production</td>
+            </tr>
+            <tr>
+                <td><code>php artisan key:generate</code></td>
+                <td>Generate APP_KEY</td>
+            </tr>
+            <tr>
+                <td><code>php artisan migrate</code></td>
+                <td>Jalankan database migrations</td>
+            </tr>
+            <tr>
+                <td><code>mysqldump -u root -p db > backup.sql</code></td>
+                <td>Backup database MySQL</td>
+            </tr>
+        </table>
+
+        <h3>File Konfigurasi Penting</h3>
+
+        <table>
+            <tr>
+                <th>File</th>
+                <th>Fungsi</th>
+            </tr>
+            <tr>
+                <td><span class="file-path">.env</span></td>
+                <td>Environment variables (database, app key, dll)</td>
+            </tr>
+            <tr>
+                <td><span class="file-path">config/app.php</span></td>
+                <td>Konfigurasi aplikasi</td>
+            </tr>
+            <tr>
+                <td><span class="file-path">bootstrap/app.php</span></td>
+                <td>Konfigurasi kernel & middleware (Laravel 12)</td>
+            </tr>
+            <tr>
+                <td><span class="file-path">config/database.php</span></td>
+                <td>Konfigurasi database</td>
+            </tr>
+        </table>
+
+        <h3>Folder Penting</h3>
+
+        <table>
+            <tr>
+                <th>Folder</th>
+                <th>Fungsi</th>
+            </tr>
+            <tr>
+                <td><span class="file-path">public/</span></td>
+                <td>Public folder (web root) - HARUS point ke sini</td>
+            </tr>
+            <tr>
+                <td><span class="file-path">public/build/</span></td>
+                <td>Assets hasil build (CSS, JS)</td>
+            </tr>
+            <tr>
+                <td><span class="file-path">storage/</span></td>
+                <td>Log files & uploads - harus writable</td>
+            </tr>
+            <tr>
+                <td><span class="file-path">bootstrap/cache/</span></td>
+                <td>Cache files - harus writable</td>
+            </tr>
+            <tr>
+                <td><span class="file-path">database/</span></td>
+                <td>Migrations & seeders</td>
+            </tr>
+        </table>
+
+        <div class="page-break"></div>
+
+        <!-- === SUPPORT & KONTAK === -->
+        <h2>💬 Support & Bantuan Lanjutan</h2>
+
+        <h3>Jika Masih Ada Error:</h3>
+
+        <ol>
+            <li><strong>Cek Error Log</strong>
+                <ul>
+                    <li>cPanel → Error Log untuk PHP errors</li>
+                    <li><span class="file-path">storage/logs/laravel.log</span> untuk Laravel-specific errors</li>
+                </ul>
+            </li>
+            <li><strong>Debug Mode</strong>
+                <ul>
+                    <li>Ubah APP_DEBUG=true di .env (untuk testing saja, ubah kembali ke false setelah selesai)</li>
+                    <li>Lihat detail error di browser</li>
+                </ul>
+            </li>
+            <li><strong>Hubungi Hostinger Support</strong>
+                <ul>
+                    <li>Jika ada masalah dengan server/database/PHP version</li>
+                    <li>Minta bantuan untuk: composer install, permissions, document root config</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>Resources Tambahan:</h3>
+
+        <ul>
+            <li>Laravel Documentation: <code>https://laravel.com/docs/12</code></li>
+            <li>Hostinger cPanel Guide: <code>https://support.hostinger.com/</code></li>
+            <li>Tailwind CSS Docs: <code>https://tailwindcss.com/docs</code></li>
+        </ul>
+
+        <div class="info">
+            <strong>ℹ️ Catatan Akhir:</strong> Panduan ini untuk GajiPro (Laravel 12 + Tailwind CSS 4 + Alpine.js). Jika ada perubahan struktur aplikasi di masa depan, beberapa langkah mungkin perlu disesuaikan.
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-note">
+            <p>📄 Panduan Migrasi GajiPro ke Hostinger | Dibuat Oktober 2026</p>
+            <p>Untuk pertanyaan lebih lanjut, hubungi tim development.</p>
+        </div>
+    </div>
+</body>
+</html>
