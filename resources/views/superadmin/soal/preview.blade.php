@@ -87,7 +87,7 @@
                                             
                                              <div class="flex-1 pt-0.5">
                                                  <span class="text-base font-bold mr-2" :class="terpilih === '{{ $opsi }}' ? 'text-primary-700' : 'text-slate-700'">{{ $opsi }}.</span>
-                                                 <span class="text-base inline-block" :class="terpilih === '{{ $opsi }}' ? 'text-primary-900 font-medium' : 'text-slate-700'">{!! app('App\Services\FormulaRenderer')->render($opsiText) !!}</span>
+                                                 <span class="text-base inline-block" :class="terpilih === '{{ $opsi }}' ? 'text-primary-900 font-medium' : 'text-slate-700'">{!! app('App\Services\FormulaRenderer')->render(app('App\Services\FormulaRenderer')->stripParagraphTags($opsiText)) !!}</span>
                                                  
                                                  @if($gambarOpsi)
                                                      <img src="{{ \Illuminate\Support\Facades\Storage::url($gambarOpsi) }}" alt="Opsi {{ $opsi }}" class="mt-3 max-h-40 rounded-lg border border-slate-200">

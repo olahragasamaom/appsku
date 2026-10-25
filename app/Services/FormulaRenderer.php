@@ -30,6 +30,22 @@ class FormulaRenderer
         return $rendered;
     }
 
+    public function stripParagraphTags(string $content): string
+    {
+        if (! $content) {
+            return '';
+        }
+
+        $content = html_entity_decode($content, ENT_QUOTES, 'UTF-8');
+        $content = trim($content);
+
+        if (str_starts_with($content, '<p>') && str_ends_with($content, '</p>')) {
+            $content = substr($content, 3, -4);
+        }
+
+        return $content;
+    }
+
     public function getKaTeXScripts(): string
     {
         return <<<'HTML'

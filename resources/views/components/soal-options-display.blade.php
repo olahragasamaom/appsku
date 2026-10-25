@@ -41,7 +41,7 @@
                     <span class="text-sm font-bold" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-700' : 'text-slate-700'">{{ $opsi }}</span>
                     
                     @if($opsiText && !$gambarOpsi)
-                        <span class="text-xs text-slate-600 text-center line-clamp-2">{!! app('App\Services\FormulaRenderer')->render($opsiText) !!}</span>
+                        <span class="text-xs text-slate-600 text-center line-clamp-2">{!! app('App\Services\FormulaRenderer')->render(app('App\Services\FormulaRenderer')->stripParagraphTags($opsiText)) !!}</span>
                     @endif
                 </label>
             @endif
@@ -71,7 +71,7 @@
                     
                     <div class="flex-1 pt-0.5">
                         <span class="text-base font-bold mr-2" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-700' : 'text-slate-700'">{{ $opsi }}.</span>
-                        <span class="text-base inline-block" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-900 font-medium' : 'text-slate-700'">{!! app('App\Services\FormulaRenderer')->render($opsiText) !!}</span>
+                        <span class="text-base inline-block" :class="jawaban[{{ $ujianSoal->id }}] === '{{ $opsi }}' ? 'text-primary-900 font-medium' : 'text-slate-700'">{!! app('App\Services\FormulaRenderer')->render(app('App\Services\FormulaRenderer')->stripParagraphTags($opsiText)) !!}</span>
                         
                         @if($gambarOpsi)
                             <img src="{{ \Illuminate\Support\Facades\Storage::url($gambarOpsi) }}" 
