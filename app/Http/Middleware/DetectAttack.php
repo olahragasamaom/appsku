@@ -12,9 +12,6 @@ use Symfony\Component\HttpFoundation\Response;
 class DetectAttack
 {
     protected array $sqlInjectionPatterns = [
-        '/(\%27)|(\')|(\-\-)|(\%23)|(#)/i',
-        '/((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(;))/i',
-        '/\w*((\%27)|(\'))((\%6F)|o|(\%4F))((\%72)|r|(\%52))/i',
         '/((\%27)|(\'))union/i',
         '/exec(\s|\+)+(s|x)p\w+/i',
         '/union(\s+)select/i',
@@ -25,9 +22,8 @@ class DetectAttack
         '/select(\s+)[\w\*\,\s]+(\s+)from/i',
         '/\bor\b\s+\d+\s*=\s*\d+/i',
         '/\band\b\s+\d+\s*=\s*\d+/i',
-        '/\bor\b\s+[\'\"]?\w+[\'\"]?\s*=\s*[\'\"]?\w+[\'\"]?/i',
         '/benchmark\s*\(/i',
-        '/sleep\s*\(/i',
+        '/sleep\s*\(\d+/i',
         '/load_file\s*\(/i',
         '/into\s+outfile/i',
         '/into\s+dumpfile/i',
@@ -36,7 +32,6 @@ class DetectAttack
     protected array $xssPatterns = [
         '/<script[^>]*>.*?<\/script>/is',
         '/javascript\s*:/i',
-        '/on\w+\s*=\s*["\'][^"\']*["\']/i',
         '/<iframe[^>]*>/i',
         '/<object[^>]*>/i',
         '/<embed[^>]*>/i',
@@ -45,6 +40,11 @@ class DetectAttack
         '/expression\s*\(/i',
         '/vbscript\s*:/i',
         '/data\s*:\s*text\/html/i',
+        '/<a\s+href\s*=\s*["\']?javascript:/i',
+    ];
+
+    protected array $whitelistTags = [
+        'img', 'p', 'b', 'i', 'br', 'strong', 'em', 'u', 'span', 'div', 'ul', 'ol', 'li',
     ];
 
     protected array $pathTraversalPatterns = [
@@ -73,8 +73,9 @@ class DetectAttack
     ];
 
     protected array $ldapInjectionPatterns = [
-        '/[)(|*\\\\]/',
         '/\x00/',
+        '/\(\s*(\||&)\s*\(/i',
+        '/\)\s*\(\s*(\||&)/i',
     ];
 
     protected array $xmlInjectionPatterns = [
@@ -132,8 +133,8 @@ class DetectAttack
                 ];
             }
 
-            // XSS
-            if ($this->matchesPatterns($value, $this->xssPatterns)) {
+            // XSS - skip if content only contains safe whitelisted tags
+            if (! $this->isSafeHtmlContent($value) && $this->matchesPatterns($value, $this->xssPatterns)) {
                 $attacks[] = [
                     'type' => 'xss',
                     'severity' => 'critical',
@@ -249,6 +250,34 @@ class DetectAttack
         }
 
         return false;
+    }
+
+    public function isSafeHtmlContent(string $value): bool
+    {
+        // Extract all HTML tags from the content
+        preg_match_all('/<\s*\/?\s*([a-zA-Z0-9]+)[^>]*>/i', $value, $matches);
+
+        if (empty($matches[1])) {
+            return false;
+        }
+
+        // Check if ALL tags found are in the whitelist
+        foreach ($matches[1] as $tag) {
+            if (! in_array(strtolower($tag), $this->whitelistTags, true)) {
+                return false;
+            }
+        }
+
+        // Also check for dangerous attributes like onclick, onload, javascript:
+        if (preg_match('/\son\w+\s*=/i', $value)) {
+            return false;
+        }
+
+        if (preg_match('/javascript\s*:/i', $value)) {
+            return false;
+        }
+
+        return true;
     }
 
     protected function isSuspiciousUserAgent(string $userAgent): bool
