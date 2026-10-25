@@ -80,9 +80,11 @@ function makeUploadAdapter(loader, uploadUrl) {
 window.createSoalEditor = async function (el, options) {
     const { value = '', placeholder = '', uploadUrl = '', onChange = () => {} } = options || {};
 
+    // Set content in div BEFORE creating editor (CKEditor reads this as initial data)
+    el.innerHTML = value;
+
     const editor = await ClassicEditor.create(el, {
         licenseKey: 'GPL',
-        initialData: value,
         plugins: [
             Essentials,
             Paragraph,
