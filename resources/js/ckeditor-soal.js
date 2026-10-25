@@ -80,11 +80,9 @@ function makeUploadAdapter(loader, uploadUrl) {
 window.createSoalEditor = async function (el, options) {
     const { value = '', placeholder = '', uploadUrl = '', onChange = () => {} } = options || {};
 
-    // Set content in div BEFORE creating editor (CKEditor reads this as initial data)
-    el.innerHTML = value;
-
     const editor = await ClassicEditor.create(el, {
         licenseKey: 'GPL',
+        initialData: value,
         plugins: [
             Essentials,
             Paragraph,
@@ -139,6 +137,11 @@ window.createSoalEditor = async function (el, options) {
 
     editor.plugins.get('FileRepository').createUploadAdapter = (loader) =>
         makeUploadAdapter(loader, uploadUrl);
+
+    // Force re-render content via setData if initialData didn't apply fully
+    if (value && !editor.getData()) {
+        editor.setData(value);
+    }
 
     window.insertMathFormula = function (editor, valueInput, formula) {
         if (!formula || !formula.trim()) {
