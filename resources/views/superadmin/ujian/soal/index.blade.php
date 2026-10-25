@@ -143,11 +143,8 @@
                         <tr class="hover:bg-secondary-50">
                             <td class="px-6 py-4 text-secondary-500">{{ $index + 1 }}</td>
                             <td class="px-6 py-4">
-                                <div class="space-y-2">
-                                    <p class="text-secondary-900 line-clamp-2">{{ \Illuminate\Support\Str::limit(strip_tags(html_entity_decode($ujianSoal->soal->soal ?? '', ENT_QUOTES, 'UTF-8')), 100) }}</p>
-                                    @if($ujianSoal->soal->hasImages())
-                                        <x-badge type="info">Soal bergambar</x-badge>
-                                    @endif
+                                <div class="soal-preview-cell text-secondary-900 line-clamp-3 max-w-xl">
+                                    {!! app('App\Services\FormulaRenderer')->render($ujianSoal->soal->soal ?? '') !!}
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-secondary-700">
@@ -205,11 +202,8 @@
                             @foreach($soalGroup as $index => $ujianSoal)
                                  <div class="flex items-start gap-3 p-3 border border-secondary-100 rounded-lg hover:bg-secondary-50">
                                       <span class="flex-shrink-0 w-6 h-6 rounded-full bg-secondary-100 text-secondary-600 text-xs font-semibold flex items-center justify-center">{{ $index + 1 }}</span>
-                                      <div class="flex-1">
-                                         <p class="text-sm text-secondary-800 line-clamp-2">{{ \Illuminate\Support\Str::limit(strip_tags(html_entity_decode($ujianSoal->soal->soal ?? '', ENT_QUOTES, 'UTF-8')), 120) }}</p>
-                                         @if($ujianSoal->soal->hasImages())
-                                             <x-badge type="info" class="mt-1">Soal bergambar</x-badge>
-                                         @endif
+                                      <div class="flex-1 soal-preview-cell text-sm text-secondary-800 line-clamp-3">
+                                         {!! app('App\Services\FormulaRenderer')->render($ujianSoal->soal->soal ?? '') !!}
                                       </div>
                                      <a href="{{ route('superadmin.soal.edit', $ujianSoal->soal) }}?ujian_id={{ $ujian->id }}" class="btn btn-ghost btn-sm flex-shrink-0" title="Edit Soal">
                                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,6 +332,13 @@
             </div>
         </div>
     @endif
+
+    <style>
+        .soal-preview-cell img { max-height: 60px; width: auto; display: inline-block; vertical-align: middle; margin: 2px 4px; border-radius: 4px; }
+        .soal-preview-cell figure { display: inline-block; margin: 0; }
+        .soal-preview-cell p { margin: 0; display: inline; }
+    </style>
+    {!! app('App\Services\FormulaRenderer')->getKaTeXScripts() !!}
 @endsection
 
 @push('scripts')

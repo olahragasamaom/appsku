@@ -102,11 +102,8 @@
                 @forelse($soals as $soal)
                     <tr class="hover:bg-secondary-50">
                         <td class="px-6 py-4">
-                            <div class="space-y-2">
-                                <p class="text-secondary-900 line-clamp-2">{{ \Illuminate\Support\Str::limit(strip_tags(html_entity_decode($soal->soal ?? '', ENT_QUOTES, 'UTF-8')), 90) }}</p>
-                                @if($soal->hasImages())
-                                    <x-badge type="info">Soal bergambar</x-badge>
-                                @endif
+                            <div class="space-y-2 soal-preview-cell text-secondary-900 line-clamp-3 max-w-xl">
+                                {!! app('App\Services\FormulaRenderer')->render($soal->soal ?? '') !!}
                             </div>
                         </td>
                         <td class="px-6 py-4 text-secondary-700">
@@ -163,4 +160,11 @@
             </div>
         @endif
     </div>
+
+    <style>
+        .soal-preview-cell img { max-height: 60px; width: auto; display: inline-block; vertical-align: middle; margin: 2px 4px; border-radius: 4px; }
+        .soal-preview-cell figure { display: inline-block; margin: 0; }
+        .soal-preview-cell p { margin: 0; display: inline; }
+    </style>
+    {!! app('App\Services\FormulaRenderer')->getKaTeXScripts() !!}
 @endsection
