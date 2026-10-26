@@ -52,23 +52,25 @@ class FormulaRenderer
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
         <script>
-            function renderMathFormulas() {
+            window.renderMathFormulas = function() {
                 document.querySelectorAll('[data-katex]').forEach(function(el) {
                     const formula = el.getAttribute('data-katex');
-                    if (window.katex && formula) {
+                    if (window.katex && formula && !el.dataset.rendered) {
                         try {
                             const html = window.katex.renderToString(formula, { throwOnError: true });
                             el.innerHTML = html;
+                            el.dataset.rendered = '1';
                         } catch (e) {
                             el.innerHTML = '<span style="color: #dc2626; font-size: 0.875rem;">❌ ' + formula + '</span>';
+                            el.dataset.rendered = '1';
                         }
                     }
                 });
-            }
+            };
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', renderMathFormulas);
+                document.addEventListener('DOMContentLoaded', window.renderMathFormulas);
             } else {
-                renderMathFormulas();
+                window.renderMathFormulas();
             }
         </script>
         HTML;

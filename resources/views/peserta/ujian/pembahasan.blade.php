@@ -56,7 +56,7 @@
                                     @endif
                                 </div>
 
-                                <div class="prose prose-sm max-w-none text-slate-800 mt-2">{!! $soal->soal !!}</div>
+                                <div class="prose prose-sm max-w-none text-slate-800 mt-2">{!! app('App\Services\FormulaRenderer')->render($soal->soal ?? '') !!}</div>
 
                                 <div class="mt-3 space-y-1.5">
                                     @foreach(['A', 'B', 'C', 'D', 'E'] as $opsi)
@@ -72,7 +72,7 @@
                                             @elseif($isJawaban) border-danger-300 bg-danger-50
                                             @else border-slate-100 @endif">
                                             <span class="font-semibold text-slate-700 w-5">{{ $opsi }}.</span>
-                                            <span class="text-slate-700 flex-1">{{ $opsiText }}</span>
+                                            <span class="text-slate-700 flex-1">{!! app('App\Services\FormulaRenderer')->render(app('App\Services\FormulaRenderer')->stripParagraphTags($opsiText)) !!}</span>
 
                                             @if($sistem === 'tiap_jawaban_ada_poin' && $poin !== null)
                                                 <span class="text-xs text-slate-400">({{ $poin }} poin)</span>
@@ -113,7 +113,7 @@
                                 @if(! empty($soal->pembahasan))
                                     <div class="mt-3 border-t border-slate-100 pt-3">
                                         <p class="text-xs font-semibold text-slate-500 mb-1">Pembahasan</p>
-                                        <div class="prose prose-sm max-w-none text-slate-700">{!! $soal->pembahasan !!}</div>
+                                        <div class="prose prose-sm max-w-none text-slate-700">{!! app('App\Services\FormulaRenderer')->render($soal->pembahasan) !!}</div>
                                     </div>
                                 @endif
                             </div>
@@ -123,4 +123,5 @@
             @endforeach
         </div>
     </div>
+    {!! app('App\Services\FormulaRenderer')->getKaTeXScripts() !!}
 @endsection

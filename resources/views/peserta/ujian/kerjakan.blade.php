@@ -241,6 +241,7 @@
             };
         }
     </script>
+    {!! app('App\Services\FormulaRenderer')->getKaTeXScripts() !!}
 </head>
 <body class="font-sans antialiased bg-slate-50 min-h-screen">
     @php
@@ -368,7 +369,7 @@
                                     <div class="mb-6">
                                         @if($soal->soal)
                                             <div class="prose prose-sm md:prose-base prose-slate max-w-none text-slate-800 leading-relaxed">
-                                                {!! $soal->soal !!}
+                                                {!! app('App\Services\FormulaRenderer')->render($soal->soal) !!}
                                             </div>
                                         @endif
                                         @if($soal->gambar_soal)

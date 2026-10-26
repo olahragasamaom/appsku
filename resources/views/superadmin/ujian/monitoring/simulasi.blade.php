@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {!! app('App\Services\FormulaRenderer')->getKaTeXScripts() !!}
 </head>
 <body class="font-sans antialiased bg-slate-50 min-h-screen relative">
     {{-- Dekorasi background --}}
@@ -16,6 +17,7 @@
         <div class="absolute bottom-0 right-1/4 w-72 h-72 bg-emerald-200/20 rounded-full blur-3xl"></div>
     </div>
     @php
+        $formulaRenderer = app('App\Services\FormulaRenderer');
         // Siapkan data soal sebagai array untuk konsumsi Alpine.js
         $soalData = [];
         $globalIndex = 0;
@@ -26,7 +28,11 @@
             foreach (['A', 'B', 'C', 'D', 'E'] as $huruf) {
                 $teks = $soal->{'opsi_'.strtolower($huruf)};
                 if ($teks !== null && $teks !== '') {
-                    $opsi[] = ['huruf' => $huruf, 'teks' => strip_tags($teks), 'gambar' => $soal->{'gambar_opsi_'.strtolower($huruf)} ? \Illuminate\Support\Facades\Storage::url($soal->{'gambar_opsi_'.strtolower($huruf)}) : null];
+                    $opsi[] = [
+                        'huruf' => $huruf,
+                        'teks' => $formulaRenderer->render($formulaRenderer->stripParagraphTags($teks)),
+                        'gambar' => $soal->{'gambar_opsi_'.strtolower($huruf)} ? \Illuminate\Support\Facades\Storage::url($soal->{'gambar_opsi_'.strtolower($huruf)}) : null,
+                    ];
                 }
             }
             $soalData[] = [
@@ -34,7 +40,7 @@
                 'nomor' => $globalIndex,
                 'sub_jenis' => $soal->subIndikator?->subJenisUjian?->nama_sub_jenis_ujian ?? 'Umum',
                 'sub_indikator' => $soal->subIndikator?->nama_sub_indikator ?? 'Tanpa Kategori',
-                'teks' => $soal->soal,
+                'teks' => $formulaRenderer->render($soal->soal ?? ''),
                 'gambar' => $soal->gambar_soal ? \Illuminate\Support\Facades\Storage::url($soal->gambar_soal) : null,
                 'opsi' => $opsi,
             ];
@@ -193,6 +199,20 @@
                 raguRagu: {},
                 get soalAktif() {
                     return this.soalList[this.indexAktif] ?? null;
+                },
+                init() {
+                    this.$watch('indexAktif', () => {
+                        this.$nextTick(() => {
+                            if (typeof window.renderMathFormulas === 'function') {
+                                window.renderMathFormulas();
+                            }
+                        });
+                    });
+                    this.$nextTick(() => {
+                        if (typeof window.renderMathFormulas === 'function') {
+                            window.renderMathFormulas();
+                        }
+                    });
                 },
                 goTo(index) {
                     this.indexAktif = index;
