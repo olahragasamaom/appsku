@@ -244,12 +244,37 @@ class SoalController extends Controller
 
     /**
      * PREVIEW: Mensimulasikan tampilan soal persis seperti di halaman ujian peserta.
+     * Jika soal ada dalam ujian, tampilkan dengan urutan nomor & navigasi lengkap.
      */
     public function preview(Soal $soal): View
     {
         $soal->load('subIndikator.subJenisUjian');
 
-        return view('superadmin.soal.preview', compact('soal'));
+        // Cari ujian_soal entry (jika soal ini bagian dari ujian)
+        $ujianSoal = \App\Models\UjianSoal::where('soal_id', $soal->id)
+            ->orderBy('urutan')
+            ->first();
+
+        $nomorUrut = 1;
+        $totalSoal = 1;
+        $navigasiNomors = [1];
+
+        if ($ujianSoal) {
+            $allUjianSoals = \App\Models\UjianSoal::where('ujian_id', $ujianSoal->ujian_id)
+                ->where('jenis_ujian_id', $ujianSoal->jenis_ujian_id)
+                ->orderBy('urutan')
+                ->get();
+
+            $totalSoal = $allUjianSoals->count();
+            $navigasiNomors = range(1, $totalSoal);
+
+            $index = $allUjianSoals->search(fn ($us) => $us->soal_id === $soal->id);
+            if ($index !== false) {
+                $nomorUrut = $index + 1;
+            }
+        }
+
+        return view('superadmin.soal.preview', compact('soal', 'nomorUrut', 'totalSoal', 'navigasiNomors'));
     }
 
     /**

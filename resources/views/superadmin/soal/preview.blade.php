@@ -46,16 +46,16 @@
 
         <div class="flex flex-col lg:flex-row gap-6 items-start relative">
             {{-- Bagian Kiri: Area Soal (75%) --}}
-            <div class="flex-1 w-full space-y-8">
+            <div class="flex-1 w-full space-y-6">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="p-6 sm:p-8 flex items-start gap-4 sm:gap-6">
                         <div class="flex-col items-center flex-shrink-0 hidden sm:flex">
-                            <span class="w-10 h-10 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-lg border border-slate-200 shadow-sm">1</span>
+                            <span class="w-10 h-10 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-lg border border-slate-200 shadow-sm">{{ $nomorUrut }}</span>
                         </div>
                         <div class="flex-1 min-w-0">
                             {{-- Indikator Kategori & Nomor (Mobile) --}}
                             <div class="flex items-center gap-2 mb-4 pb-4 border-b border-slate-100">
-                                <span class="sm:hidden w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-sm border border-slate-200">1</span>
+                                <span class="sm:hidden w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-sm border border-slate-200">{{ $nomorUrut }}</span>
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600 tracking-wide uppercase">
                                     {{ $soal->subIndikator?->subJenisUjian?->nama_sub_jenis_ujian ?? 'Umum' }} &mdash; {{ $soal->subIndikator?->nama_sub_indikator ?? 'Tanpa Kategori' }}
                                 </span>
@@ -75,22 +75,30 @@
                                     @php 
                                         $opsiText = $soal->{'opsi_'.strtolower($opsi)}; 
                                         $gambarOpsi = $soal->{'gambar_opsi_'.strtolower($opsi)};
+                                        $isKunci = $soal->kunci_jawaban === $opsi;
                                     @endphp
                                     
                                     @if($opsiText !== null && $opsiText !== '')
-                                        <label class="flex items-start gap-4 p-4 border rounded-xl cursor-pointer transition-colors group"
-                                               :class="terpilih === '{{ $opsi }}' ? 'border-primary-500 bg-primary-50 shadow-sm ring-1 ring-primary-500' : 'border-slate-200 hover:bg-slate-50'">
+                                        <label class="flex items-start gap-4 p-4 border rounded-xl cursor-pointer transition-colors group {{ $isKunci ? 'border-success-500 bg-success-50 ring-1 ring-success-500' : 'border-slate-200' }}"
+                                               :class="terpilih === '{{ $opsi }}' ? 'border-primary-500 bg-primary-50 shadow-sm ring-1 ring-primary-500' : ''">
                                             
                                             <div class="flex items-center h-6">
                                                 <input type="radio" name="simulasi_opsi" value="{{ $opsi }}" x-model="terpilih" class="w-5 h-5 text-primary-600 border-slate-300 focus:ring-primary-600">
                                             </div>
                                             
                                              <div class="flex-1 pt-0.5 flex flex-wrap gap-2">
-                                                 <span class="text-base font-bold flex-shrink-0" :class="terpilih === '{{ $opsi }}' ? 'text-primary-700' : 'text-slate-700'">{{ $opsi }}.</span>
-                                                 <span class="text-base flex-1" :class="terpilih === '{{ $opsi }}' ? 'text-primary-900 font-medium' : 'text-slate-700'">{!! app('App\Services\FormulaRenderer')->render(app('App\Services\FormulaRenderer')->stripParagraphTags($opsiText)) !!}</span>
+                                                 <span class="text-base font-bold flex-shrink-0 {{ $isKunci ? 'text-success-700' : 'text-slate-700' }}">{{ $opsi }}.</span>
+                                                 <span class="text-base flex-1 {{ $isKunci ? 'text-success-900 font-medium' : 'text-slate-700' }}">{!! app('App\Services\FormulaRenderer')->render(app('App\Services\FormulaRenderer')->stripParagraphTags($opsiText)) !!}</span>
                                                  
                                                  @if($gambarOpsi)
                                                      <img src="{{ \Illuminate\Support\Facades\Storage::url($gambarOpsi) }}" alt="Opsi {{ $opsi }}" class="mt-3 max-h-40 rounded-lg border border-slate-200">
+                                                 @endif
+
+                                                 @if($isKunci)
+                                                     <span class="w-full mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-success-700">
+                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                         Jawaban Benar
+                                                     </span>
                                                  @endif
                                              </div>
                                         </label>
@@ -100,6 +108,24 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Pembahasan Jawaban --}}
+                @if($soal->pembahasan || $soal->gambar_pembahasan)
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-blue-50 border-b border-blue-100 px-6 py-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                            <h3 class="font-bold text-blue-900">Pembahasan Jawaban</h3>
+                        </div>
+                        <div class="p-6 prose prose-slate max-w-none text-slate-800 text-base leading-relaxed">
+                            @if($soal->pembahasan)
+                                {!! app('App\Services\FormulaRenderer')->render($soal->pembahasan) !!}
+                            @endif
+                            @if($soal->gambar_pembahasan)
+                                <img src="{{ \Illuminate\Support\Facades\Storage::url($soal->gambar_pembahasan) }}" alt="Gambar pembahasan" class="mt-4 max-h-80 rounded-xl border border-slate-200 shadow-sm">
+                            @endif
+                        </div>
+                    </div>
+                @endif
             </div>
 
             {{-- Bagian Kanan: Navigasi Nomor Soal Tiruan (25%) --}}
@@ -110,22 +136,23 @@
                             <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                             Navigasi Soal
                         </h3>
+                        <span class="text-xs font-medium text-slate-500">{{ $nomorUrut }} / {{ $totalSoal }}</span>
                     </div>
                     <div class="p-4">
                         <div class="mb-5 last:mb-0">
                             <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">{{ $soal->subIndikator?->subJenisUjian?->nama_sub_jenis_ujian ?? 'Kategori Simulasi' }}</h4>
                             <div class="grid grid-cols-5 gap-2">
-                                {{-- Nomor 1: Current Soal --}}
-                                <button type="button" class="w-full aspect-square flex items-center justify-center rounded-lg bg-primary-500 text-white border-primary-600 shadow-sm font-bold text-sm transition-all">
-                                    1
-                                </button>
-
-                                {{-- Tiruan nomor lainnya --}}
-                                @for($i = 2; $i <= 10; $i++)
-                                    <button type="button" class="w-full aspect-square flex items-center justify-center rounded-lg bg-white text-slate-600 border border-slate-300 hover:bg-slate-50 font-bold text-sm transition-all opacity-50 cursor-not-allowed">
-                                        {{ $i }}
-                                    </button>
-                                @endfor
+                                @foreach($navigasiNomors as $nomor)
+                                    @if($nomor === $nomorUrut)
+                                        <button type="button" class="w-full aspect-square flex items-center justify-center rounded-lg bg-primary-500 text-white border-primary-600 shadow-sm font-bold text-sm transition-all">
+                                            {{ $nomor }}
+                                        </button>
+                                    @else
+                                        <button type="button" class="w-full aspect-square flex items-center justify-center rounded-lg bg-white text-slate-600 border border-slate-300 hover:bg-slate-50 font-bold text-sm transition-all opacity-60 cursor-not-allowed">
+                                            {{ $nomor }}
+                                        </button>
+                                    @endif
+                                @endforeach
                             </div>
                         </div>
                     </div>
