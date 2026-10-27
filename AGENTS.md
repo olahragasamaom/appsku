@@ -149,40 +149,73 @@ php artisan tinker
 5. **Outer <p> strip**: Only stripped for editor display (form load), stored with `<p>` in DB
 6. **N+1 prevention**: Always eager-load relations (subIndikator, subJenisUjian, jenisUjian)
 
-## Recent Session Summary (2026-10-26)
-**Commit**: `7d66162 feat: implement HTML tags & formula rendering...`
+## Recent Session Summary (2026-10-27)
+**Commits**: `e67b0b3 feat: offline exam results flow, storage upload fix, and ujian management improvements`
 
-### Changes Made:
-1. **FormulaRenderer Service** (new)
-   - Unescape HTML entities
-   - Render LaTeX formulas with KaTeX
-   - Keep safe HTML tags
+### Changes Made (Session 2026-10-27):
+1. **Storage Upload Fix** (Hostinger subdomain `program.lkppanrita.com`)
+   - Root `.htaccess` rewrite: all requests → `public/`
+   - New `uploads` filesystem disk in `config/filesystems.php`
+     - Root: `public_path('uploads')`
+     - URL: `APP_URL.'/uploads'`
+   - SoalController: all image upload/url methods use `disk('uploads')` instead of `public`
+   - Preview/form views: `Storage::disk('uploads')->url()` calls
+   - Created public/uploads folder structure
+   - Added `/public/uploads` to .gitignore
+   - Deployment guide PDF: `STORAGE_FIX_GUIDE.pdf`
 
-2. **Soal Model**
-   - Added `hasImages()` method
+2. **Offline Exam Results Flow**
+   - `UjianController` (`Peserta\`): `hasil()`, `pembahasan()`, `leaderboard()` check offline session first
+   - `resolvePeserta()`: returns ujianPeserta from offline or online user
+   - `OfflineParticipantAuth` middleware: added branch for result routes (only needs offline_peserta_id + token)
+   - Redirects: `peserta.login` → `home` route (landing page) across all auth flows
+   - `PesertaOffline::with('ujianPeserta')` eager-loaded
+   - Session cleared only on explicit logout, not after exam/results
 
-3. **CKEditor Improvements**
-   - Clean initial value (strip outer `<p>`)
-   - `initialData` config for WYSIWYG mode
-   - Prevent double-escaping loop
+3. **Results Page UI** (`resources/views/peserta/ujian/hasil.blade.php`)
+   - Per-sub-jenis (TWK/TIU/TKP) breakdown cards with nilai, passing_grade, lulus status
+   - Progress bar colored by score % (≥75 green, 50-74 yellow, <50 red)
+   - Overall LULUS/TIDAK LULUS computed from breakdown
 
-4. **Display Updates**
-   - Preview, opsi display, exam all use FormulaRenderer
-   - KaTeX scripts included in layouts
+4. **UjianScoringService**
+   - Added `breakdownPerSubJenis(UjianPeserta)` method
+   - Builds map of all sub-jenis, even those with 0 score (unattempted)
+   - Returns: `nilai_maksimal`, `pencapaian_persen`, `passing_grade`, `lulus` per sub-type
 
-5. **UI/UX Enhancement**
-   - Preview button moved right, styled blue (primary)
-   - Better visual hierarchy in kelola soal tables
-   - "Soal bergambar" badge for image detection
+5. **Leaderboard Injection** (`UjianController`)
+   - Private `injectLulusStatus()` method recomputes lulus for 0-score participants
+   - Uses `breakdownPerSubJenis()` to show TIDAK LULUS for non-participants
 
-6. **Tests**
-   - 16 unit tests for FormulaRenderer
-   - All 41 soal tests passing
+6. **Offline Participant Activation**
+   - Migration: `add_is_active_to_peserta_offline_table` default = false
+   - `OfflineParticipantService::create()`: sets `is_active => false`
+   - Exam list shows badge "✓ Sudah Mengerjakan" and "Lihat Hasil" button if done, hides start
 
-### File Changes Summary:
-- New: `app/Services/FormulaRenderer.php`, `tests/Unit/FormulaRendererTest.php`
-- Modified: Models (Soal), Views (preview, ujian/soal, components), JS (ckeditor-soal)
-- Updated: 20+ files
+7. **Ujian Status Update** (`Superadmin\UjianController`)
+   - New `updateStatus()` method; new route `superadmin.ujian.update-status`
+   - Index action buttons: Edit (yellow) → Hapus (red) → Simulasi (blue primary), right-aligned
+   - Status badge: aktif (green), draft (yellow); clickable opens modal Aktif/Draft/Selesai
+
+8. **Hasil Ujian Filter** (`Superadmin\HasilUjianController`)
+   - Index now shows only ujian `status=aktif` AND currently ongoing
+   - Ongoing = `tanggal_ujian <= now` AND `now <= max(batas_keterlambatan, tanggal_ujian + durasi)`
+   - Window logic: batas if valid > start, else start + durasi
+
+9. **UI/UX Minor**
+   - Exam warning modal: compact, 2 rules, scrollable content, agreement checkbox gates submit
+   - Absensi activation view: removed duplicate alert block
+   - Navigator answered questions: green `bg-success-500` color
+
+### File Changes Summary (28 files):
+- New: `.htaccess`, `STORAGE_FIX_GUIDE.pdf`
+- Modified: Controllers (SoalController, UjianController, HasilUjianController, Peserta/*, Middleware/*), Models (Soal), Views (preview, ujian/*, offline/*, absensi/), Services (UjianScoringService, OfflineParticipantService), Config (filesystems.php), Migration
+- Working tree clean after commit
+
+## Known Constraints & Patterns
+- **Offline session keys**: UjianPeserta needs 4 fields (offline_peserta_id, offline_session_token, offline_ujian_id, offline_attempt_id)
+- **Hasil page layout**: Uses breakdown data; gracefully handles both online (user) and offline (pesertaOffline) participants
+- **Storage disk separation**: Keep `public` disk for symlink fallback; use `uploads` disk for reliable subdomain access
+- **Date filtering**: batas_keterlambatan might be epoch (1970) for legacy; always fallback to start + durasi
 
 ## Next Potential Work
 - [ ] HTML sanitizer (remove unsafe tags while preserving safe ones)
@@ -190,6 +223,8 @@ php artisan tinker
 - [ ] Bulk import with HTML/formula support
 - [ ] Export soal to PDF with proper formatting
 - [ ] Accessibility improvements (ARIA labels for formulas)
+- [ ] Offline exam certificate/document generation
+- [ ] Mobile app sync for offline exams
 
 ---
-*Last updated: 2026-10-26 | Session: HTML/Formula Implementation*
+*Last updated: 2026-10-27 | Session: Offline exam portal + storage fix + ujian management*
