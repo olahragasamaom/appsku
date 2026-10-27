@@ -125,7 +125,7 @@ class SoalController extends Controller
 
         foreach ($this->imageFields() as $field) {
             if ($request->hasFile($field)) {
-                $data[$field] = $request->file($field)->store('panritta/soal', 'public');
+                $data[$field] = $request->file($field)->store('panritta/soal', 'uploads');
             }
         }
 
@@ -184,11 +184,11 @@ class SoalController extends Controller
         foreach ($this->imageFields() as $field) {
             if ($request->hasFile($field)) {
                 if ($soal->{$field}) {
-                    Storage::disk('public')->delete($soal->{$field});
+                    Storage::disk('uploads')->delete($soal->{$field});
                 }
-                $data[$field] = $request->file($field)->store('panritta/soal', 'public');
+                $data[$field] = $request->file($field)->store('panritta/soal', 'uploads');
             } elseif ($request->boolean('hapus_'.$field) && $soal->{$field}) {
-                Storage::disk('public')->delete($soal->{$field});
+                Storage::disk('uploads')->delete($soal->{$field});
                 $data[$field] = null;
             }
         }
@@ -291,10 +291,10 @@ class SoalController extends Controller
             'gambar' => ['required', 'image', 'max:2048'],
         ]);
 
-        $path = $request->file('gambar')->store('panritta/soal/editor', 'public');
+        $path = $request->file('gambar')->store('panritta/soal/editor', 'uploads');
 
         return response()->json([
-            'url' => \Illuminate\Support\Facades\Storage::url($path),
+            'url' => \Illuminate\Support\Facades\Storage::disk('uploads')->url($path),
         ]);
     }
 

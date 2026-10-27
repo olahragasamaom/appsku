@@ -16,11 +16,26 @@ class HasilUjianController extends Controller
     ) {}
 
     /**
-     * Index: Daftar ujian aktif/berlangsung
+     * Index: Daftar ujian yang sedang berlangsung
+     *
+     * Ujian dianggap "berlangsung" jika waktu sekarang sudah melewati
+     * tanggal_ujian dan belum melewati akhir rentang ujian (batas_keterlambatan
+     * atau tanggal_ujian + durasi_ujian, mana yang lebih akhir).
      */
     public function index(): View
     {
+        $now = now();
+
         $ujians = Ujian::where('status', 'aktif')
+            ->where('tanggal_ujian', '<=', $now)
+            ->where(function ($q) use ($now) {
+                $q->where('batas_keterlambatan', '>=', $now)
+                    // batas_keterlambatan kosong: pakai tanggal_ujian + durasi
+                    ->orWhereRaw(
+                        'DATE_ADD(tanggal_ujian, INTERVAL COALESCE(durasi_ujian, 0) MINUTE) >= ?',
+                        [$now]
+                    );
+            })
             ->with(['subJenisUjian', 'peserta'])
             ->withCount([
                 'peserta',

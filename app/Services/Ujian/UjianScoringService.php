@@ -168,6 +168,90 @@ class UjianScoringService
     }
 
     /**
+     * Breakdown nilai per Sub Jenis Ujian (TWK, TIU, TKP, dll).
+     * Mengelompokkan jawaban berdasarkan sub_jenis_ujian dari soal.
+     *
+     * @return array<int, array{sub_jenis_ujian_id: int, nama: string, nilai: float, nilai_maksimal: float, passing_grade: float|null, lulus: bool|null, pencapaian_persen: float}>
+     */
+    public function breakdownPerSubJenis(UjianPeserta $peserta): array
+    {
+        $peserta->loadMissing('jawaban.soal.subIndikator.subJenisUjian', 'ujian.ujianSoals.soal.subIndikator.subJenisUjian');
+
+        // Build subJenisMap dari SEMUA soal di ujian (bukan dari jawaban saja)
+        // Ini memastikan sub jenis tetap tampil meski peserta tidak menjawab satu soalpun
+        $subJenisMap = [];
+        $nilaiMaksimalPerSubJenis = [];
+
+        foreach ($peserta->ujian->ujianSoals as $ujianSoal) {
+            $subJenis = $ujianSoal->soal?->subIndikator?->subJenisUjian;
+            if (! $subJenis) {
+                continue;
+            }
+
+            $id = $subJenis->id;
+            $subJenisMap[$id] = $subJenis;
+
+            $sistem = $subJenis->sistem_penilaian ?? 'benar_salah';
+
+            // Nilai maksimal per soal
+            if ($sistem === 'benar_salah') {
+                $nilaiMax = $ujianSoal->soal->nilai_bobot_benar
+                    ?? $subJenis->nilai_benar
+                    ?? 0;
+            } else {
+                // Tiap jawaban ada poin: ambil nilai bobot tertinggi dari opsi A-E
+                $nilaiMax = max(
+                    (float) ($ujianSoal->soal->nilai_bobot_a ?? 0),
+                    (float) ($ujianSoal->soal->nilai_bobot_b ?? 0),
+                    (float) ($ujianSoal->soal->nilai_bobot_c ?? 0),
+                    (float) ($ujianSoal->soal->nilai_bobot_d ?? 0),
+                    (float) ($ujianSoal->soal->nilai_bobot_e ?? 0),
+                );
+            }
+
+            $nilaiMaksimalPerSubJenis[$id] = ($nilaiMaksimalPerSubJenis[$id] ?? 0) + (float) $nilaiMax;
+        }
+
+        // Kelompokkan nilai jawaban peserta berdasarkan sub_jenis_ujian_id
+        $nilaiPerSubJenis = [];
+        foreach ($peserta->jawaban as $jawaban) {
+            $subJenis = $jawaban->soal?->subIndikator?->subJenisUjian;
+            if (! $subJenis) {
+                continue;
+            }
+
+            $id = $subJenis->id;
+            $nilaiPerSubJenis[$id] = ($nilaiPerSubJenis[$id] ?? 0) + (float) $jawaban->nilai;
+        }
+
+        // Build hasil breakdown — semua sub jenis dari ujian ter-include
+        $result = [];
+        foreach ($subJenisMap as $id => $subJenis) {
+            $nilai = $nilaiPerSubJenis[$id] ?? 0.0;
+            $nilaiMaksimal = $nilaiMaksimalPerSubJenis[$id] ?? 0.0;
+            $passingGrade = $subJenis->passing_grade !== null
+                ? (float) $subJenis->passing_grade
+                : null;
+
+            $pencapaianPersen = $nilaiMaksimal > 0
+                ? round(($nilai / $nilaiMaksimal) * 100, 1)
+                : 0.0;
+
+            $result[] = [
+                'sub_jenis_ujian_id' => $id,
+                'nama' => $subJenis->nama_sub_jenis_ujian ?? '-',
+                'nilai' => $nilai,
+                'nilai_maksimal' => $nilaiMaksimal,
+                'passing_grade' => $passingGrade,
+                'lulus' => $passingGrade === null ? null : $nilai >= $passingGrade,
+                'pencapaian_persen' => $pencapaianPersen,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
      * Rebuild rankings for all finished peserta of an ujian (highest cumulative first).
      *
      * Urutan: nilai tertinggi lebih dulu; jika seri, penyelesaian tercepat menang.

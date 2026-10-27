@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('panritta_peserta_offline', function (Blueprint $table) {
-            $table->boolean('is_active')->default(true)->after('ujian_peserta_id');
+            $table->boolean('is_active')->default(false)->after('ujian_peserta_id');
         });
     }
 

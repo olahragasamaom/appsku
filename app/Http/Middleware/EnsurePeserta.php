@@ -18,11 +18,11 @@ class EnsurePeserta
         $user = $request->user();
 
         if (! $user || ! $user->isPeserta()) {
-            return redirect()->route('peserta.login');
+            return redirect()->route('home');
         }
 
         if (! $user->is_active) {
-            return redirect()->route('peserta.login')->withErrors([
+            return redirect()->route('home')->withErrors([
                 'username' => 'Akun Anda tidak aktif.',
             ]);
         }

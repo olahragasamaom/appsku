@@ -101,24 +101,25 @@
                         <td class="px-6 py-4 text-center">
                             @php
                                 $badge = match($ujian->status) {
-                                    'aktif' => 'bg-success-100 text-success-700',
+                                    'aktif' => 'bg-success-500 text-white',
+                                    'draft' => 'bg-yellow-400 text-black',
                                     'selesai' => 'bg-secondary-100 text-secondary-700',
                                     default => 'bg-warning-100 text-warning-700',
                                 };
                             @endphp
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badge }}">{{ ucfirst($ujian->status) }}</span>
+                            <button type="button"
+                                    @click="$dispatch('status-change-dialog', {
+                                        ujianId: {{ $ujian->id }},
+                                        ujianName: '{{ $ujian->nama_ujian }}',
+                                        currentStatus: '{{ $ujian->status }}'
+                                    })"
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badge }} cursor-pointer hover:opacity-80 transition-opacity">
+                                {{ ucfirst($ujian->status) }}
+                            </button>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="flex items-center justify-center gap-1">
-                                <a href="{{ route('superadmin.ujian.monitoring.live', $ujian) }}" class="btn btn-ghost btn-sm text-success-600" title="Live Scoring / Pantau Ujian">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                                    </svg>
-                                </a>
-                                <a href="{{ route('superadmin.ujian.monitoring.simulasi', $ujian) }}" target="_blank" class="btn btn-ghost btn-sm text-primary-600" title="Simulasi Ujian (Pratinjau)">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                </a>
-                                <a href="{{ route('superadmin.ujian.edit', $ujian) }}" class="btn btn-ghost btn-sm text-secondary-600" title="Edit Ujian">
+                            <div class="flex items-center justify-end gap-1">
+                                <a href="{{ route('superadmin.ujian.edit', $ujian) }}" class="btn btn-sm bg-yellow-400 hover:bg-yellow-500 text-white border-0" title="Edit Ujian">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
@@ -131,11 +132,14 @@
                                             type: 'danger',
                                             formAction: '{{ route('superadmin.ujian.destroy', $ujian) }}'
                                         })"
-                                        class="btn btn-ghost btn-sm text-danger-600" title="Hapus Ujian">
+                                        class="btn btn-sm bg-danger-500 hover:bg-danger-600 text-white border-0" title="Hapus Ujian">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
                                 </button>
+                                <a href="{{ route('superadmin.ujian.monitoring.simulasi', $ujian) }}" target="_blank" class="btn btn-primary btn-sm" title="Simulasi Ujian (Pratinjau)">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -155,4 +159,77 @@
             </div>
         @endif
     </div>
+
+    {{-- Status Change Modal --}}
+    <div x-data="statusChangeDialog()" @status-change-dialog.window="open($event.detail)">
+        <x-modal title="Ubah Status Ujian" name="statusChangeModal">
+            <div class="space-y-4">
+                <p class="text-secondary-600">Ubah status ujian "<span x-text="ujianName" class="font-semibold"></span>" menjadi:</p>
+                
+                <div class="space-y-2">
+                    <button type="button"
+                            @click="changeStatus('aktif')"
+                            class="w-full px-4 py-2 text-left rounded-lg border-2 border-success-500 bg-success-50 text-success-700 font-medium hover:bg-success-100 transition-colors">
+                        Aktif
+                    </button>
+                    <button type="button"
+                            @click="changeStatus('draft')"
+                            class="w-full px-4 py-2 text-left rounded-lg border-2 border-yellow-400 bg-yellow-50 text-black font-medium hover:bg-yellow-100 transition-colors">
+                        Draft
+                    </button>
+                    <button type="button"
+                            @click="changeStatus('selesai')"
+                            class="w-full px-4 py-2 text-left rounded-lg border-2 border-secondary-300 bg-secondary-50 text-secondary-700 font-medium hover:bg-secondary-100 transition-colors">
+                        Selesai
+                    </button>
+                </div>
+            </div>
+
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" class="btn btn-ghost">Batal</button>
+            </x-slot>
+        </x-modal>
+    </div>
+
+    <script>
+        function statusChangeDialog() {
+            return {
+                ujianId: null,
+                ujianName: '',
+                currentStatus: '',
+                showModal: false,
+
+                open(data) {
+                    this.ujianId = data.ujianId;
+                    this.ujianName = data.ujianName;
+                    this.currentStatus = data.currentStatus;
+                    this.showModal = true;
+                    this.$nextTick(() => {
+                        this.$dispatch('open-modal', 'statusChangeModal');
+                    });
+                },
+
+                changeStatus(newStatus) {
+                    if (newStatus === this.currentStatus) {
+                        alert('Status sudah sama');
+                        return;
+                    }
+
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/superadmin/ujian/${this.ujianId}/update-status`;
+                    form.innerHTML = `
+                        @csrf
+                        <input type="hidden" name="status" value="${newStatus}">
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                },
+
+                closeModal() {
+                    this.$dispatch('close-modal', 'statusChangeModal');
+                }
+            };
+        }
+    </script>
 @endsection

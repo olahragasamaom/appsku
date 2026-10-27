@@ -352,17 +352,14 @@
                                 <div class="p-6 md:p-8">
                                     {{-- Header dengan kategori --}}
                                     <div class="mb-6 pb-6 border-b border-slate-200">
-                                        <div class="flex items-start justify-between gap-4">
-                                            <div class="flex-1">
-                                                <h2 class="text-base md:text-lg font-bold text-primary-600">
-                                                    {{ $soal->subIndikator?->subJenisUjian?->nama_sub_jenis_ujian ?? 'Umum' }}
-                                                </h2>
-                                                <p class="text-sm text-slate-600 mt-1">Soal <span x-text="currentSoalIndex + 1"></span> dari <span x-text="totalSoal"></span></p>
-                                            </div>
-                                            <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary-50 text-primary-600 font-bold text-sm flex-shrink-0 border-2 border-primary-200">
-                                                {{ $globalIndex }}
-                                            </span>
-                                        </div>
+                                    <div class="flex items-start justify-between gap-4">
+                                             <div class="flex-1">
+                                                 <h2 class="text-base md:text-lg font-bold text-primary-600">
+                                                     {{ $soal->subIndikator?->subJenisUjian?->nama_sub_jenis_ujian ?? 'Umum' }}
+                                                 </h2>
+                                                 <p class="text-sm text-slate-600 mt-1">Soal <span x-text="currentSoalIndex + 1"></span> dari <span x-text="totalSoal"></span></p>
+                                             </div>
+                                         </div>
                                     </div>
 
                                     {{-- Teks Soal --}}
@@ -451,11 +448,11 @@
                                                         @click="currentSoalIndex = {{ $idxNow }}"
                                                         class="w-full aspect-square flex items-center justify-center rounded-lg text-xs md:text-sm font-bold transition-all border-2"
                                                         :class="{
-                                                            'bg-primary-600 text-white border-primary-700 shadow-md': currentSoalIndex === {{ $idxNow }},
-                                                            'bg-yellow-400 text-white border-yellow-600': currentSoalIndex !== {{ $idxNow }} && ragu[{{ $ujianSoal->id }}],
-                                                            'bg-primary-500 text-white border-primary-600': currentSoalIndex !== {{ $idxNow }} && !ragu[{{ $ujianSoal->id }}] && jawaban[{{ $ujianSoal->id }}],
-                                                            'bg-white text-slate-700 border-slate-300 hover:bg-slate-50': currentSoalIndex !== {{ $idxNow }} && !ragu[{{ $ujianSoal->id }}] && !jawaban[{{ $ujianSoal->id }}]
-                                                        }">
+                                                             'bg-primary-600 text-white border-primary-700 shadow-md': currentSoalIndex === {{ $idxNow }},
+                                                             'bg-yellow-400 text-white border-yellow-600': currentSoalIndex !== {{ $idxNow }} && ragu[{{ $ujianSoal->id }}],
+                                                             'bg-success-500 text-white border-success-600': currentSoalIndex !== {{ $idxNow }} && !ragu[{{ $ujianSoal->id }}] && jawaban[{{ $ujianSoal->id }}],
+                                                             'bg-white text-slate-700 border-slate-300 hover:bg-slate-50': currentSoalIndex !== {{ $idxNow }} && !ragu[{{ $ujianSoal->id }}] && !jawaban[{{ $ujianSoal->id }}]
+                                                         }">
                                                     {{ $navIndex + 1 }}
                                                 </button>
                                                 @php $navIndex++; @endphp

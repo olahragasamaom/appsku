@@ -120,6 +120,24 @@ class UjianController extends Controller
         return back()->with('success', 'Ujian berhasil diaktifkan.');
     }
 
+    public function updateStatus(Request $request, Ujian $ujian): RedirectResponse
+    {
+        $request->validate([
+            'status' => ['required', 'in:draft,aktif,selesai'],
+        ]);
+
+        $ujian->update(['status' => $request->status]);
+
+        $statusLabel = match ($request->status) {
+            'aktif' => 'Aktif',
+            'draft' => 'Draft',
+            'selesai' => 'Selesai',
+            default => 'Unknown',
+        };
+
+        return back()->with('success', "Status ujian berhasil diubah menjadi {$statusLabel}.");
+    }
+
     /**
      * @return array<string, mixed>
      */

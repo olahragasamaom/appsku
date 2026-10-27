@@ -89,7 +89,7 @@ class OfflinePortalController extends Controller
             abort(403);
         }
 
-        $peserta = PesertaOffline::findOrFail($pesertaId);
+        $peserta = PesertaOffline::with('ujianPeserta')->findOrFail($pesertaId);
 
         // Get ujian offline yang peserta terdaftar di dalamnya.
         // Rentang akses: tanggal_ujian <= now() <= batas_keterlambatan
@@ -152,6 +152,7 @@ class OfflinePortalController extends Controller
 
         $attempt = UjianPeserta::create([
             'ujian_id' => $ujian->id,
+            'user_id' => null,
             'status' => 'sedang_ujian',
             'waktu_mulai' => now(),
             'last_activity_at' => now(),
@@ -197,7 +198,7 @@ class OfflinePortalController extends Controller
             'offline_attempt_id',
         ]);
 
-        return redirect()->route('peserta.ujian.offline.portal')
+        return redirect()->route('home')
             ->with('success', 'Anda telah logout.');
     }
 }

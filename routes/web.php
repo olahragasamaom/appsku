@@ -680,6 +680,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('ujian/{ujian}/soal/import', [UjianSoalController::class, 'importExcel'])->name('ujian.soal.import');
         Route::delete('ujian/{ujian}/soal/{ujianSoal}/detach', [UjianSoalController::class, 'detach'])->name('ujian.soal.detach');
         Route::post('ujian/{ujian}/activate', [UjianController::class, 'activate'])->name('ujian.activate');
+        Route::post('ujian/{ujian}/update-status', [UjianController::class, 'updateStatus'])->name('ujian.update-status');
 
         // hasil ujian management
         Route::prefix('hasil-ujian')->name('hasil-ujian.')->group(function () {

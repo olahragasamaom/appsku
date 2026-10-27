@@ -80,6 +80,6 @@ class OfflineController extends Controller
     {
         $request->session()->forget(['offline_peserta_id', 'offline_ujian_id', 'offline_attempt_id']);
 
-        return redirect()->route('peserta.ujian.offline.login');
+        return redirect()->route('home');
     }
 }

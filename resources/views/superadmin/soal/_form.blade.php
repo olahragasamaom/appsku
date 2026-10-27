@@ -165,7 +165,7 @@
                     <div x-data="{ hapus: false }" class="mt-2">
                         <input type="hidden" name="hapus_gambar_soal" :value="hapus ? '1' : '0'">
                         <div class="inline-flex flex-col gap-1.5" :class="hapus ? 'opacity-50' : ''">
-                            <img src="{{ Storage::url($soal->gambar_soal) }}" class="h-24 rounded border">
+                            <img src="{{ Storage::disk('uploads')->url($soal->gambar_soal) }}" class="h-24 rounded border">
                             <button type="button" @click="hapus = !hapus"
                                     class="inline-flex items-center gap-1 text-xs font-medium"
                                     :class="hapus ? 'text-secondary-500' : 'text-danger-600 hover:text-danger-700'">
@@ -203,7 +203,7 @@
                                 <div x-data="{ hapus: false }" class="mt-2">
                                     <input type="hidden" name="hapus_gambar_opsi_{{ $opt }}" :value="hapus ? '1' : '0'">
                                     <div class="inline-flex flex-col gap-1.5" :class="hapus ? 'opacity-50' : ''">
-                                        <img src="{{ Storage::url($soal->{'gambar_opsi_'.$opt}) }}" class="h-16 rounded border">
+                                        <img src="{{ Storage::disk('uploads')->url($soal->{'gambar_opsi_'.$opt}) }}" class="h-16 rounded border">
                                         <button type="button" @click="hapus = !hapus"
                                                 class="inline-flex items-center gap-1 text-xs font-medium"
                                                 :class="hapus ? 'text-secondary-500' : 'text-danger-600 hover:text-danger-700'">
@@ -255,7 +255,7 @@
                     <div x-data="{ hapus: false }" class="mt-2">
                         <input type="hidden" name="hapus_gambar_pembahasan" :value="hapus ? '1' : '0'">
                         <div class="inline-flex flex-col gap-1.5" :class="hapus ? 'opacity-50' : ''">
-                            <img src="{{ Storage::url($soal->gambar_pembahasan) }}" class="h-24 rounded border">
+                            <img src="{{ Storage::disk('uploads')->url($soal->gambar_pembahasan) }}" class="h-24 rounded border">
                             <button type="button" @click="hapus = !hapus"
                                     class="inline-flex items-center gap-1 text-xs font-medium"
                                     :class="hapus ? 'text-secondary-500' : 'text-danger-600 hover:text-danger-700'">

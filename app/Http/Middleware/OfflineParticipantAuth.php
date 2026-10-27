@@ -18,6 +18,50 @@ class OfflineParticipantAuth
         $offlineUjianId = $request->session()->get('offline_ujian_id');
         $offlineAttemptId = $request->session()->get('offline_attempt_id');
 
+        $routeName = $request->route()->getName();
+        $isViewResultRoute = in_array($routeName, [
+            'peserta.ujian.hasil',
+            'peserta.ujian.pembahasan',
+            'peserta.ujian.leaderboard',
+        ]);
+
+        // For view result routes, only peserta_id + session_token required
+        if ($isViewResultRoute) {
+            if (! $offlinePesertaId || ! $offlineSessionToken) {
+                abort(403, 'Sesi offline tidak valid.');
+            }
+
+            // Validate session token still active
+            $participantSession = OfflineParticipantSession::where('session_token', $offlineSessionToken)
+                ->whereIn('status', ['logged_in', 'sedang_ujian'])
+                ->first();
+
+            if (! $participantSession) {
+                $request->session()->forget([
+                    'offline_peserta_id',
+                    'offline_session_token',
+                    'offline_ujian_id',
+                    'offline_attempt_id',
+                ]);
+                abort(403, 'Sesi Anda telah berakhir.');
+            }
+
+            // Resolve ujianPeserta via PesertaOffline
+            $pesertaOffline = \App\Models\PesertaOffline::with('ujianPeserta')->find($offlinePesertaId);
+            if (! $pesertaOffline || ! $pesertaOffline->ujianPeserta) {
+                abort(403, 'Data peserta tidak ditemukan.');
+            }
+
+            // Check route ujian_id matches peserta ujian_id
+            $routeUjian = $request->route('ujian');
+            $routeUjianId = is_object($routeUjian) ? $routeUjian->id : (int) $routeUjian;
+            if ($pesertaOffline->ujian_id != $routeUjianId) {
+                abort(403, 'Akses ke ujian ini tidak diizinkan.');
+            }
+
+            return $next($request);
+        }
+
         if (! $offlinePesertaId || ! $offlineSessionToken || ! $offlineUjianId || ! $offlineAttemptId) {
             abort(403, 'Sesi offline tidak valid.');
         }

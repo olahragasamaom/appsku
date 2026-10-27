@@ -31,7 +31,7 @@ class OfflineParticipantService
             'nama_peserta' => $data['nama_peserta'],
             'kode_akses' => Hash::make($plaintext),
             'kode_akses_plain' => $plaintext,
-            'is_active' => true,
+            'is_active' => false,
         ]);
 
         return ['peserta' => $peserta, 'kode_akses' => $plaintext];

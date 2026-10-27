@@ -182,7 +182,7 @@ class UjianController extends Controller
             return response()->json([
                 'expired' => true,
                 'message' => 'Sesi tidak valid.',
-                'redirect' => route('peserta.login'),
+                'redirect' => route('home'),
             ], 401);
         }
 
@@ -237,39 +237,94 @@ class UjianController extends Controller
             $this->scoring->finalize($peserta);
         }
 
-        // Clear offline session keys after successful submit
-        if ($request->session()->has('offline_peserta_id')) {
-            $request->session()->forget(['offline_peserta_id', 'offline_ujian_id', 'offline_attempt_id']);
-        }
-
         return redirect()->route('peserta.ujian.hasil', $ujian)
             ->with('success', 'Ujian berhasil diselesaikan.');
     }
 
     public function hasil(Request $request, Ujian $ujian): View|RedirectResponse
     {
+        // Try offline peserta first (after exam submit or after login)
+        if ($request->session()->has('offline_peserta_id')) {
+            $pesertaOfflineId = $request->session()->get('offline_peserta_id');
+            $pesertaOffline = \App\Models\PesertaOffline::with('ujianPeserta')->find($pesertaOfflineId);
+
+            if ($pesertaOffline && $pesertaOffline->ujianPeserta) {
+                $peserta = $pesertaOffline->ujianPeserta;
+
+                // If status not selesai yet, redirect to exams
+                if ($peserta->status !== 'selesai') {
+                    return redirect()->route('peserta.offline.exams');
+                }
+
+                $breakdown = $this->scoring->breakdownPerJenis($peserta);
+                $breakdownSubJenis = $this->scoring->breakdownPerSubJenis($peserta);
+
+                return view('peserta.ujian.hasil', compact('ujian', 'peserta', 'breakdown', 'breakdownSubJenis'));
+            }
+        }
+
+        // Fallback: try resolve via standard logic
         $peserta = $this->resolvePeserta($request, $ujian);
 
         if ($peserta instanceof RedirectResponse) {
             return $peserta;
         }
 
-        abort_unless($peserta && $peserta->status === 'selesai', 404);
+        if (! $peserta) {
+            return redirect()->route('peserta.offline.exams');
+        }
+
+        abort_unless($peserta->status === 'selesai', 404);
 
         $breakdown = $this->scoring->breakdownPerJenis($peserta);
+        $breakdownSubJenis = $this->scoring->breakdownPerSubJenis($peserta);
 
-        return view('peserta.ujian.hasil', compact('ujian', 'peserta', 'breakdown'));
+        return view('peserta.ujian.hasil', compact('ujian', 'peserta', 'breakdown', 'breakdownSubJenis'));
     }
 
     public function pembahasan(Request $request, Ujian $ujian): View|RedirectResponse
     {
+        // Try offline peserta first
+        if ($request->session()->has('offline_peserta_id')) {
+            $pesertaOfflineId = $request->session()->get('offline_peserta_id');
+            $pesertaOffline = \App\Models\PesertaOffline::with('ujianPeserta')->find($pesertaOfflineId);
+
+            if ($pesertaOffline && $pesertaOffline->ujianPeserta) {
+                $peserta = $pesertaOffline->ujianPeserta;
+
+                if ($peserta->status !== 'selesai') {
+                    return redirect()->route('peserta.offline.exams');
+                }
+
+                if (! $ujian->tampilkan_hasil) {
+                    return redirect()->route('peserta.ujian.hasil', $ujian);
+                }
+
+                $ujianSoals = $ujian->ujianSoals()
+                    ->with('soal.subIndikator.subJenisUjian', 'jenisUjian')
+                    ->orderBy('urutan')
+                    ->orderBy('id')
+                    ->get();
+
+                $jawabanMap = $peserta->jawaban()->get()->keyBy('ujian_soal_id');
+                $breakdown = $this->scoring->breakdownPerJenis($peserta);
+
+                return view('peserta.ujian.pembahasan', compact('ujian', 'peserta', 'ujianSoals', 'jawabanMap', 'breakdown'));
+            }
+        }
+
+        // Fallback
         $peserta = $this->resolvePeserta($request, $ujian);
 
         if ($peserta instanceof RedirectResponse) {
             return $peserta;
         }
 
-        abort_unless($peserta && $peserta->status === 'selesai', 404);
+        if (! $peserta) {
+            return redirect()->route('peserta.offline.exams');
+        }
+
+        abort_unless($peserta->status === 'selesai', 404);
 
         if (! $ujian->tampilkan_hasil) {
             return redirect()->route('peserta.ujian.hasil', $ujian);
@@ -289,13 +344,42 @@ class UjianController extends Controller
 
     public function leaderboard(Request $request, Ujian $ujian): View|RedirectResponse
     {
+        // Try offline peserta first
+        if ($request->session()->has('offline_peserta_id')) {
+            $pesertaOfflineId = $request->session()->get('offline_peserta_id');
+            $pesertaOffline = \App\Models\PesertaOffline::with('ujianPeserta')->find($pesertaOfflineId);
+
+            if ($pesertaOffline && $pesertaOffline->ujianPeserta) {
+                $peserta = $pesertaOffline->ujianPeserta;
+
+                if ($peserta->status !== 'selesai') {
+                    return redirect()->route('peserta.offline.exams');
+                }
+
+                if (! $ujian->tampilkan_hasil) {
+                    return redirect()->route('peserta.ujian.hasil', $ujian);
+                }
+
+                $ranking = $this->scoring->rank($ujian);
+                $posisi = $this->scoring->positionOf($peserta);
+                $this->injectLulusStatus($ranking);
+
+                return view('peserta.ujian.leaderboard', compact('ujian', 'peserta', 'ranking', 'posisi'));
+            }
+        }
+
+        // Fallback
         $peserta = $this->resolvePeserta($request, $ujian);
 
         if ($peserta instanceof RedirectResponse) {
             return $peserta;
         }
 
-        abort_unless($peserta && $peserta->status === 'selesai', 404);
+        if (! $peserta) {
+            return redirect()->route('peserta.offline.exams');
+        }
+
+        abort_unless($peserta->status === 'selesai', 404);
 
         if (! $ujian->tampilkan_hasil) {
             return redirect()->route('peserta.ujian.hasil', $ujian);
@@ -303,12 +387,34 @@ class UjianController extends Controller
 
         $ranking = $this->scoring->rank($ujian);
         $posisi = $this->scoring->positionOf($peserta);
+        $this->injectLulusStatus($ranking);
 
         return view('peserta.ujian.leaderboard', compact('ujian', 'peserta', 'ranking', 'posisi'));
     }
 
+    /**
+     * Inject computed lulus status ke setiap peserta di ranking berdasarkan breakdown sub jenis.
+     * Peserta lulus hanya jika semua sub jenis ujian lulus.
+     */
+    private function injectLulusStatus(\Illuminate\Support\Collection $ranking): void
+    {
+        foreach ($ranking as $item) {
+            $breakdown = $this->scoring->breakdownPerSubJenis($item);
+
+            if (empty($breakdown)) {
+                continue;
+            }
+
+            $hasFailed = collect($breakdown)->contains(fn ($row) => $row['lulus'] === false);
+            $allPassed = collect($breakdown)->every(fn ($row) => $row['lulus'] === true);
+
+            $item->lulus = $allPassed && ! $hasFailed;
+        }
+    }
+
     private function resolvePeserta(Request $request, Ujian $ujian): UjianPeserta|RedirectResponse|null
     {
+        // Check current exam attempt (offline atau online)
         if ($request->session()->has('offline_attempt_id')) {
             $attemptId = $request->session()->get('offline_attempt_id');
             $sessionUjianId = $request->session()->get('offline_ujian_id');
@@ -320,8 +426,19 @@ class UjianController extends Controller
             return $ujian->peserta()->where('id', $attemptId)->first();
         }
 
+        // Check offline peserta session (untuk akses hasil setelah submit)
+        if ($request->session()->has('offline_peserta_id')) {
+            $pesertaOfflineId = $request->session()->get('offline_peserta_id');
+            $pesertaOffline = \App\Models\PesertaOffline::find($pesertaOfflineId);
+
+            if ($pesertaOffline && $pesertaOffline->ujianPeserta) {
+                return $pesertaOffline->ujianPeserta;
+            }
+        }
+
+        // Check online peserta
         if (! $request->user()) {
-            return redirect()->route('peserta.login');
+            return redirect()->route('home');
         }
 
         return $ujian->peserta()->where('user_id', $request->user()->id)->first();

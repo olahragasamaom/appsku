@@ -61,7 +61,9 @@
                     @php
                         $isUjianAktif = $ujian->status === 'aktif';
                         $isPesertaAktif = (bool) $peserta->is_active;
-                        $canStart = $isUjianAktif && $isPesertaAktif;
+                        $ujianPeserta = $peserta->ujianPeserta;
+                        $sudahSelesai = $ujianPeserta && $ujianPeserta->status === 'selesai';
+                        $canStart = $isUjianAktif && $isPesertaAktif && !$sudahSelesai;
                     @endphp
                     
                     <div class="card border-l-4 {{ $canStart ? 'border-l-success-500' : 'border-l-slate-300' }}">
@@ -85,15 +87,19 @@
                                              </span>
                                          @endif
 
-                                         @if($isPesertaAktif)
-                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
-                                                 ✓ Diaktifkan
-                                             </span>
-                                         @else
-                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning-100 text-warning-700">
-                                                 ⏳ Menunggu Aktivasi
-                                             </span>
-                                         @endif
+                                          @if($sudahSelesai)
+                                              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                                                  ✓ Sudah Mengerjakan
+                                              </span>
+                                          @elseif($isPesertaAktif)
+                                              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
+                                                  ✓ Diaktifkan
+                                              </span>
+                                          @else
+                                              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning-100 text-warning-700">
+                                                  ⏳ Menunggu Aktivasi
+                                              </span>
+                                          @endif
                                      </div>
 
                                     <div class="text-sm text-slate-600 space-y-1">
@@ -119,23 +125,33 @@
                                 </div>
 
                                 <div class="flex-shrink-0">
-                                    @if($canStart)
-                                        <form method="POST" action="{{ route('peserta.offline.start', $ujian->id) }}">
-                                            @csrf
-                                            <button type="submit" class="btn btn-primary">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                </svg>
-                                                Ikuti Ujian
-                                            </button>
-                                        </form>
-                                    @else
-                                        <button type="button" class="btn btn-secondary" disabled>
-                                            Belum Tersedia
-                                        </button>
-                                    @endif
-                                </div>
+                                     @if($sudahSelesai)
+                                         <a href="{{ route('peserta.ujian.hasil', $ujian->id) }}" class="btn btn-secondary">
+                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                             </svg>
+                                             Lihat Hasil
+                                         </a>
+                                     @elseif($canStart)
+                                         <button type="button" 
+                                                 onclick="showExamWarning({{ $ujian->id }}, '{{ $ujian->nama_ujian }}')"
+                                                 class="btn btn-primary">
+                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                             </svg>
+                                             Ikuti Ujian
+                                         </button>
+                                         <form id="examForm-{{ $ujian->id }}" method="POST" action="{{ route('peserta.offline.start', $ujian->id) }}" style="display: none;">
+                                             @csrf
+                                         </form>
+                                     @else
+                                         <button type="button" class="btn btn-secondary" disabled>
+                                             Belum Tersedia
+                                         </button>
+                                     @endif
+                                  </div>
                             </div>
                         </div>
                     </div>
@@ -144,6 +160,118 @@
         @endif
     </section>
 </main>
+
+<!-- Modal Konfirmasi Ujian -->
+<div id="examWarningModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-lg max-w-lg w-full flex flex-col h-[90vh] max-h-[90vh]">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-primary-600 to-primary-800 px-6 py-8 text-white flex-shrink-0">
+            <h2 class="text-2xl font-bold mb-2">Peraturan Ujian</h2>
+            <p class="text-primary-100" id="modalUjianNama"></p>
+        </div>
+
+        <!-- Content (Scrollable) -->
+        <div class="px-4 py-6 space-y-4 overflow-y-auto flex-1">
+            <div class="space-y-4">
+                <div class="flex gap-3">
+                    <div class="flex-shrink-0 mt-0.5">
+                        <div class="flex items-center justify-center h-7 w-7 rounded-full bg-danger-100">
+                            <svg class="h-4 w-4 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 4v2M9 3h6a9 9 0 019 9v6a9 9 0 01-9 9H9a9 9 0 01-9-9V9a9 9 0 019-9z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-slate-900 text-sm">Ketenangan Selama Ujian</h3>
+                        <p class="text-slate-600 mt-0.5 text-xs">Menjaga ketenangan di ruangan ujian sangat penting. Tidak diperbolehkan berbicara dengan peserta lain atau mengganggu konsentrasi peserta lain.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <div class="flex-shrink-0 mt-0.5">
+                        <div class="flex items-center justify-center h-7 w-7 rounded-full bg-success-100">
+                            <svg class="h-4 w-4 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-slate-900 text-sm">Berdoa Sebelum Memulai</h3>
+                        <p class="text-slate-600 mt-0.5 text-xs">Sebelum memulai ujian, sempatkan diri untuk berdoa agar dapat mengerjakan soal dengan baik dan lancar.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-primary-50 border-l-4 border-primary-500 p-3 rounded">
+                <p class="text-primary-900 text-xs">
+                    <strong>Catatan:</strong> Dengan menekan tombol "Saya Setuju, Mulai Ujian", Anda telah memahami dan menyetujui semua peraturan ujian di atas.
+                </p>
+            </div>
+
+            <label class="flex items-start gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+                <input type="checkbox" 
+                       id="agreementCheckbox"
+                       onchange="updateSubmitButton()"
+                       class="w-4 h-4 mt-0.5 rounded border-slate-300 text-primary-600 focus:ring-primary-600 flex-shrink-0">
+                <span class="text-xs text-slate-700">
+                    <strong>Saya telah membaca dan memahami</strong> semua peraturan dan informasi ujian di atas, serta bersedia mematuhi semua ketentuan yang berlaku.
+                </span>
+            </label>
+        </div>
+
+        <!-- Footer (Fixed) -->
+        <div class="bg-slate-50 px-6 py-4 flex gap-3 justify-end border-t border-slate-200 flex-shrink-0">
+            <button type="button" 
+                    onclick="closeExamWarning()"
+                    class="btn btn-ghost">
+                Batal
+            </button>
+            <button type="button" 
+                    id="submitExamButton"
+                    onclick="submitExamForm()"
+                    disabled
+                    class="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
+                Saya Setuju, Mulai Ujian
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentUjianId = null;
+
+    function showExamWarning(ujianId, ujianName) {
+        currentUjianId = ujianId;
+        document.getElementById('modalUjianNama').textContent = ujianName;
+        document.getElementById('agreementCheckbox').checked = false;
+        updateSubmitButton();
+        document.getElementById('examWarningModal').classList.remove('hidden');
+    }
+
+    function updateSubmitButton() {
+        const checkbox = document.getElementById('agreementCheckbox');
+        const submitBtn = document.getElementById('submitExamButton');
+        submitBtn.disabled = !checkbox.checked;
+    }
+
+    function closeExamWarning() {
+        document.getElementById('examWarningModal').classList.add('hidden');
+        currentUjianId = null;
+    }
+
+    function submitExamForm() {
+        if (currentUjianId) {
+            document.getElementById('examForm-' + currentUjianId).submit();
+        }
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('examWarningModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeExamWarning();
+        }
+    });
+</script>
 
 </body>
 </html>

@@ -46,12 +46,12 @@ class OAuthController extends Controller
 
         $state = $request->query('state', '');
         if (! Cache::pull("oauth_state_{$state}")) {
-            return redirect()->route('peserta.login')->withErrors(['username' => 'State OAuth tidak valid.']);
+            return redirect()->route('home')->withErrors(['username' => 'State OAuth tidak valid.']);
         }
 
         $code = $request->query('code');
         if (! $code) {
-            return redirect()->route('peserta.login')->withErrors(['username' => 'Otorisasi Google gagal.']);
+            return redirect()->route('home')->withErrors(['username' => 'Otorisasi Google gagal.']);
         }
 
         $tokenResponse = Http::asForm()->post('https://oauth2.googleapis.com/token', [
@@ -63,7 +63,7 @@ class OAuthController extends Controller
         ]);
 
         if (! $tokenResponse->successful()) {
-            return redirect()->route('peserta.login')->withErrors(['username' => 'Gagal menukar token Google.']);
+            return redirect()->route('home')->withErrors(['username' => 'Gagal menukar token Google.']);
         }
 
         $accessToken = $tokenResponse->json('access_token');
@@ -71,7 +71,7 @@ class OAuthController extends Controller
         $profileResponse = Http::withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
 
         if (! $profileResponse->successful()) {
-            return redirect()->route('peserta.login')->withErrors(['username' => 'Gagal mengambil profil Google.']);
+            return redirect()->route('home')->withErrors(['username' => 'Gagal mengambil profil Google.']);
         }
 
         $profile = $profileResponse->json();
@@ -79,13 +79,13 @@ class OAuthController extends Controller
         $name = $profile['name'] ?? 'Peserta Google';
 
         if (! $email) {
-            return redirect()->route('peserta.login')->withErrors(['username' => 'Akun Google tidak memiliki email.']);
+            return redirect()->route('home')->withErrors(['username' => 'Akun Google tidak memiliki email.']);
         }
 
         $user = User::where('email', $email)->first();
 
         if ($user && ! $user->isPeserta()) {
-            return redirect()->route('peserta.login')->withErrors(['username' => 'Email ini terdaftar sebagai akun lain.']);
+            return redirect()->route('home')->withErrors(['username' => 'Email ini terdaftar sebagai akun lain.']);
         }
 
         if (! $user) {

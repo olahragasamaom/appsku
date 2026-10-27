@@ -103,7 +103,7 @@
                                             </div>
                                             <div class="flex-1 pt-0.5">
                                                 <span class="text-base font-bold mr-2" :class="jawaban[soalAktif.id] === op.huruf ? 'text-primary-700' : 'text-slate-700'" x-text="op.huruf + '.'"></span>
-                                                <span class="text-base" :class="jawaban[soalAktif.id] === op.huruf ? 'text-primary-900 font-medium' : 'text-slate-700'" x-text="op.teks"></span>
+                                                <span class="text-base" :class="jawaban[soalAktif.id] === op.huruf ? 'text-primary-900 font-medium' : 'text-slate-700'" x-html="op.teks"></span>
                                                 <template x-if="op.gambar">
                                                     <img :src="op.gambar" class="mt-3 max-h-40 rounded-lg border border-slate-200">
                                                 </template>
@@ -201,18 +201,18 @@
                     return this.soalList[this.indexAktif] ?? null;
                 },
                 init() {
-                    this.$watch('indexAktif', () => {
+                    const renderMath = () => {
                         this.$nextTick(() => {
-                            if (typeof window.renderMathFormulas === 'function') {
-                                window.renderMathFormulas();
-                            }
+                            requestAnimationFrame(() => {
+                                if (typeof window.renderMathFormulas === 'function') {
+                                    window.renderMathFormulas();
+                                }
+                            });
                         });
-                    });
-                    this.$nextTick(() => {
-                        if (typeof window.renderMathFormulas === 'function') {
-                            window.renderMathFormulas();
-                        }
-                    });
+                    };
+
+                    this.$watch('indexAktif', () => renderMath());
+                    renderMath();
                 },
                 goTo(index) {
                     this.indexAktif = index;

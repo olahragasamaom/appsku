@@ -20,14 +20,6 @@
 
 @section('content')
     <div class="max-w-5xl mx-auto space-y-6">
-        @if(session('success'))
-            <x-alert type="success" dismissible>{{ session('success') }}</x-alert>
-        @endif
-
-        @if(session('error'))
-            <x-alert type="danger" dismissible>{{ session('error') }}</x-alert>
-        @endif
-
         <div class="card">
             <div class="card-body">
                 @if($peserta->isEmpty())

@@ -66,7 +66,7 @@
                                 {!! app('App\Services\FormulaRenderer')->render($soal->soal) !!}
                             </div>
                             @if($soal->gambar_soal)
-                                <img src="{{ \Illuminate\Support\Facades\Storage::url($soal->gambar_soal) }}" alt="Gambar soal" class="mt-4 max-h-80 rounded-xl border border-slate-200 shadow-sm">
+                                <img src="{{ \Illuminate\Support\Facades\Storage::disk('uploads')->url($soal->gambar_soal) }}" alt="Gambar soal" class="mt-4 max-h-80 rounded-xl border border-slate-200 shadow-sm">
                             @endif
 
                             {{-- Opsi Jawaban (Interaktif Alpine Tiruan) --}}
@@ -90,9 +90,9 @@
                                                  <span class="text-base font-bold flex-shrink-0 {{ $isKunci ? 'text-success-700' : 'text-slate-700' }}">{{ $opsi }}.</span>
                                                  <span class="text-base flex-1 {{ $isKunci ? 'text-success-900 font-medium' : 'text-slate-700' }}">{!! app('App\Services\FormulaRenderer')->render(app('App\Services\FormulaRenderer')->stripParagraphTags($opsiText)) !!}</span>
                                                  
-                                                 @if($gambarOpsi)
-                                                     <img src="{{ \Illuminate\Support\Facades\Storage::url($gambarOpsi) }}" alt="Opsi {{ $opsi }}" class="mt-3 max-h-40 rounded-lg border border-slate-200">
-                                                 @endif
+                                  @if($gambarOpsi)
+                                      <img src="{{ \Illuminate\Support\Facades\Storage::disk('uploads')->url($gambarOpsi) }}" alt="Opsi {{ $opsi }}" class="mt-3 max-h-40 rounded-lg border border-slate-200">
+                                  @endif
 
                                                  @if($isKunci)
                                                      <span class="w-full mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-success-700">
@@ -121,7 +121,7 @@
                                 {!! app('App\Services\FormulaRenderer')->render($soal->pembahasan) !!}
                             @endif
                             @if($soal->gambar_pembahasan)
-                                <img src="{{ \Illuminate\Support\Facades\Storage::url($soal->gambar_pembahasan) }}" alt="Gambar pembahasan" class="mt-4 max-h-80 rounded-xl border border-slate-200 shadow-sm">
+                                <img src="{{ \Illuminate\Support\Facades\Storage::disk('uploads')->url($soal->gambar_pembahasan) }}" alt="Gambar pembahasan" class="mt-4 max-h-80 rounded-xl border border-slate-200 shadow-sm">
                             @endif
                         </div>
                     </div>
