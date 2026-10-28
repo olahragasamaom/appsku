@@ -109,3 +109,16 @@ superadmin-starter.zip
 # Environment Files
 .envrc
 .dirlocal
+
+# Project Folders & Documentation
+/ai/
+/belajar/
+/boilerplate/
+/docs/
+/materi/
+Agentsx.md
+checklist_migrasi
+commands_migrasi
+convert_html_to_pdf
+InstruksiGoogleAuth
+Panduan_migrasi
