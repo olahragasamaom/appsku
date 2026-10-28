@@ -16,8 +16,9 @@ class SuperadminSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'superadmin@gajipro.com'],
             [
+                'username' => 'superadmin',
                 'name' => 'Super Admin',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('Panrita2017'),
                 'is_superadmin' => true,
                 'company_id' => null,
                 'is_active' => true,

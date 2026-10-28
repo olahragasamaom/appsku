@@ -1,17 +1,5 @@
-*.log
-.DS_Store
-.env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
+# Laravel Framework
+/vendor
 /node_modules
 /public/hot
 /public/storage
@@ -19,9 +7,105 @@
 /storage/*.key
 /storage/pail
 /storage/api-docs
-/vendor
-Homestead.json
-Homestead.yaml
-Thumbs.db
+/bootstrap/cache
 
+# Environment & Config
+.env
+.env.backup
+.env.production
+.env.*.backup
+
+# IDE & Editor
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+.phpactor.json
+
+# Authentication & Cache
+/auth.json
+/.phpunit.result.cache
+
+# OS & System Files
+.DS_Store
+Thumbs.db
+*.log
+logs
+*.swp
+*.swo
+*~
+.tmp
+
+# Database & Backups
+*.sql
+*.sql.gz
+dump-*.sql
+database.sqlite
+*.db
+*.sqlite
+
+# Node & Build
+npm-debug.log
+yarn-error.log
+.npm
+.yarn
+dist
+build
+
+# AI & ML Related
+*.pt
+*.pth
+*.pkl
+*.joblib
+*.h5
+*.hdf5
+models/
+__pycache__/
+*.pyc
+.python-version
+
+# IDE Generated
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.phpunit.result.cache
+coverage/
+htmlcov/
+
+# Compiled Assets (keep source)
+/public/js/*.js
+/public/css/*.css
+mix-manifest.json
+
+# Temporary Files
+*.tmp
+temp/
+tmp/
+
+# Archives & Backups
+*.zip
+*.tar.gz
+*.rar
+*.bak
+*.backup
 superadmin-starter.zip
+
+# Upload Files (keep .gitkeep)
+/storage/uploads/
+/storage/exports/
+/storage/imports/
+
+# Cache Files
+.cache/
+*.cache
+
+# Environment Files
+.envrc
+.dirlocal
