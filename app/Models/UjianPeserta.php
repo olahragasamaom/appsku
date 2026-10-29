@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class UjianPeserta extends Model
 {
@@ -22,6 +23,9 @@ class UjianPeserta extends Model
         'auto_submitted',
         'total_nilai',
         'lulus',
+        'is_paused',
+        'paused_at',
+        'sisa_detik_saat_pause',
     ];
 
     protected function casts(): array
@@ -38,6 +42,9 @@ class UjianPeserta extends Model
             'auto_submitted' => 'boolean',
             'total_nilai' => 'decimal:2',
             'lulus' => 'boolean',
+            'is_paused' => 'boolean',
+            'paused_at' => 'datetime',
+            'sisa_detik_saat_pause' => 'integer',
         ];
     }
 
@@ -54,7 +61,7 @@ class UjianPeserta extends Model
     /**
      * Relasi ke data peserta offline (jika attempt ini dari peserta offline).
      */
-    public function pesertaOffline(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function pesertaOffline(): HasOne
     {
         return $this->hasOne(PesertaOffline::class, 'ujian_peserta_id');
     }

@@ -42,6 +42,7 @@ use App\Http\Controllers\OvertimeSettingController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayrollItemController;
 use App\Http\Controllers\PayrollSettingController;
+use App\Http\Controllers\Pengajar\AuthController;
 use App\Http\Controllers\Peserta\AuthController as PesertaAuthController;
 use App\Http\Controllers\Peserta\DashboardController as PesertaDashboardController;
 use App\Http\Controllers\Peserta\LanggananController as PesertaLanggananController;
@@ -62,20 +63,33 @@ use App\Http\Controllers\Settings\ApprovalWorkflowController;
 use App\Http\Controllers\Settings\AttendanceSettingController;
 use App\Http\Controllers\Settings\BillingController;
 use App\Http\Controllers\Settings\CompanyProfileController;
+use App\Http\Controllers\Settings\PermissionController;
+use App\Http\Controllers\Settings\RoleController;
 use App\Http\Controllers\Settings\SessionController;
 use App\Http\Controllers\Settings\UserController;
 use App\Http\Controllers\Spt1721Controller;
+use App\Http\Controllers\Superadmin\AbsensiController;
 use App\Http\Controllers\Superadmin\AuditLogController;
 use App\Http\Controllers\Superadmin\BlockedIpController;
+use App\Http\Controllers\Superadmin\ChangePasswordController;
+use App\Http\Controllers\Superadmin\CompanyController;
+use App\Http\Controllers\Superadmin\Dashboard2Controller;
 use App\Http\Controllers\Superadmin\EmailLogController;
+use App\Http\Controllers\Superadmin\HasilUjianController;
 use App\Http\Controllers\Superadmin\JenisUjianController;
+use App\Http\Controllers\Superadmin\LatihanDetailController;
+use App\Http\Controllers\Superadmin\LatihanSederhanaController;
 use App\Http\Controllers\Superadmin\NotificationLogController;
+use App\Http\Controllers\Superadmin\OfflineMonitoringController;
 use App\Http\Controllers\Superadmin\PaketController;
 use App\Http\Controllers\Superadmin\PaketUjianController;
 use App\Http\Controllers\Superadmin\PaymentController;
 use App\Http\Controllers\Superadmin\PaymentGatewayController;
+use App\Http\Controllers\Superadmin\PembayaranController;
+use App\Http\Controllers\Superadmin\PengawasActionController;
 use App\Http\Controllers\Superadmin\PesertaController;
 use App\Http\Controllers\Superadmin\PesertaOfflineController;
+use App\Http\Controllers\Superadmin\PesertaOfflineKodeAksesController;
 use App\Http\Controllers\Superadmin\PlanController;
 use App\Http\Controllers\Superadmin\QueueMonitorController;
 use App\Http\Controllers\Superadmin\RateLimitLogController;
@@ -97,6 +111,7 @@ use App\Http\Controllers\TaxForm1721A1Controller;
 use App\Http\Controllers\ThrController;
 use App\Http\Controllers\ThrSettingController;
 use App\Http\Controllers\WorkScheduleController;
+use App\Models\Paket;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -118,7 +133,7 @@ Route::get('/', function () {
         }
     }
 
-    $pakets = \App\Models\Paket::where('is_active', true)
+    $pakets = Paket::where('is_active', true)
         ->orderBy('urutan')
         ->orderBy('harga')
         ->get();
@@ -446,12 +461,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::put('attendance', [AttendanceSettingController::class, 'update'])->name('attendance.update');
 
         // Role Management
-        Route::resource('roles', \App\Http\Controllers\Settings\RoleController::class)
+        Route::resource('roles', RoleController::class)
             ->except(['show'])
             ->middleware('permission:manage roles');
 
         // Permission Management
-        Route::resource('permissions', \App\Http\Controllers\Settings\PermissionController::class)
+        Route::resource('permissions', PermissionController::class)
             ->except(['show'])
             ->middleware('permission:manage roles');
     });
@@ -615,28 +630,28 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 
         // Dashboard
         Route::get('/', [SuperadminDashboardController::class, 'index'])->name('dashboard');
-        Route::get('/dashboard2', [\App\Http\Controllers\Superadmin\Dashboard2Controller::class, 'index'])->name('dashboard2');
+        Route::get('/dashboard2', [Dashboard2Controller::class, 'index'])->name('dashboard2');
 
         // User Management
-        Route::resource('users', \App\Http\Controllers\Superadmin\UserController::class)->only(['index', 'show']);
+        Route::resource('users', App\Http\Controllers\Superadmin\UserController::class)->only(['index', 'show']);
 
         // Change Password
-        Route::get('change-password', [\App\Http\Controllers\Superadmin\ChangePasswordController::class, 'index'])->name('change-password.index');
-        Route::put('change-password', [\App\Http\Controllers\Superadmin\ChangePasswordController::class, 'update'])->name('change-password.update');
+        Route::get('change-password', [ChangePasswordController::class, 'index'])->name('change-password.index');
+        Route::put('change-password', [ChangePasswordController::class, 'update'])->name('change-password.update');
 
         // Company Management (View Only)
-        Route::get('companies', [\App\Http\Controllers\Superadmin\CompanyController::class, 'index'])->name('companies.index');
-        Route::get('companies/{company}', [\App\Http\Controllers\Superadmin\CompanyController::class, 'show'])->name('companies.show');
+        Route::get('companies', [CompanyController::class, 'index'])->name('companies.index');
+        Route::get('companies/{company}', [CompanyController::class, 'show'])->name('companies.show');
 
         // Plan Management
         Route::patch('plans/{plan}/toggle-status', [PlanController::class, 'toggleStatus'])->name('plans.toggle-status');
         Route::resource('plans', PlanController::class);
 
         // Pembayaran Peserta
-        Route::get('pembayaran', [\App\Http\Controllers\Superadmin\PembayaranController::class, 'index'])->name('pembayaran.index');
-        Route::get('pembayaran/{pembayaran}', [\App\Http\Controllers\Superadmin\PembayaranController::class, 'show'])->name('pembayaran.show');
-        Route::post('pembayaran/{pembayaran}/verifikasi', [\App\Http\Controllers\Superadmin\PembayaranController::class, 'verifikasi'])->name('pembayaran.verifikasi');
-        Route::post('pembayaran/{pembayaran}/tolak', [\App\Http\Controllers\Superadmin\PembayaranController::class, 'tolak'])->name('pembayaran.tolak');
+        Route::get('pembayaran', [PembayaranController::class, 'index'])->name('pembayaran.index');
+        Route::get('pembayaran/{pembayaran}', [PembayaranController::class, 'show'])->name('pembayaran.show');
+        Route::post('pembayaran/{pembayaran}/verifikasi', [PembayaranController::class, 'verifikasi'])->name('pembayaran.verifikasi');
+        Route::post('pembayaran/{pembayaran}/tolak', [PembayaranController::class, 'tolak'])->name('pembayaran.tolak');
 
         // jenis ujian management
         Route::resource('jenis-ujian', JenisUjianController::class)
@@ -684,21 +699,25 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 
         // hasil ujian management
         Route::prefix('hasil-ujian')->name('hasil-ujian.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'index'])->name('index');
-            Route::get('/{ujian}', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'show'])->name('show');
-            Route::get('/{ujian}/live-score', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'liveScore'])->name('live-score');
-            Route::get('/{ujian}/final-score', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'finalScore'])->name('final-score');
-            Route::get('/{ujian}/soal-analysis', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'soalAnalysis'])->name('soal-analysis');
-            Route::get('/{ujian}/peserta', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'pesertaList'])->name('peserta-list');
-            Route::get('/{ujian}/peserta/{peserta}/review', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'reviewPeserta'])->name('review-peserta');
-            Route::post('/{ujian}/peserta/{peserta}/force-finalize', [\App\Http\Controllers\Superadmin\HasilUjianController::class, 'forceFinalize'])->name('force-finalize');
+            Route::get('/', [HasilUjianController::class, 'index'])->name('index');
+            Route::get('/{ujian}', [HasilUjianController::class, 'show'])->name('show');
+            Route::get('/{ujian}/live-score', [HasilUjianController::class, 'liveScore'])->name('live-score');
+            Route::get('/{ujian}/final-score', [HasilUjianController::class, 'finalScore'])->name('final-score');
+            Route::get('/{ujian}/soal-analysis', [HasilUjianController::class, 'soalAnalysis'])->name('soal-analysis');
+            Route::get('/{ujian}/peserta', [HasilUjianController::class, 'pesertaList'])->name('peserta-list');
+            Route::get('/{ujian}/peserta/{peserta}/review', [HasilUjianController::class, 'reviewPeserta'])->name('review-peserta');
+            Route::post('/{ujian}/peserta/{peserta}/force-finalize', [HasilUjianController::class, 'forceFinalize'])->name('force-finalize');
+            Route::get('/{ujian}/management', [HasilUjianController::class, 'management'])->name('management');
+            Route::get('/{ujian}/management/data', [HasilUjianController::class, 'getManagementData'])->name('management.data');
+            Route::post('/{ujian}/peserta/{peserta}/toggle-pause', [HasilUjianController::class, 'togglePause'])->name('toggle-pause');
+            Route::post('/{ujian}/peserta/{peserta}/force-stop', [HasilUjianController::class, 'forceStop'])->name('force-stop');
         });
 
         // absensi management (activation only, no attendance)
-        Route::get('absensi', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'index'])->name('absensi.index');
-        Route::get('absensi/ujian/{ujian}/activation', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'activation'])->name('absensi.activation');
-        Route::patch('absensi/ujian/{ujian}/peserta/{pesertaOffline}/toggle', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'toggleActivation'])->name('absensi.toggle');
-        Route::post('absensi/ujian/{ujian}/bulk-toggle', [\App\Http\Controllers\Superadmin\AbsensiController::class, 'bulkToggleActivation'])->name('absensi.bulk-toggle');
+        Route::get('absensi', [AbsensiController::class, 'index'])->name('absensi.index');
+        Route::get('absensi/ujian/{ujian}/activation', [AbsensiController::class, 'activation'])->name('absensi.activation');
+        Route::patch('absensi/ujian/{ujian}/peserta/{pesertaOffline}/toggle', [AbsensiController::class, 'toggleActivation'])->name('absensi.toggle');
+        Route::post('absensi/ujian/{ujian}/bulk-toggle', [AbsensiController::class, 'bulkToggleActivation'])->name('absensi.bulk-toggle');
 
         // peserta offline management
         Route::get('ujian/{ujian}/peserta-offline/passwords', [PesertaOfflineController::class, 'showPasswords'])->name('ujian.peserta-offline.passwords');
@@ -712,25 +731,25 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
             ->parameters(['peserta-offline' => 'pesertaOffline']);
 
         // monitoring pengawas offline (real-time) - P8-T1
-        Route::get('ujian/{ujian}/pengawas', [\App\Http\Controllers\Superadmin\OfflineMonitoringController::class, 'index'])
+        Route::get('ujian/{ujian}/pengawas', [OfflineMonitoringController::class, 'index'])
             ->name('ujian.pengawas.index');
-        Route::get('ujian/{ujian}/pengawas/live', [\App\Http\Controllers\Superadmin\OfflineMonitoringController::class, 'live'])
+        Route::get('ujian/{ujian}/pengawas/live', [OfflineMonitoringController::class, 'live'])
             ->name('ujian.pengawas.live');
-        Route::post('ujian/{ujian}/pengawas/force-logout/{session}', [\App\Http\Controllers\Superadmin\OfflineMonitoringController::class, 'forceLogout'])
+        Route::post('ujian/{ujian}/pengawas/force-logout/{session}', [OfflineMonitoringController::class, 'forceLogout'])
             ->name('ujian.pengawas.force-logout');
 
         // pengawas actions: block/unblock peserta, add time extension
-        Route::post('ujian/{ujian}/pengawas/peserta/{pesertaOffline}/block', [\App\Http\Controllers\Superadmin\PengawasActionController::class, 'block'])
+        Route::post('ujian/{ujian}/pengawas/peserta/{pesertaOffline}/block', [PengawasActionController::class, 'block'])
             ->name('ujian.pengawas.block');
-        Route::post('ujian/{ujian}/pengawas/peserta/{pesertaOffline}/unblock', [\App\Http\Controllers\Superadmin\PengawasActionController::class, 'unblock'])
+        Route::post('ujian/{ujian}/pengawas/peserta/{pesertaOffline}/unblock', [PengawasActionController::class, 'unblock'])
             ->name('ujian.pengawas.unblock');
-        Route::post('ujian/{ujian}/pengawas/attempt/{ujianPeserta}/extend-time', [\App\Http\Controllers\Superadmin\PengawasActionController::class, 'addTimeExtension'])
+        Route::post('ujian/{ujian}/pengawas/attempt/{ujianPeserta}/extend-time', [PengawasActionController::class, 'addTimeExtension'])
             ->name('ujian.pengawas.extend-time');
 
         // reset kode akses peserta
-        Route::post('ujian/{ujian}/peserta-offline/{pesertaOffline}/reset-kode', [\App\Http\Controllers\Superadmin\PesertaOfflineKodeAksesController::class, 'reset'])
+        Route::post('ujian/{ujian}/peserta-offline/{pesertaOffline}/reset-kode', [PesertaOfflineKodeAksesController::class, 'reset'])
             ->name('ujian.peserta-offline.reset-kode');
-        Route::post('ujian/{ujian}/peserta-offline/bulk-reset-kode', [\App\Http\Controllers\Superadmin\PesertaOfflineKodeAksesController::class, 'bulkReset'])
+        Route::post('ujian/{ujian}/peserta-offline/bulk-reset-kode', [PesertaOfflineKodeAksesController::class, 'bulkReset'])
             ->name('ujian.peserta-offline.bulk-reset-kode');
 
         // paket member management
@@ -772,13 +791,13 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 
         // Latihan (Training Modules) - untuk belajar Laravel
         // Latihan Sederhana: CRUD sederhana dengan 4 input text
-        Route::resource('latihan-sederhana', \App\Http\Controllers\Superadmin\LatihanSederhanaController::class)
+        Route::resource('latihan-sederhana', LatihanSederhanaController::class)
             ->parameters(['latihan-sederhana' => 'latihan_sederhana']);
 
         // Latihan Detail: Form kompleks dengan relasi antar tabel dan modal picker
-        Route::get('latihan-detail/search-produk', [\App\Http\Controllers\Superadmin\LatihanDetailController::class, 'searchProduk'])
+        Route::get('latihan-detail/search-produk', [LatihanDetailController::class, 'searchProduk'])
             ->name('latihan-detail.search-produk');
-        Route::resource('latihan-detail', \App\Http\Controllers\Superadmin\LatihanDetailController::class)
+        Route::resource('latihan-detail', LatihanDetailController::class)
             ->parameters(['latihan-detail' => 'latihan_detail']);
 
         // Subscription Management
@@ -850,22 +869,22 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 */
 Route::prefix('pengajar')->name('pengajar.')->group(function () {
     Route::middleware('guest:web')->group(function () {
-        Route::get('/login-pengajar', [\App\Http\Controllers\Pengajar\AuthController::class, 'showLoginForm'])->name('login');
-        Route::post('/login-pengajar', [\App\Http\Controllers\Pengajar\AuthController::class, 'login']);
+        Route::get('/login-pengajar', [AuthController::class, 'showLoginForm'])->name('login');
+        Route::post('/login-pengajar', [AuthController::class, 'login']);
     });
 
     Route::middleware(['auth', 'pengajar'])->group(function () {
-        Route::post('/logout-pengajar', [\App\Http\Controllers\Pengajar\AuthController::class, 'logout'])->name('logout');
+        Route::post('/logout-pengajar', [AuthController::class, 'logout'])->name('logout');
 
         // Dashboard
-        Route::get('/', [\App\Http\Controllers\Pengajar\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/', [App\Http\Controllers\Pengajar\DashboardController::class, 'index'])->name('dashboard');
 
         // Soal Management
-        Route::resource('soal', \App\Http\Controllers\Pengajar\SoalController::class);
+        Route::resource('soal', App\Http\Controllers\Pengajar\SoalController::class);
 
         // Change Password
-        Route::get('change-password', [\App\Http\Controllers\Pengajar\ChangePasswordController::class, 'index'])->name('change-password.index');
-        Route::put('change-password', [\App\Http\Controllers\Pengajar\ChangePasswordController::class, 'update'])->name('change-password.update');
+        Route::get('change-password', [App\Http\Controllers\Pengajar\ChangePasswordController::class, 'index'])->name('change-password.index');
+        Route::put('change-password', [App\Http\Controllers\Pengajar\ChangePasswordController::class, 'update'])->name('change-password.update');
     });
 });
 
@@ -905,9 +924,9 @@ Route::prefix('peserta')->name('peserta.')->group(function () {
         Route::get('langganan/status/{pembayaran}', [PesertaLanggananController::class, 'statusPembayaran'])->name('langganan.status');
 
         // Notifikasi Peserta
-        Route::get('notifications', [\App\Http\Controllers\Peserta\NotificationController::class, 'index'])->name('notifications.index');
-        Route::get('notifications/{notification}', [\App\Http\Controllers\Peserta\NotificationController::class, 'show'])->name('notifications.show');
-        Route::post('notifications/mark-all-read', [\App\Http\Controllers\Peserta\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+        Route::get('notifications', [App\Http\Controllers\Peserta\NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('notifications/{notification}', [App\Http\Controllers\Peserta\NotificationController::class, 'show'])->name('notifications.show');
+        Route::post('notifications/mark-all-read', [App\Http\Controllers\Peserta\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
 
         Route::get('ujian/{ujian}', [PesertaUjianController::class, 'show'])->name('ujian.show');
         Route::post('ujian/{ujian}/start', [PesertaUjianController::class, 'start'])->name('ujian.start');

@@ -63,7 +63,8 @@
                         $isPesertaAktif = (bool) $peserta->is_active;
                         $ujianPeserta = $peserta->ujianPeserta;
                         $sudahSelesai = $ujianPeserta && $ujianPeserta->status === 'selesai';
-                        $canStart = $isUjianAktif && $isPesertaAktif && !$sudahSelesai;
+                        $isPaused = $ujianPeserta && $ujianPeserta->is_paused;
+                        $canStart = $isUjianAktif && $isPesertaAktif && !$sudahSelesai && !$isPaused;
                     @endphp
                     
                     <div class="card border-l-4 {{ $canStart ? 'border-l-success-500' : 'border-l-slate-300' }}">
@@ -87,19 +88,23 @@
                                              </span>
                                          @endif
 
-                                          @if($sudahSelesai)
-                                              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
-                                                  ✓ Sudah Mengerjakan
-                                              </span>
-                                          @elseif($isPesertaAktif)
-                                              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
-                                                  ✓ Diaktifkan
-                                              </span>
-                                          @else
-                                              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning-100 text-warning-700">
-                                                  ⏳ Menunggu Aktivasi
-                                              </span>
-                                          @endif
+                                           @if($sudahSelesai)
+                                               <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                                                   ✓ Sudah Mengerjakan
+                                               </span>
+                                           @elseif($isPaused)
+                                               <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-danger-100 text-danger-700">
+                                                   ⏸ Dihentikan Sementara
+                                               </span>
+                                           @elseif($isPesertaAktif)
+                                               <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
+                                                   ✓ Diaktifkan
+                                               </span>
+                                           @else
+                                               <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning-100 text-warning-700">
+                                                   ⏳ Menunggu Aktivasi
+                                               </span>
+                                           @endif
                                      </div>
 
                                     <div class="text-sm text-slate-600 space-y-1">
@@ -124,34 +129,38 @@
                                      @endif
                                 </div>
 
-                                <div class="flex-shrink-0">
-                                     @if($sudahSelesai)
-                                         <a href="{{ route('peserta.ujian.hasil', $ujian->id) }}" class="btn btn-secondary">
-                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                             </svg>
-                                             Lihat Hasil
-                                         </a>
-                                     @elseif($canStart)
-                                         <button type="button" 
-                                                 onclick="showExamWarning({{ $ujian->id }}, '{{ $ujian->nama_ujian }}')"
-                                                 class="btn btn-primary">
-                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                             </svg>
-                                             Ikuti Ujian
-                                         </button>
-                                         <form id="examForm-{{ $ujian->id }}" method="POST" action="{{ route('peserta.offline.start', $ujian->id) }}" style="display: none;">
-                                             @csrf
-                                         </form>
-                                     @else
-                                         <button type="button" class="btn btn-secondary" disabled>
-                                             Belum Tersedia
-                                         </button>
-                                     @endif
-                                  </div>
+                                 <div class="flex-shrink-0">
+                                      @if($sudahSelesai)
+                                          <a href="{{ route('peserta.ujian.hasil', $ujian->id) }}" class="btn btn-secondary">
+                                              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                              </svg>
+                                              Lihat Hasil
+                                          </a>
+                                      @elseif($isPaused)
+                                          <button type="button" class="btn btn-secondary" disabled>
+                                              Anda Dihentikan Sementara Oleh Admin
+                                          </button>
+                                      @elseif($canStart)
+                                          <button type="button" 
+                                                  onclick="showExamWarning({{ $ujian->id }}, '{{ $ujian->nama_ujian }}')"
+                                                  class="btn btn-primary">
+                                              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                              </svg>
+                                              Ikuti Ujian
+                                          </button>
+                                          <form id="examForm-{{ $ujian->id }}" method="POST" action="{{ route('peserta.offline.start', $ujian->id) }}" style="display: none;">
+                                              @csrf
+                                          </form>
+                                      @else
+                                          <button type="button" class="btn btn-secondary" disabled>
+                                              Belum Tersedia
+                                          </button>
+                                      @endif
+                                   </div>
                             </div>
                         </div>
                     </div>

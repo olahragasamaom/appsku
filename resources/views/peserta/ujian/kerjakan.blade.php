@@ -425,66 +425,86 @@
                 <div class="lg:col-span-1">
                     <div class="sticky top-20 space-y-4">
                         {{-- Navigation Panel --}}
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                            <div class="bg-gradient-to-r from-slate-800 to-slate-700 px-5 py-4">
-                                <h3 class="font-bold text-white text-sm flex items-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-                                    </svg>
-                                    Navigasi Soal
-                                </h3>
-                            </div>
-                            <div class="p-4 max-h-96 overflow-y-auto space-y-4">
-                                @php 
-                                    $navIndex = 0;
-                                @endphp
-                                @foreach($soalGroups as $groupName => $items)
-                                    <div>
-                                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{{ $groupName }}</h4>
-                                        <div class="grid grid-cols-5 gap-2">
-                                            @foreach($items as $ujianSoal)
-                                                @php $idxNow = $navIndex; @endphp
-                                                <button type="button" 
-                                                        @click="currentSoalIndex = {{ $idxNow }}"
-                                                        class="w-full aspect-square flex items-center justify-center rounded-lg text-xs md:text-sm font-bold transition-all border-2"
-                                                        :class="{
-                                                             'bg-primary-600 text-white border-primary-700 shadow-md': currentSoalIndex === {{ $idxNow }},
-                                                             'bg-yellow-400 text-white border-yellow-600': currentSoalIndex !== {{ $idxNow }} && ragu[{{ $ujianSoal->id }}],
-                                                             'bg-success-500 text-white border-success-600': currentSoalIndex !== {{ $idxNow }} && !ragu[{{ $ujianSoal->id }}] && jawaban[{{ $ujianSoal->id }}],
-                                                             'bg-white text-slate-700 border-slate-300 hover:bg-slate-50': currentSoalIndex !== {{ $idxNow }} && !ragu[{{ $ujianSoal->id }}] && !jawaban[{{ $ujianSoal->id }}]
-                                                         }">
-                                                    {{ $navIndex + 1 }}
-                                                </button>
-                                                @php $navIndex++; @endphp
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
+                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                             <div class="bg-gradient-to-r from-slate-800 to-slate-700 px-5 py-4">
+                                 <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                                     </svg>
+                                     Navigasi Soal
+                                 </h3>
+                             </div>
+                             <div class="p-4 max-h-80 overflow-y-auto space-y-4">
+                                 @php 
+                                     $navIndex = 0;
+                                 @endphp
+                                 @foreach($soalGroups as $groupName => $items)
+                                     <div>
+                                         <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{{ $groupName }}</h4>
+                                         <div class="grid grid-cols-5 gap-2">
+                                             @foreach($items as $ujianSoal)
+                                                 @php $idxNow = $navIndex; @endphp
+                                                 <button type="button" 
+                                                         @click="currentSoalIndex = {{ $idxNow }}"
+                                                         class="w-full aspect-square flex items-center justify-center rounded-lg text-xs md:text-sm font-bold transition-all border"
+                                                         :style="{
+                                                              'backgroundColor': jawaban[{{ $ujianSoal->id }}] ? 'rgb(16, 185, 129)' : (ragu[{{ $ujianSoal->id }}] ? 'rgb(250, 204, 21)' : (currentSoalIndex === {{ $idxNow }} ? 'rgb(59, 130, 246)' : 'white')),
+                                                              'color': jawaban[{{ $ujianSoal->id }}] ? 'white' : (ragu[{{ $ujianSoal->id }}] ? 'white' : (currentSoalIndex === {{ $idxNow }} ? 'white' : 'rgb(55, 65, 81)')),
+                                                              'borderWidth': currentSoalIndex === {{ $idxNow }} ? '3px' : '2px',
+                                                              'borderColor': currentSoalIndex === {{ $idxNow }} ? 'rgb(37, 99, 235)' : (ragu[{{ $ujianSoal->id }}] ? 'rgb(202, 138, 4)' : (jawaban[{{ $ujianSoal->id }}] ? 'rgb(5, 150, 105)' : 'rgb(209, 213, 219)'))
+                                                          }">
+                                                     {{ $navIndex + 1 }}
+                                                 </button>
+                                                 @php $navIndex++; @endphp
+                                             @endforeach
+                                         </div>
+                                     </div>
+                                 @endforeach
+                             </div>
+                             <div class="border-t border-slate-200 px-4 py-3 flex gap-2">
+                                 <button type="button"
+                                         @click="currentSoalIndex = Math.max(0, currentSoalIndex - 1)"
+                                         :disabled="currentSoalIndex === 0"
+                                         class="flex-1 btn btn-sm bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                         title="Soal Sebelumnya">
+                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                     </svg>
+                                 </button>
+                                 <button type="button"
+                                         @click="currentSoalIndex = Math.min(totalSoal - 1, currentSoalIndex + 1)"
+                                         :disabled="currentSoalIndex === totalSoal - 1"
+                                         class="flex-1 btn btn-sm bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                         title="Soal Selanjutnya">
+                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                     </svg>
+                                 </button>
+                             </div>
+                         </div>
 
                         {{-- Legend --}}
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                            <h4 class="font-bold text-slate-900 text-sm mb-3">Keterangan</h4>
-                            <div class="space-y-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded bg-primary-600 border border-primary-700"></div>
-                                    <span class="text-xs text-slate-600">Soal Aktif</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded bg-primary-500 border border-primary-600"></div>
-                                    <span class="text-xs text-slate-600">Sudah Dijawab</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded bg-yellow-400 border border-yellow-600"></div>
-                                    <span class="text-xs text-slate-600">Ragu-Ragu</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded bg-white border border-slate-300"></div>
-                                    <span class="text-xs text-slate-600">Belum Dijawab</span>
-                                </div>
-                            </div>
-                        </div>
+                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                             <h4 class="font-bold text-slate-900 text-sm mb-3">Keterangan</h4>
+                             <div class="space-y-2">
+                                 <div class="flex items-center gap-2">
+                                     <div class="w-4 h-4 rounded" style="background-color: rgb(59, 130, 246); border: 3px solid rgb(37, 99, 235);"></div>
+                                     <span class="text-xs text-slate-600">Soal Aktif</span>
+                                 </div>
+                                 <div class="flex items-center gap-2">
+                                     <div class="w-4 h-4 rounded" style="background-color: rgb(16, 185, 129); border: 3px solid rgb(5, 150, 105);"></div>
+                                     <span class="text-xs text-slate-600">Sudah Dijawab</span>
+                                 </div>
+                                 <div class="flex items-center gap-2">
+                                     <div class="w-4 h-4 rounded" style="background-color: rgb(250, 204, 21); border: 3px solid rgb(202, 138, 4);"></div>
+                                     <span class="text-xs text-slate-600">Ragu-Ragu</span>
+                                 </div>
+                                 <div class="flex items-center gap-2">
+                                     <div class="w-4 h-4 rounded" style="background-color: white; border: 2px solid rgb(209, 213, 219);"></div>
+                                     <span class="text-xs text-slate-600">Belum Dijawab</span>
+                                 </div>
+                             </div>
+                         </div>
 
                         {{-- Summary --}}
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">

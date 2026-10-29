@@ -118,24 +118,44 @@
             </a>
 
             {{-- Daftar Peserta --}}
-            <a href="{{ route('superadmin.hasil-ujian.peserta-list', $ujian) }}" class="card hover:shadow-lg transition-shadow group">
-                <div class="card-body">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-violet-200 transition-colors">
-                            <svg class="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="font-semibold text-secondary-900 mb-1">Daftar Peserta</h3>
-                            <p class="text-sm text-secondary-500">Status ujian & review jawaban per peserta</p>
-                        </div>
-                        <svg class="w-5 h-5 text-secondary-400 group-hover:text-violet-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </div>
-@endsection
+             <a href="{{ route('superadmin.hasil-ujian.peserta-list', $ujian) }}" class="card hover:shadow-lg transition-shadow group">
+                 <div class="card-body">
+                     <div class="flex items-start gap-4">
+                         <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-violet-200 transition-colors">
+                             <svg class="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                             </svg>
+                         </div>
+                         <div class="flex-1">
+                             <h3 class="font-semibold text-secondary-900 mb-1">Daftar Peserta</h3>
+                             <p class="text-sm text-secondary-500">Status ujian & review jawaban per peserta</p>
+                         </div>
+                         <svg class="w-5 h-5 text-secondary-400 group-hover:text-violet-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                         </svg>
+                     </div>
+                 </div>
+             </a>
+
+            {{-- Manajemen Peserta --}}
+             <a href="{{ route('superadmin.hasil-ujian.management', $ujian) }}" class="card hover:shadow-lg transition-shadow group">
+                 <div class="card-body">
+                     <div class="flex items-start gap-4">
+                         <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-cyan-200 transition-colors">
+                             <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                             </svg>
+                         </div>
+                         <div class="flex-1">
+                             <h3 class="font-semibold text-secondary-900 mb-1">Manajemen Peserta</h3>
+                             <p class="text-sm text-secondary-500">Pause/Resume waktu ujian peserta saat ada kendala</p>
+                         </div>
+                         <svg class="w-5 h-5 text-secondary-400 group-hover:text-cyan-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                         </svg>
+                     </div>
+                 </div>
+             </a>
+         </div>
+     </div>
+ @endsection

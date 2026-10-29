@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Peserta;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreJawabanRequest;
+use App\Models\PesertaOffline;
 use App\Models\Ujian;
 use App\Models\UjianPeserta;
 use App\Services\Ujian\UjianScoringService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class UjianController extends Controller
@@ -94,6 +96,10 @@ class UjianController extends Controller
 
         if ($peserta->status === 'selesai') {
             return redirect()->route('peserta.ujian.hasil', $ujian);
+        }
+
+        if ($peserta->is_paused) {
+            return redirect()->route('peserta.dashboard')->with('warning', 'Ujian Anda dihentikan sementara oleh pengawas. Silakan login kembali untuk melanjutkan.');
         }
 
         if ($this->deadlinePassed($ujian, $peserta)) {
@@ -246,7 +252,7 @@ class UjianController extends Controller
         // Try offline peserta first (after exam submit or after login)
         if ($request->session()->has('offline_peserta_id')) {
             $pesertaOfflineId = $request->session()->get('offline_peserta_id');
-            $pesertaOffline = \App\Models\PesertaOffline::with('ujianPeserta')->find($pesertaOfflineId);
+            $pesertaOffline = PesertaOffline::with('ujianPeserta')->find($pesertaOfflineId);
 
             if ($pesertaOffline && $pesertaOffline->ujianPeserta) {
                 $peserta = $pesertaOffline->ujianPeserta;
@@ -287,7 +293,7 @@ class UjianController extends Controller
         // Try offline peserta first
         if ($request->session()->has('offline_peserta_id')) {
             $pesertaOfflineId = $request->session()->get('offline_peserta_id');
-            $pesertaOffline = \App\Models\PesertaOffline::with('ujianPeserta')->find($pesertaOfflineId);
+            $pesertaOffline = PesertaOffline::with('ujianPeserta')->find($pesertaOfflineId);
 
             if ($pesertaOffline && $pesertaOffline->ujianPeserta) {
                 $peserta = $pesertaOffline->ujianPeserta;
@@ -347,7 +353,7 @@ class UjianController extends Controller
         // Try offline peserta first
         if ($request->session()->has('offline_peserta_id')) {
             $pesertaOfflineId = $request->session()->get('offline_peserta_id');
-            $pesertaOffline = \App\Models\PesertaOffline::with('ujianPeserta')->find($pesertaOfflineId);
+            $pesertaOffline = PesertaOffline::with('ujianPeserta')->find($pesertaOfflineId);
 
             if ($pesertaOffline && $pesertaOffline->ujianPeserta) {
                 $peserta = $pesertaOffline->ujianPeserta;
@@ -396,7 +402,7 @@ class UjianController extends Controller
      * Inject computed lulus status ke setiap peserta di ranking berdasarkan breakdown sub jenis.
      * Peserta lulus hanya jika semua sub jenis ujian lulus.
      */
-    private function injectLulusStatus(\Illuminate\Support\Collection $ranking): void
+    private function injectLulusStatus(Collection $ranking): void
     {
         foreach ($ranking as $item) {
             $breakdown = $this->scoring->breakdownPerSubJenis($item);
@@ -429,7 +435,7 @@ class UjianController extends Controller
         // Check offline peserta session (untuk akses hasil setelah submit)
         if ($request->session()->has('offline_peserta_id')) {
             $pesertaOfflineId = $request->session()->get('offline_peserta_id');
-            $pesertaOffline = \App\Models\PesertaOffline::find($pesertaOfflineId);
+            $pesertaOffline = PesertaOffline::find($pesertaOfflineId);
 
             if ($pesertaOffline && $pesertaOffline->ujianPeserta) {
                 return $pesertaOffline->ujianPeserta;

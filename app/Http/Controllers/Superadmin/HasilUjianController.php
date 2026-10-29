@@ -7,6 +7,10 @@ use App\Models\Ujian;
 use App\Models\UjianJawaban;
 use App\Models\UjianPeserta;
 use App\Services\Ujian\UjianScoringService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class HasilUjianController extends Controller
@@ -213,7 +217,7 @@ class HasilUjianController extends Controller
     /**
      * Force Finalize: untuk peserta yang stuck "sedang_ujian"
      */
-    public function forceFinalize(Ujian $ujian, UjianPeserta $peserta): \Illuminate\Http\RedirectResponse
+    public function forceFinalize(Ujian $ujian, UjianPeserta $peserta): RedirectResponse
     {
         abort_unless($peserta->ujian_id === $ujian->id, 404);
 
@@ -226,5 +230,150 @@ class HasilUjianController extends Controller
         $nama = $peserta->user?->name ?? $peserta->pesertaOffline?->nama_peserta ?? 'Peserta';
 
         return back()->with('success', "Ujian {$nama} berhasil difinalisasi.");
+    }
+
+    /**
+     * Manajemen Peserta: daftar peserta sedang ujian
+     */
+    public function management(Ujian $ujian): View
+    {
+        $pesertaSedangUjian = $this->getPesertaSedangUjian($ujian);
+
+        return view('superadmin.hasil-ujian.management', compact('ujian', 'pesertaSedangUjian'));
+    }
+
+    /**
+     * API: Get data peserta sedang ujian (untuk auto-refresh)
+     */
+    public function getManagementData(Ujian $ujian): JsonResponse
+    {
+        $pesertaSedangUjian = $this->getPesertaSedangUjian($ujian);
+
+        return response()->json([
+            'peserta' => $pesertaSedangUjian,
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+
+    private function getPesertaSedangUjian(Ujian $ujian): array
+    {
+        return $ujian->peserta()
+            ->where('status', 'sedang_ujian')
+            ->with('user', 'pesertaOffline', 'jawaban')
+            ->latest('waktu_mulai')
+            ->get()
+            ->map(function ($peserta) use ($ujian) {
+                $nama = $peserta->user?->name ?? $peserta->pesertaOffline?->nama_peserta ?? 'Peserta';
+                $nomorPeserta = $peserta->pesertaOffline?->nomor_peserta;
+
+                $sisaDetik = $this->calculateSisaDetik($peserta, $ujian);
+
+                $jumlahJawaban = $peserta->jawaban()
+                    ->whereNotNull('jawaban')
+                    ->count();
+                $totalSoal = $ujian->ujianSoals()->count();
+
+                return [
+                    'id' => $peserta->id,
+                    'nama' => $nama,
+                    'nomor_peserta' => $nomorPeserta,
+                    'is_paused' => $peserta->is_paused,
+                    'paused_at' => $peserta->paused_at,
+                    'sisa_detik_saat_pause' => $peserta->sisa_detik_saat_pause,
+                    'sisa_detik' => $sisaDetik,
+                    'waktu_mulai' => $peserta->waktu_mulai,
+                    'status' => $peserta->status,
+                    'jumlah_jawaban' => $jumlahJawaban,
+                    'total_soal' => $totalSoal,
+                ];
+            })
+            ->toArray();
+    }
+
+    private function calculateSisaDetik(UjianPeserta $peserta, Ujian $ujian): int
+    {
+        if ($peserta->is_paused) {
+            return $peserta->sisa_detik_saat_pause ?? 0;
+        }
+
+        $waktuMulai = $peserta->waktu_mulai;
+        $durasiUjian = $ujian->durasi_ujian ?? 0;
+        $batasWaktu = $ujian->batas_keterlambatan;
+
+        if (! $waktuMulai) {
+            return 0;
+        }
+
+        $waktuSekarang = now();
+        $elapsedSeconds = $waktuMulai->diffInSeconds($waktuSekarang);
+
+        $totalWaktuDetik = $durasiUjian * 60;
+        $sisaDetik = max(0, $totalWaktuDetik - $elapsedSeconds);
+
+        if ($batasWaktu && $batasWaktu->isPast()) {
+            $sisaDetik = 0;
+        }
+
+        return (int) $sisaDetik;
+    }
+
+    /**
+     * Toggle pause peserta
+     */
+    public function togglePause(Ujian $ujian, UjianPeserta $peserta, Request $request): RedirectResponse
+    {
+        abort_unless($peserta->ujian_id === $ujian->id, 404);
+
+        if ($peserta->status !== 'sedang_ujian') {
+            return back()->with('error', 'Hanya peserta yang sedang ujian yang bisa di-pause.');
+        }
+
+        $nama = $peserta->user?->name ?? $peserta->pesertaOffline?->nama_peserta ?? 'Peserta';
+
+        if ($peserta->is_paused) {
+            $peserta->update([
+                'is_paused' => false,
+                'paused_at' => null,
+            ]);
+
+            return back()->with('success', "{$nama} berhasil dilanjutkan ujiannya.");
+        } else {
+            $sisaDetik = (int) $request->input('sisa_detik', 0);
+            $peserta->update([
+                'is_paused' => true,
+                'paused_at' => now(),
+                'sisa_detik_saat_pause' => $sisaDetik,
+            ]);
+
+            $this->logoutPesertaSession($peserta);
+
+            return back()->with('success', "{$nama} berhasil dihentikan sementara. Peserta telah logout dan dapat login kembali. Sisa waktu: {$sisaDetik} detik.");
+        }
+    }
+
+    /**
+     * Force Stop: menyelesaikan ujian peserta secara permanen
+     */
+    public function forceStop(Ujian $ujian, UjianPeserta $peserta): RedirectResponse
+    {
+        abort_unless($peserta->ujian_id === $ujian->id, 404);
+
+        if ($peserta->status !== 'sedang_ujian') {
+            return back()->with('error', 'Hanya peserta yang sedang ujian yang bisa di-stop.');
+        }
+
+        $nama = $peserta->user?->name ?? $peserta->pesertaOffline?->nama_peserta ?? 'Peserta';
+
+        $this->scoring->finalize($peserta);
+        $this->logoutPesertaSession($peserta);
+
+        return back()->with('success', "{$nama} berhasil dihentikan. Ujian telah disimpan dan tidak dapat dilanjutkan.");
+    }
+
+    private function logoutPesertaSession(UjianPeserta $peserta): void
+    {
+        if ($peserta->pesertaOffline) {
+            Cache::forget("offline_session_{$peserta->pesertaOffline->id}");
+        }
     }
 }

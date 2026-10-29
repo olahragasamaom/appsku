@@ -150,16 +150,22 @@ class OfflinePortalController extends Controller
             abort(403, 'Anda belum diaktifkan oleh admin. Silakan hubungi pengawas untuk aktivasi.');
         }
 
-        $attempt = UjianPeserta::create([
-            'ujian_id' => $ujian->id,
-            'user_id' => null,
-            'status' => 'sedang_ujian',
-            'waktu_mulai' => now(),
-            'last_activity_at' => now(),
-            'batas_waktu' => now()->addMinutes($ujian->durasi_ujian ?? 90),
-        ]);
+        // Cek apakah ada attempt paused milik peserta ini
+        $attempt = $peserta->ujianPeserta;
 
-        $peserta->update(['ujian_peserta_id' => $attempt->id]);
+        if ($attempt && $attempt->is_paused) {
+            $attempt->update(['is_paused' => false]);
+        } elseif (! $attempt) {
+            $attempt = UjianPeserta::create([
+                'ujian_id' => $ujian->id,
+                'user_id' => null,
+                'status' => 'sedang_ujian',
+                'waktu_mulai' => now(),
+                'last_activity_at' => now(),
+                'batas_waktu' => now()->addMinutes($ujian->durasi_ujian ?? 90),
+            ]);
+            $peserta->update(['ujian_peserta_id' => $attempt->id]);
+        }
 
         // Update session status: peserta sekarang sedang ujian
         OfflineParticipantSession::where('session_token', $sessionToken)
