@@ -68,8 +68,12 @@
                                 <p class="text-xs text-secondary-500">{{ $ujian->tanggal_ujian->format('d M Y H:i') }}</p>
                             @endif
                         </td>
-                        <td class="px-6 py-4 text-sm text-secondary-600">
-                            {{ $ujian->tipe_ujian === 'offline_kelas' ? 'Offline di Kelas' : 'Online Paket' }}
+                        <td class="px-6 py-4">
+                            @if($ujian->tipe_ujian === 'offline_kelas')
+                                <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-blue-100 text-blue-700">Offline di Kelas</span>
+                            @else
+                                <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-success-100 text-success-700">Online Paket</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex flex-wrap gap-1">
