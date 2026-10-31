@@ -1,6 +1,7 @@
 @php
     $ujian = $ujian ?? null;
     $selectedJenisList = $selectedJenis ?? old('jenis_ujian_id', []);
+    $selectedJenisListStr = array_map('strval', $selectedJenisList);
     $firstSelectedJenis = !empty($selectedJenisList) ? (int) (is_array($selectedJenisList) ? reset($selectedJenisList) : $selectedJenisList) : '';
     $passingGrades = $passingGrades ?? collect(old('passing_grade', []));
     $firstPassingGrade = $firstSelectedJenis ? ($passingGrades[$firstSelectedJenis] ?? '') : '';
@@ -8,15 +9,18 @@
 @endphp
 
 <div x-data="{
-        tipe: '{{ old('tipe_ujian', $ujian->tipe_ujian ?? 'offline_kelas') }}',
-        selectedJenis: '{{ $firstSelectedJenis }}',
+        tipe: '{{ old('tipe_ujian', $ujian?->tipe_ujian ?? 'offline_kelas') }}',
+        selectedJenis: {{ Js::from($selectedJenisListStr) }},
+        selectedJenisSingle: {{ $firstSelectedJenis ? $firstSelectedJenis : 'null' }},
         jenisUjiansData: {{ Js::from($jenisUjians) }},
         get activeJenis() {
-            if (!this.selectedJenis) return null;
-            return this.jenisUjiansData.find(j => j.id == this.selectedJenis);
+            if (!this.selectedJenis || !this.selectedJenis.length) return null;
+            return this.jenisUjiansData.find(j => j.id == this.selectedJenis[0]);
         }
      }"
-     class="space-y-6">
+      x-init="$watch('tipe', (v) => $nextTick(() => {})); console.log('selectedJenis on init:', selectedJenis)"
+      @change="console.log('selectedJenis after change:', selectedJenis)"
+      class="space-y-6">
 
     {{-- Parameter Utama --}}
     <div class="card">
@@ -39,7 +43,7 @@
                 <label class="block text-sm font-medium text-secondary-700 mb-1">
                     Tipe Ujian <span class="text-danger-500">*</span>
                 </label>
-                <select name="tipe_ujian" x-model="tipe" class="input w-full">
+                <select name="tipe_ujian" x-model="tipe" @change="tipe = $event.target.value" class="input w-full">
                     <option value="offline_kelas">Offline di Kelas</option>
                     <option value="online_paket">Online Paket</option>
                 </select>
@@ -93,18 +97,21 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-secondary-700 mb-1">Pilih Jenis Ujian <span class="text-danger-500">*</span></label>
-                    <select name="jenis_ujian_id[]" x-model="selectedJenis" class="input w-full" required>
+                    <select name="jenis_ujian_id[]" 
+                            x-model.number="selectedJenisSingle"
+                            @change="selectedJenis = selectedJenisSingle ? [selectedJenisSingle] : []"
+                            class="input w-full" required>
                         <option value="">-- Pilih Jenis Ujian --</option>
                         <template x-for="jenis in jenisUjiansData" :key="jenis.id">
-                            <option :value="jenis.id" x-text="jenis.nama_jenis_ujian" :selected="selectedJenis == jenis.id"></option>
+                            <option :value="jenis.id" x-text="jenis.nama_jenis_ujian"></option>
                         </template>
                     </select>
                 </div>
-                <div x-show="selectedJenis" x-cloak>
+                <div x-show="selectedJenis && selectedJenis.length" x-cloak>
                     <label class="block text-sm font-medium text-secondary-700 mb-1">Passing Grade (Opsional)</label>
                     <input type="number" step="0.01" min="0" 
-                           :name="`passing_grade[${selectedJenis}]`"
-                           value="{{ $firstPassingGrade }}"
+                           :name="`passing_grade[${selectedJenis[0]}]`"
+                           :value="activeJenis ? ({{ Js::from($passingGrades) }}[activeJenis.id] || '') : ''"
                            class="input w-full" 
                            placeholder="Contoh: 300">
                 </div>
@@ -174,4 +181,11 @@
         <a href="{{ route('superadmin.ujian.index') }}" class="btn btn-secondary">Batal</a>
         <button type="submit" class="btn btn-primary">{{ $submitLabel ?? 'Simpan' }}</button>
     </div>
+    
+    @if (config('app.debug'))
+        <div class="mt-4 p-4 bg-blue-50 rounded-lg text-sm font-mono">
+            <div>selectedJenis: <span x-text="JSON.stringify(selectedJenis)"></span></div>
+            <div>activeJenis: <span x-text="JSON.stringify(activeJenis)"></span></div>
+        </div>
+    @endif
 </div>
