@@ -17,7 +17,7 @@ class UjianRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'nama_ujian' => ['required', 'string', 'max:255'],
             'tipe_ujian' => ['required', Rule::in(['offline_kelas', 'online_paket'])],
             'jumlah_soal' => ['required', 'integer', 'min:0', 'max:65535'],
@@ -32,12 +32,18 @@ class UjianRequest extends FormRequest
 
             'tanggal_ujian' => ['nullable', 'required_if:tipe_ujian,offline_kelas', 'date'],
             'durasi_ujian' => ['nullable', 'required_if:tipe_ujian,offline_kelas', 'integer', 'min:1'],
-            'batas_keterlambatan' => ['nullable', 'required_if:tipe_ujian,offline_kelas', 'date', 'after_or_equal:tanggal_ujian'],
+            'batas_keterlambatan' => ['nullable'],
             'token_ujian' => ['nullable', 'string', 'max:50'],
 
             'akses_member' => ['nullable', 'required_if:tipe_ujian,online_paket', 'array'],
             'akses_member.*' => ['string', 'max:50'],
         ];
+
+        if ($this->input('tipe_ujian') === 'offline_kelas') {
+            $rules['batas_keterlambatan'] = ['nullable', 'date', 'after_or_equal:tanggal_ujian'];
+        }
+
+        return $rules;
     }
 
     /**
