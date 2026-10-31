@@ -32,7 +32,7 @@ class UjianRequest extends FormRequest
 
             'tanggal_ujian' => ['nullable', 'required_if:tipe_ujian,offline_kelas', 'date'],
             'durasi_ujian' => ['nullable', 'required_if:tipe_ujian,offline_kelas', 'integer', 'min:1'],
-            'batas_keterlambatan' => ['nullable', 'date', 'after_or_equal:tanggal_ujian'],
+            'batas_keterlambatan' => ['nullable', 'required_if:tipe_ujian,offline_kelas', 'date', 'after_or_equal:tanggal_ujian'],
             'token_ujian' => ['nullable', 'string', 'max:50'],
 
             'akses_member' => ['nullable', 'required_if:tipe_ujian,online_paket', 'array'],
