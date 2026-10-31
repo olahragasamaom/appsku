@@ -5,8 +5,29 @@
     $firstSelectedJenis = !empty($selectedJenisList) ? (int) (is_array($selectedJenisList) ? reset($selectedJenisList) : $selectedJenisList) : '';
     $passingGrades = $passingGrades ?? collect(old('passing_grade', []));
     $firstPassingGrade = $firstSelectedJenis ? ($passingGrades[$firstSelectedJenis] ?? '') : '';
-    $selectedAkses = old('akses_member', $ujian?->akses_member ?? []);
+    
+    $dbAkses = $ujian?->akses_member ?? [];
+    $dbAkses = is_array($dbAkses) ? $dbAkses : (is_string($dbAkses) ? json_decode($dbAkses, true) : []);
+    $selectedAkses = old('akses_member', $dbAkses);
 @endphp
+
+@if ($errors->any())
+    <div class="mb-6 p-4 bg-danger-50 border border-danger-200 rounded-lg">
+        <div class="flex gap-3">
+            <svg class="w-5 h-5 text-danger-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div>
+                <h3 class="font-semibold text-danger-900 mb-2">Form Error:</h3>
+                <ul class="text-sm text-danger-800 space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>• {{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    </div>
+@endif
 
 <div x-data="{
         tipe: '{{ old('tipe_ujian', $ujian?->tipe_ujian ?? 'offline_kelas') }}',
