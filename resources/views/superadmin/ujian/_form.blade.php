@@ -98,8 +98,9 @@
                     <label class="block text-sm font-medium text-secondary-700 mb-1">Pilih Jenis Ujian <span class="text-danger-500">*</span></label>
                     <select name="jenis_ujian_id[]" 
                             x-model.number="selectedJenisSingle"
+                            :value="selectedJenisSingle"
                             @change="selectedJenis = selectedJenisSingle ? [selectedJenisSingle] : []"
-                            class="input w-full" required>
+                            class="input w-full @error('jenis_ujian_id') border-danger-500 @enderror" required>
                         <option value="">-- Pilih Jenis Ujian --</option>
                         @foreach($jenisUjians as $jenis)
                             <option value="{{ $jenis['id'] }}" @selected($firstSelectedJenis == $jenis['id'])>

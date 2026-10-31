@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\JenisUjian;
+use App\Models\Soal;
+use App\Models\SubIndikator;
 use App\Models\SubJenisUjian;
 use App\Models\Ujian;
 use App\Models\User;
@@ -161,6 +163,23 @@ describe('Ujian Create', function () {
     });
 });
 
+describe('Ujian Edit Form', function () {
+    it('displays edit form with selected jenis ujian', function () {
+        $skd = JenisUjian::factory()->create(['nama_jenis_ujian' => 'SKD']);
+        $skb = JenisUjian::factory()->create(['nama_jenis_ujian' => 'SKB']);
+
+        $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id]);
+        $ujian->jenisUjians()->sync([$skd->id => ['passing_grade' => 300]]);
+
+        $response = $this->get("/superadmin/ujian/{$ujian->id}/edit");
+
+        $response->assertSuccessful();
+        $response->assertViewIs('superadmin.ujian.edit');
+        $this->assertStringContainsString('value="'.$skd->id.'"', $response->getContent());
+        $response->assertSee('SKD');
+    });
+});
+
 describe('Ujian Update', function () {
     it('can update an ujian and resync jenis ujian', function () {
         $skd = JenisUjian::factory()->create(['nama_jenis_ujian' => 'SKD']);
@@ -218,9 +237,9 @@ describe('Ujian Activate', function () {
         $ujian = Ujian::factory()->create(['dibuat_oleh' => $this->superadmin->id, 'jumlah_soal' => 1, 'tipe_ujian' => 'offline_kelas', 'token_ujian' => null]);
         $ujian->jenisUjians()->attach($skd->id);
 
-        $subJenis = \App\Models\SubJenisUjian::factory()->create(['jenis_ujian_id' => $skd->id]);
-        $subIndikator = \App\Models\SubIndikator::factory()->create(['sub_jenis_ujian_id' => $subJenis->id, 'jenis_ujian_id' => $skd->id]);
-        $soal = \App\Models\Soal::factory()->create(['sub_indikator_id' => $subIndikator->id]);
+        $subJenis = SubJenisUjian::factory()->create(['jenis_ujian_id' => $skd->id]);
+        $subIndikator = SubIndikator::factory()->create(['sub_jenis_ujian_id' => $subJenis->id, 'jenis_ujian_id' => $skd->id]);
+        $soal = Soal::factory()->create(['sub_indikator_id' => $subIndikator->id]);
 
         $ujian->ujianSoals()->create(['soal_id' => $soal->id, 'jenis_ujian_id' => $skd->id, 'urutan' => 1]);
 

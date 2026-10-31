@@ -135,6 +135,39 @@
             previewModal.style.display = 'none';
         }
     };
+
+    window.showHtmlSourceModal = function(editorId) {
+        const editor = window._ckeditorInstances && window._ckeditorInstances[editorId];
+        if (!editor) {
+            alert('Editor tidak ditemukan');
+            return;
+        }
+
+        const htmlContent = editor.getData();
+        const htmlSourceModal = document.getElementById('html_source_modal_' + editorId);
+        const htmlSourceCode = document.getElementById('html_source_code_' + editorId);
+        
+        if (htmlSourceModal && htmlSourceCode) {
+            htmlSourceCode.value = htmlContent;
+            htmlSourceModal.style.display = 'flex';
+        }
+    };
+
+    window.closeHtmlSourceModal = function(editorId) {
+        const htmlSourceModal = document.getElementById('html_source_modal_' + editorId);
+        if (htmlSourceModal) {
+            htmlSourceModal.style.display = 'none';
+        }
+    };
+
+    window.copyHtmlSourceToClipboard = function(editorId) {
+        const htmlSourceCode = document.getElementById('html_source_code_' + editorId);
+        if (htmlSourceCode) {
+            htmlSourceCode.select();
+            document.execCommand('copy');
+            alert('HTML source berhasil disalin ke clipboard');
+        }
+    };
 </script>
 <style>
     figure.image { max-width: 100%; margin: 1rem auto; text-align: center; }
@@ -275,6 +308,70 @@
     .preview-content p {
         margin: 1rem 0;
     }
+
+    .html-source-modal {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        padding: 1rem;
+    }
+
+    .html-source-modal-content {
+        background-color: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        max-width: 70rem;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .html-source-modal-header {
+        position: sticky;
+        top: 0;
+        background-color: white;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .html-source-modal-body {
+        padding: 1.5rem;
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .html-source-textarea {
+        width: 100%;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        padding: 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        background-color: #f9fafb;
+        color: #1f2937;
+        resize: vertical;
+        min-height: 300px;
+    }
+
+    .html-source-modal-footer {
+        position: sticky;
+        bottom: 0;
+        background-color: #f9fafb;
+        border-top: 1px solid #e5e7eb;
+        padding: 1rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
 </style>
 @endpushonce
 
@@ -315,6 +412,33 @@
         </div>
         <div class="preview-modal-body">
             <div id="preview_content_{{ $editorId }}" class="preview-content"></div>
+        </div>
+    </div>
+</div>
+
+{{-- HTML Source Modal --}}
+<div id="html_source_modal_{{ $editorId }}" class="html-source-modal" onclick="if(event.target.id === this.id) window.closeHtmlSourceModal('{{ $editorId }}')">
+    <div class="html-source-modal-content">
+        <div class="html-source-modal-header">
+            <h3 class="font-semibold text-secondary-900">📄 HTML Source Code</h3>
+            <button type="button" onclick="window.closeHtmlSourceModal('{{ $editorId }}')" class="text-secondary-500 hover:text-secondary-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="html-source-modal-body">
+            <textarea id="html_source_code_{{ $editorId }}" class="html-source-textarea" readonly></textarea>
+        </div>
+
+        <div class="html-source-modal-footer">
+            <button type="button" onclick="window.copyHtmlSourceToClipboard('{{ $editorId }}')" class="btn btn-secondary">
+                📋 Salin ke Clipboard
+            </button>
+            <button type="button" onclick="window.closeHtmlSourceModal('{{ $editorId }}')" class="btn btn-secondary">
+                Tutup
+            </button>
         </div>
     </div>
 </div>
@@ -432,6 +556,23 @@
                     window.showPreviewModal('{{ $editorId }}');
                 };
                 toolbarElement.appendChild(btnPreview);
+            }
+
+            // Add HTML Source button
+            if (toolbarElement && !document.getElementById('btn_html_source_' + editorId)) {
+                const btnHtmlSource = document.createElement('button');
+                btnHtmlSource.id = 'btn_html_source_' + editorId;
+                btnHtmlSource.type = 'button';
+                btnHtmlSource.innerHTML = '&lt;/&gt; HTML';
+                btnHtmlSource.className = 'ck-button';
+                btnHtmlSource.style.cssText = 'padding: 8px 12px; margin: 0 4px; border: 1px solid #c4c4c4; background: #f5f5f5; border-radius: 2px; cursor: pointer; font-weight: 600; color: #333;';
+                btnHtmlSource.onmouseover = function() { this.style.background = '#e8e8e8'; };
+                btnHtmlSource.onmouseout = function() { this.style.background = '#f5f5f5'; };
+                btnHtmlSource.onclick = function(e) {
+                    e.preventDefault();
+                    window.showHtmlSourceModal('{{ $editorId }}');
+                };
+                toolbarElement.appendChild(btnHtmlSource);
             }
         }
     }, 500);
