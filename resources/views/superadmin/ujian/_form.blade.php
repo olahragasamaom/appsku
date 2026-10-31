@@ -18,8 +18,7 @@
             return this.jenisUjiansData.find(j => j.id == this.selectedJenis[0]);
         }
      }"
-      x-init="$watch('tipe', (v) => $nextTick(() => {})); console.log('selectedJenis on init:', selectedJenis)"
-      @change="console.log('selectedJenis after change:', selectedJenis)"
+      x-init="$watch('tipe', (v) => $nextTick(() => {}))"
       class="space-y-6">
 
     {{-- Parameter Utama --}}
@@ -43,7 +42,7 @@
                 <label class="block text-sm font-medium text-secondary-700 mb-1">
                     Tipe Ujian <span class="text-danger-500">*</span>
                 </label>
-                <select name="tipe_ujian" x-model="tipe" @change="tipe = $event.target.value" class="input w-full">
+                <select name="tipe_ujian" x-model="tipe" class="input w-full">
                     <option value="offline_kelas">Offline di Kelas</option>
                     <option value="online_paket">Online Paket</option>
                 </select>
@@ -102,9 +101,11 @@
                             @change="selectedJenis = selectedJenisSingle ? [selectedJenisSingle] : []"
                             class="input w-full" required>
                         <option value="">-- Pilih Jenis Ujian --</option>
-                        <template x-for="jenis in jenisUjiansData" :key="jenis.id">
-                            <option :value="jenis.id" x-text="jenis.nama_jenis_ujian"></option>
-                        </template>
+                        @foreach($jenisUjians as $jenis)
+                            <option value="{{ $jenis['id'] }}" @selected($firstSelectedJenis == $jenis['id'])>
+                                {{ $jenis['nama_jenis_ujian'] }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
                 <div x-show="selectedJenis && selectedJenis.length" x-cloak>
@@ -181,11 +182,4 @@
         <a href="{{ route('superadmin.ujian.index') }}" class="btn btn-secondary">Batal</a>
         <button type="submit" class="btn btn-primary">{{ $submitLabel ?? 'Simpan' }}</button>
     </div>
-    
-    @if (config('app.debug'))
-        <div class="mt-4 p-4 bg-blue-50 rounded-lg text-sm font-mono">
-            <div>selectedJenis: <span x-text="JSON.stringify(selectedJenis)"></span></div>
-            <div>activeJenis: <span x-text="JSON.stringify(activeJenis)"></span></div>
-        </div>
-    @endif
 </div>
