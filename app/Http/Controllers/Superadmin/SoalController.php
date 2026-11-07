@@ -92,6 +92,7 @@ class SoalController extends Controller
     {
         $jenisUjians = JenisUjian::orderBy('nama_jenis_ujian')->get();
         $subIndikator = null;
+        $ujian = null;
 
         // Jika datang dari halaman lain dengan membawa sub_indikator_id di URL,
         // muat sub indikator beserta relasi ke atasnya (sub jenis & jenis ujian)
@@ -101,11 +102,16 @@ class SoalController extends Controller
                 ->find($request->sub_indikator_id);
         }
 
+        // Jika ada ujian_id, load ujian untuk breadcrumb
+        if ($request->filled('ujian_id')) {
+            $ujian = Ujian::find($request->ujian_id);
+        }
+
         // $locked = kategori dikunci (tidak bisa diubah) ketika sub indikator
         // sudah ditentukan dari luar (mis. tombol "Tambah Soal" per sub indikator).
         $locked = $subIndikator !== null;
 
-        return view('superadmin.soal.create', compact('jenisUjians', 'subIndikator', 'locked'));
+        return view('superadmin.soal.create', compact('jenisUjians', 'subIndikator', 'locked', 'ujian'));
     }
 
     /**
@@ -131,8 +137,8 @@ class SoalController extends Controller
 
         $soal = Soal::create($data);
 
-        // Jika dikirim dari halaman Kelola Soal Ujian, langsung attach ke ujian
-        // dan redirect kembali ke halaman ujian tersebut.
+        // Jika dikirim dari halaman Kelola Soal Ujian, attach ke ujian
+        // dan redirect kembali ke form create (same page) dengan success message
         if ($request->filled('ujian_id')) {
             $ujian = Ujian::find($request->ujian_id);
             if ($ujian) {
@@ -142,7 +148,10 @@ class SoalController extends Controller
                     app(ExamAssemblyService::class)->addQuestions($ujian, $jenisUjianId, [$soal->id]);
 
                     return redirect()
-                        ->route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $jenisUjianId])
+                        ->route('superadmin.soal.create', [
+                            'sub_indikator_id' => $request->sub_indikator_id,
+                            'ujian_id' => $ujian->id,
+                        ])
                         ->with('success', 'Soal berhasil dibuat dan ditambahkan ke ujian.');
                 }
             }

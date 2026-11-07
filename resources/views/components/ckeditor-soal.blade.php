@@ -1,4 +1,4 @@
-@props(['name', 'value' => '', 'required' => false, 'placeholder' => '', 'rows' => 6, 'error' => false])
+@props(['name', 'value' => '', 'required' => false, 'placeholder' => '', 'rows' => 6, 'error' => false, 'tabindex' => null])
 
 {{-- CKEditor 5 (GPL, self-hosted via Vite) dengan Formula Modal di Toolbar --}}
 @pushonce('scripts')
@@ -395,6 +395,7 @@
          data-placeholder="{{ $placeholder ?: 'Tulis teks soal di sini...' }}"
          data-upload-url="{{ route('superadmin.soal.upload-editor') }}"
          data-initial-value="{{ e($cleanValue) }}"
+         {{ $tabindex ? "tabindex=\"$tabindex\"" : '' }}
          style="min-height: {{ max(6, (int) $rows) * 1.5 }}rem;"></div>
     <input type="hidden" name="{{ $name }}" data-editor-id="{{ $editorId }}" value="{{ e($cleanValue) }}" {{ $required ? 'required' : '' }}>
 </div>

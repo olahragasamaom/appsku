@@ -183,5 +183,30 @@ window.createSoalEditor = async function (el, options) {
     editor.model.document.on('change:data', () => onChange(editor.getData()));
     onChange(editor.getData());
 
+    // Tab navigation: press Tab → focus next editor
+    editor.editing.view.document.on('keydown', (evt, data) => {
+        if (data.keyCode === 9 && !data.shiftKey) { // Tab, no Shift
+            const allEditorDivs = Array.from(document.querySelectorAll('[data-ckeditor-soal]'));
+            const currentDiv = allEditorDivs.find(div => {
+                const divEditor = window._ckeditorInstances?.[div.getAttribute('data-ckeditor-soal')];
+                return divEditor === editor;
+            });
+            
+            if (currentDiv) {
+                const idx = allEditorDivs.indexOf(currentDiv);
+                if (idx !== -1 && idx < allEditorDivs.length - 1) {
+                    evt.stop();
+                    data.preventDefault();
+                    const nextDiv = allEditorDivs[idx + 1];
+                    const nextEditorId = nextDiv.getAttribute('data-ckeditor-soal');
+                    const nextEditor = window._ckeditorInstances?.[nextEditorId];
+                    if (nextEditor) {
+                        setTimeout(() => nextEditor.editing.view.focus(), 0);
+                    }
+                }
+            }
+        }
+    });
+
     return editor;
 };

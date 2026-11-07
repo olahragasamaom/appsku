@@ -73,11 +73,11 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                                 @foreach($subJenis->subIndikator as $indikator)
                                     @php $jumlahDiSubIndikator = $jumlahSoalPerSubIndikator[$indikator->id] ?? 0; @endphp
-                                    <div class="border border-secondary-200 rounded-lg py-2.5 px-4 bg-white flex items-center justify-between gap-3 shadow-sm hover:border-primary-300 transition-colors group">
-                                        <p class="text-sm font-medium text-secondary-800 flex-1 truncate" title="{{ $indikator->nama_sub_indikator }}">{{ $indikator->nama_sub_indikator }}</p>
+                                    <div class="border rounded-lg py-2.5 px-4 flex items-center justify-between gap-3 shadow-sm transition-colors group {{ $jumlahDiSubIndikator === 0 ? 'border-danger-200 bg-danger-50 hover:border-danger-300' : 'border-secondary-200 bg-white hover:border-primary-300' }}">
+                                        <p class="text-sm font-medium flex-1 truncate {{ $jumlahDiSubIndikator === 0 ? 'text-danger-700' : 'text-secondary-800' }}" title="{{ $indikator->nama_sub_indikator }}">{{ $indikator->nama_sub_indikator }}</p>
                                         
                                         <div class="flex items-center gap-1 flex-shrink-0">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-50 text-primary-700 mr-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mr-2 {{ $jumlahDiSubIndikator === 0 ? 'bg-danger-100 text-danger-700' : 'bg-primary-50 text-primary-700' }}">
                                                 {{ $jumlahDiSubIndikator }} soal
                                             </span>
                                             

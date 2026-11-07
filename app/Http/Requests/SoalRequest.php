@@ -55,7 +55,6 @@ class SoalRequest extends FormRequest
             'gambar_opsi_e' => ['nullable', 'image', 'max:2048'],
             'pembahasan' => ['nullable', 'string'],
             'gambar_pembahasan' => ['nullable', 'image', 'max:2048'],
-            'tipe_tampil' => ['nullable', 'in:vertical,horizontal'],
         ];
 
         // ATURAN KONDISIONAL berdasarkan sistem penilaian:
@@ -98,7 +97,6 @@ class SoalRequest extends FormRequest
             'nilai_bobot_c.required' => 'Nilai bobot C wajib diisi.',
             'nilai_bobot_d.required' => 'Nilai bobot D wajib diisi.',
             'nilai_bobot_e.required' => 'Nilai bobot E wajib diisi.',
-            'tipe_tampil.in' => 'Tipe tampil harus vertical atau horizontal.',
         ];
     }
 

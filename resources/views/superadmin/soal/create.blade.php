@@ -3,8 +3,13 @@
 @section('title', 'Tambah Soal')
 
 @section('breadcrumb')
-    <a href="{{ route('superadmin.soal.index') }}" class="text-secondary-500 hover:text-secondary-700">Bank Soal</a>
-    <span class="mx-2 text-secondary-400">/</span>
+    @if($ujian)
+        <a href="{{ route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => request('jenis_ujian_id')]) }}" class="text-secondary-500 hover:text-secondary-700">{{ $ujian->nama_ujian }}</a>
+        <span class="mx-2 text-secondary-400">/</span>
+    @else
+        <a href="{{ route('superadmin.soal.index') }}" class="text-secondary-500 hover:text-secondary-700">Bank Soal</a>
+        <span class="mx-2 text-secondary-400">/</span>
+    @endif
     <span class="text-secondary-900 font-medium">Tambah Soal</span>
 @endsection
 
