@@ -40,6 +40,7 @@ class Ujian extends Model
         'status',             // 'draft', 'aktif', 'selesai'
         'finalized_at',       // waktu finalisasi susunan soal; null = belum final
         'dibuat_oleh',
+        'user_updated_by',
     ];
 
     /**
@@ -60,6 +61,7 @@ class Ujian extends Model
             'akses_member' => 'array',
             'finalized_at' => 'datetime',
             'dibuat_oleh' => 'integer',
+            'user_updated_by' => 'integer',
         ];
     }
 
@@ -77,6 +79,11 @@ class Ujian extends Model
     public function pembuat(): BelongsTo
     {
         return $this->belongsTo(User::class, 'dibuat_oleh');
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_updated_by');
     }
 
     /**

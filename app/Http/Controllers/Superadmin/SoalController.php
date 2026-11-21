@@ -41,18 +41,19 @@ use Maatwebsite\Excel\Facades\Excel;
 class SoalController extends Controller
 {
     /**
-     * READ: daftar soal dengan FILTER berjenjang + PENCARIAN.
+     * METHOD: index()
+     * ===============
+     * URL Contoh: GET /superadmin/soal
+     * 
+     * Keterangan:
+     * Menampilkan DAFTAR SOAL dengan sistem FILTER BERJENJANG + PENCARIAN.
+     * Filter prioritas: sub_indikator_id > sub_jenis_ujian_id > jenis_ujian_id
+     * Paginasi 15 soal per halaman. Pencarian via kolom "soal".
      *
-     * $query dibangun bertahap (query builder), belum dieksekusi sampai ->paginate().
-     *
-     * Filter memakai pola if/elseif dari yang paling spesifik ke paling umum:
-     *   - sub_indikator_id  -> filter langsung di kolom soal.
-     *   - sub_jenis_ujian_id -> whereHas('subIndikator', ...) artinya "ambil soal
-     *     yang RELASI subIndikator-nya memenuhi syarat". whereHas = filter lewat relasi.
-     *   - jenis_ujian_id -> whereHas menembus dua relasi ('subIndikator.subJenisUjian').
-     *
-     * ->latest() = urutkan dari terbaru. ->withQueryString() = pertahankan
-     * parameter filter/pencarian saat pindah halaman pagination.
+     * Form: Tidak ada, hanya paramater GET (search, sub_indikator_id, sub_jenis_ujian_id, jenis_ujian_id)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd($soals->toArray()); // Lihat struktur data soal yang dikirim ke view
      */
     public function index(Request $request): View
     {
@@ -81,12 +82,20 @@ class SoalController extends Controller
     }
 
     /**
-     * CREATE (tahap 1 - TAMPILKAN FORM kosong).
-     * Berbeda dari modul modal: soal punya halaman form sendiri.
+     * METHOD: create()
+     * ===============
+     * URL Contoh: GET /superadmin/soal/create
+     * 
+     * Keterangan:
+     * Menampilkan FORM KOSONG untuk membuat soal baru.
+     * Form terpisah halaman (BUKAN modal). Jika datang dari "Kelola Soal per Ujian",
+     * parameter URL akan membawa sub_indikator_id & ujian_id untuk prefill dropdown.
      *
-     * $jenisUjians untuk mengisi dropdown pertama. Jika URL membawa
-     * sub_indikator_id (mis. datang dari halaman lain), kita muat sekalian
-     * agar form bisa langsung terisi konteksnya.
+     * Form: resources/views/superadmin/soal/create.blade.php
+     *       (Metode POST ke route: superadmin.soal.store)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd(['jenisUjians' => $jenisUjians, 'subIndikator' => $subIndikator, 'locked' => $locked]);
      */
     public function create(Request $request): View
     {
@@ -115,19 +124,31 @@ class SoalController extends Controller
     }
 
     /**
-     * CREATE (tahap 2 - SIMPAN data + gambar).
-     *
-     * 1. $request->validated() -> data yang lolos validasi kondisional (SoalRequest).
-     * 2. Tambahkan pembuat_soal_id = id user yang sedang login ($request->user()).
-     * 3. Loop tiap field gambar (lihat imageFields()); jika ada file yang diunggah,
-     *    simpan ke folder storage 'panritta/soal' di disk 'public', lalu simpan
-     *    PATH-nya ke database (bukan file-nya). ->store() mengembalikan path itu.
-     * 4. Soal::create($data) -> INSERT ke database.
+     * METHOD: store()
+     * ===============
+     * URL Contoh: POST /superadmin/soal
+     * 
+     * Keterangan:
+     * Menyimpan SOAL BARU ke database beserta semua gambar (gambar_soal, gambar_opsi_*, gambar_pembahasan).
+     * Validasi dilakukan via SoalRequest (custom form request).
+     * File gambar disimpan ke storage disk 'uploads' folder 'panritta/soal', path disimpan ke DB.
+     * 
+     * Form: resources/views/superadmin/soal/create.blade.php (POST method)
+     *       Input: soal, opsi_a-e, sub_indikator_id, sub_jenis_ujian_id, gambar_soal, gambar_opsi_*, dll
+     * 
+     * Jika request dari Kelola Soal Ujian (ujian_id ada):
+     * - Soal otomatis di-attach ke ujian via ExamAssemblyService
+     * - Redirect kembali ke form create dengan ujian_id (bisa tambah soal lagi)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('Store soal:', ['data' => $data, 'user' => $request->user()->id]);
+     * // dd($soal);
      */
     public function store(SoalRequest $request): RedirectResponse
     {
         $data = $request->validated();
         $data['pembuat_soal_id'] = $request->user()->id;
+        $data['user_updated_by'] = $request->user()->id;
 
         foreach ($this->imageFields() as $field) {
             if ($request->hasFile($field)) {
@@ -162,9 +183,19 @@ class SoalController extends Controller
     }
 
     /**
-     * UPDATE (tahap 1 - TAMPILKAN FORM terisi).
-     * ->load(...) melakukan eager loading pada model yang SUDAH ada (hasil
-     * route model binding), agar view bisa menampilkan konteks lengkapnya.
+     * METHOD: edit()
+     * ==============
+     * URL Contoh: GET /superadmin/soal/{soal}/edit (misal: /superadmin/soal/169/edit)
+     * 
+     * Keterangan:
+     * Menampilkan FORM TERISI untuk mengedit soal yang sudah ada.
+     * Parameter {soal} diambil otomatis via Route Model Binding.
+     * 
+     * Form: resources/views/superadmin/soal/edit.blade.php (PUT method)
+     *       Input: sama seperti create, hanya pre-filled dengan data existing
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd(['soal' => $soal->toArray(), 'subIndikator' => $soal->subIndikator]);
      */
     public function edit(Soal $soal): View
     {
@@ -175,20 +206,31 @@ class SoalController extends Controller
     }
 
     /**
-     * UPDATE (tahap 2 - SIMPAN perubahan).
-     *
-     * Perbedaan penting dari store():
-     *   a) Saat mengganti gambar: HAPUS DULU file lama dari storage
-     *      (Storage::delete) agar tidak menumpuk sampah, baru simpan yang baru.
-     *   b) PEMBERSIHAN kolom sesuai sistem penilaian: kita cek ulang
-     *      SubJenisUjian (resolveSubJenisUjian). Jika "benar_salah", kosongkan
-     *      semua nilai_bobot per opsi; jika sebaliknya, kosongkan kunci_jawaban
-     *      & nilai_bobot_benar. Ini menjaga data tetap konsisten bila user
-     *      mengganti tipe penilaian saat mengedit.
+     * METHOD: update()
+     * ================
+     * URL Contoh: PUT /superadmin/soal/{soal} (misal: /superadmin/soal/169)
+     * 
+     * Keterangan:
+     * Menyimpan PERUBAHAN SOAL yang sudah ada.
+     * 
+     * Fitur khusus:
+     * 1. Jika ada gambar baru: hapus gambar lama DULU, baru simpan yang baru (via Storage::delete)
+     * 2. Jika ada checkbox "hapus_gambar_soal" dll: delete file tersebut dari storage
+     * 3. Pembersihan kolom otomatis sesuai sistem penilaian:
+     *    - Benar-Salah: kosongkan nilai_bobot_a-e
+     *    - Tiap Jawaban Ada Poin: kosongkan kunci_jawaban & nilai_bobot_benar
+     * 
+     * Form: resources/views/superadmin/soal/edit.blade.php (PUT method)
+     * 
+     * Jika dari Kelola Soal Ujian: redirect kembali ke halaman Kelola Soal dengan jenis_ujian_id
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('Update soal ID '.$soal->id, ['data' => $data]);
      */
     public function update(SoalRequest $request, Soal $soal): RedirectResponse
     {
         $data = $request->validated();
+        $data['user_updated_by'] = $request->user()->id;
 
         foreach ($this->imageFields() as $field) {
             if ($request->hasFile($field)) {
@@ -234,8 +276,18 @@ class SoalController extends Controller
     }
 
     /**
-     * DELETE: hapus soal SEKALIGUS file gambar terkait dari storage,
-     * supaya tidak ada file yatim (orphan) yang tersisa.
+     * METHOD: destroy()
+     * =================
+     * URL Contoh: DELETE /superadmin/soal/{soal} (misal: /superadmin/soal/169)
+     * 
+     * Keterangan:
+     * Menghapus SOAL beserta SEMUA file gambar terkaitnya dari storage.
+     * Mencegah file yatim (orphan files) tersisa di folder uploads.
+     * 
+     * Form: Tombol delete di halaman index (via form dengan method DELETE)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('Delete soal ID '.$soal->id, ['fields' => $this->imageFields()]);
      */
     public function destroy(Soal $soal): RedirectResponse
     {
@@ -252,8 +304,21 @@ class SoalController extends Controller
     }
 
     /**
-     * PREVIEW: Mensimulasikan tampilan soal persis seperti di halaman ujian peserta.
-     * Jika soal ada dalam ujian, tampilkan dengan urutan nomor & navigasi lengkap.
+     * METHOD: preview()
+     * =================
+     * URL Contoh: GET /superadmin/soal/{soal}/preview (misal: /superadmin/soal/169/preview)
+     * 
+     * Keterangan:
+     * Mensimulasikan TAMPILAN SOAL persis seperti di halaman ujian peserta.
+     * Jika soal ada dalam ujian: tampilkan nomor urutan & navigasi lengkap.
+     * Jika soal belum ada dalam ujian: tampilkan nomor 1 dari 1.
+     * 
+     * Render formula & HTML via FormulaRenderer service (KaTeX, safe tags).
+     * 
+     * Form: Tidak ada, view only
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd(['ujianSoal' => $ujianSoal, 'totalSoal' => $totalSoal, 'nomorUrut' => $nomorUrut]);
      */
     public function preview(Soal $soal): View
     {
@@ -287,8 +352,22 @@ class SoalController extends Controller
     }
 
     /**
-     * Upload gambar dari editor WYSIWYG (disisipkan inline di teks soal).
-     * Mengembalikan URL publik gambar untuk disematkan sebagai tag <img>.
+     * METHOD: uploadGambarEditor()
+     * ============================
+     * URL Contoh: POST /superadmin/soal/upload-gambar-editor
+     * 
+     * Keterangan:
+     * API endpoint untuk upload gambar dari CKEditor (inline image).
+     * Dipanggil via AJAX saat user insert gambar di editor WYSIWYG.
+     * Mengembalikan JSON berisi URL publik untuk disematkan sebagai <img src="...">
+     * 
+     * Form: FormData multipart (file field: "gambar")
+     *       Validasi: required, image, max 2048 KB
+     * 
+     * Response: JSON { "url": "https://example.com/uploads/panritta/soal/editor/..." }
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('Editor upload', ['user' => $request->user()->id, 'path' => $path]);
      */
     public function uploadGambarEditor(Request $request): JsonResponse
     {
@@ -308,15 +387,25 @@ class SoalController extends Controller
     }
 
     /**
-     * Download format Excel (.xlsx) template untuk import soal.
-     * Format dinamis sesuai dengan sub jenis ujian (benar_salah vs tiap_jawaban_ada_poin).
-     * Filename menyertakan nama ujian dan kategori soal untuk kemudahan distribusi.
-     *
-     * Jika subJenisUjian diberikan:
-     * - Benar-Salah: Tampilkan kolom kunci_jawaban + nilai_bobot_benar
-     * - Tiap Jawaban Ada Poin: Tampilkan kolom nilai_bobot_a/b/c/d/e, TIDAK tampilkan kunci_jawaban
-     *
-     * Jika tidak ada subJenisUjian: Tampilkan template generic (full columns).
+     * METHOD: downloadTemplate()
+     * ==========================
+     * URL Contoh: GET /superadmin/soal/download-template
+     *             atau /superadmin/soal/download-template/{ujian}/{subIndikator}/{subJenisUjian}
+     * 
+     * Keterangan:
+     * Download template Excel (.xlsx) untuk bulk import soal.
+     * Format kolom DINAMIS sesuai sistem penilaian sub jenis ujian:
+     * 
+     * - Benar-Salah: kolom kunci_jawaban + nilai_bobot_benar
+     * - Tiap Jawaban Ada Poin: kolom nilai_bobot_a/b/c/d/e (NO kunci_jawaban)
+     * - Tanpa parameter: template generic lengkap semua kolom
+     * 
+     * Filename otomatis sesuai ujian+kategori+tipe (misal: import_soal_cpns_tkp_psikologi.xlsx)
+     * 
+     * Form: Tidak ada
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('Download template', ['subJenis' => $subJenisUjian->id ?? null]);
      */
     public function downloadTemplate(?SubJenisUjian $subJenisUjian = null, ?Ujian $ujian = null, ?SubIndikator $subIndikator = null)
     {
@@ -410,16 +499,26 @@ class SoalController extends Controller
     }
 
     /**
-     * ENDPOINT JSON (AJAX): opsi Sub Jenis Ujian untuk sebuah Jenis Ujian.
-
-     *
-     * Ini BUKAN halaman HTML, melainkan mengembalikan data JSON. Dipanggil oleh
-     * JavaScript di form soal: saat user memilih Jenis Ujian, JS memanggil URL
-     * ini untuk mengisi dropdown Sub Jenis Ujian secara dinamis (dependent dropdown)
-     * tanpa reload halaman.
-     *
-     * get(['id', ...]) sengaja hanya mengambil kolom yang dibutuhkan front-end
-     * (termasuk sistem_penilaian & jumlah opsi, agar JS bisa mengatur form).
+     * METHOD: subJenisUjianOptions()
+     * ==============================
+     * URL Contoh: GET /superadmin/soal/options/sub-jenis-ujian/{jenisUjian}
+     *             (misal: /superadmin/soal/options/sub-jenis-ujian/1)
+     * 
+     * Keterangan:
+     * API endpoint JSON untuk DEPENDENT DROPDOWN (dropdown bertingkat).
+     * Dipanggil via AJAX saat user memilih Jenis Ujian.
+     * Mengembalikan daftar Sub Jenis Ujian yang belong to Jenis Ujian.
+     * 
+     * Response JSON:
+     * [
+     *   { id: 1, nama_sub_jenis_ujian: "TWK", sistem_penilaian: "benar_salah", ... },
+     *   { id: 2, nama_sub_jenis_ujian: "TIU", sistem_penilaian: "tiap_jawaban_ada_poin", ... }
+     * ]
+     * 
+     * Form: Tidak ada
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('SubJenisOptions for Jenis:'.$jenisUjian->id, ['count' => $options->count()]);
      */
     public function subJenisUjianOptions(JenisUjian $jenisUjian): JsonResponse
     {
@@ -431,8 +530,27 @@ class SoalController extends Controller
     }
 
     /**
-     * ENDPOINT JSON (AJAX): opsi Sub Indikator untuk sebuah Sub Jenis Ujian.
-     * Rantai lanjutan dropdown: setelah Sub Jenis dipilih, isi dropdown Sub Indikator.
+     * METHOD: subIndikatorOptions()
+     * =============================
+     * URL Contoh: GET /superadmin/soal/options/sub-indikator/{subJenisUjian}
+     *             (misal: /superadmin/soal/options/sub-indikator/5)
+     * 
+     * Keterangan:
+     * API endpoint JSON untuk DEPENDENT DROPDOWN (dropdown 3 tingkat).
+     * Dipanggil via AJAX saat user memilih Sub Jenis Ujian.
+     * Mengembalikan daftar Sub Indikator yang belong to Sub Jenis Ujian.
+     * 
+     * Response JSON:
+     * [
+     *   { id: 10, nama_sub_indikator: "Pancasila" },
+     *   { id: 11, nama_sub_indikator: "UUD 1945" },
+     *   ...
+     * ]
+     * 
+     * Form: Tidak ada
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('SubIndikatorOptions for SubJenis:'.$subJenisUjian->id, ['count' => $options->count()]);
      */
     public function subIndikatorOptions(SubJenisUjian $subJenisUjian): JsonResponse
     {

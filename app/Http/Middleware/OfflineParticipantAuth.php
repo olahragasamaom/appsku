@@ -23,6 +23,8 @@ class OfflineParticipantAuth
             'peserta.ujian.hasil',
             'peserta.ujian.pembahasan',
             'peserta.ujian.leaderboard',
+            'peserta.ujian.riwayat',
+            'peserta.ujian.retry',
         ]);
 
         // For view result routes, only peserta_id + session_token required

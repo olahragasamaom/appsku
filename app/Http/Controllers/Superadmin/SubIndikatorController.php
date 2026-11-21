@@ -27,21 +27,28 @@ use Illuminate\View\View;
 class SubIndikatorController extends Controller
 {
     /**
-     * READ: tampilkan daftar dengan pengelompokan 2 tingkat.
-     *
-     * Langkah 1 — ambil data + eager loading BERANTAI:
-     *   ->with('subJenisUjian.jenisUjian') artinya: muat SubJenisUjian tiap
-     *   SubIndikator, DAN muat JenisUjian dari tiap SubJenisUjian. Titik (.)
-     *   berarti "lalu masuk lebih dalam". Ini menghindari masalah N+1 query.
-     *
-     * Langkah 2 — kelompokkan koleksi memakai groupBy():
-     *   groupBy() bekerja di MEMORI (bukan query SQL), memecah koleksi menjadi
-     *   sub-koleksi berdasarkan kunci yang kita tentukan.
-     *   Di sini: kelompok luar = nama Jenis Ujian, kelompok dalam = nama Sub Jenis.
-     *   Operator "?->" (nullsafe) mencegah error jika relasi kosong; jika null
-     *   dipakai label cadangan seperti "Tanpa Jenis Ujian".
-     *
-     * Langkah 3 — siapkan $subJenisUjians untuk mengisi dropdown di form modal.
+     * METHOD: index()
+     * ===============
+     * URL Contoh: GET /superadmin/sub-indikator
+     * 
+     * Keterangan:
+     * Menampilkan DAFTAR SUB INDIKATOR dengan pengelompokan 2 tingkat:
+     * - Tingkat 1: Jenis Ujian (CPNS, ASN, etc)
+     * - Tingkat 2: Sub Jenis Ujian (TWK, TIU, TKP)
+     * - Tingkat 3: Sub Indikator (Pancasila, UUD 1945, etc)
+     * 
+     * Eager Loading: ->with('subJenisUjian.jenisUjian')
+     * - Cegah N+1 query problem
+     * - Load semua relasi berantai dalam 2 query total
+     * 
+     * GroupBy: groupBy() in-memory bukan SQL
+     * - Kelompok koleksi per nama jenis + nama sub jenis
+     * - Nullsafe operator (?->) jika relasi kosong
+     * 
+     * Form: Modal tambah & edit di index view
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd($groupedSubIndikators->map(fn($jenis) => $jenis->map(fn($sub) => $sub->count())->toArray())->toArray());
      */
     public function index(): View
     {
@@ -61,9 +68,22 @@ class SubIndikatorController extends Controller
     }
 
     /**
-     * CREATE: simpan sub indikator baru.
-     * Memakai validatedWithJenisUjian() agar kolom jenis_ujian_id (jalan pintas)
-     * ikut terisi otomatis, bukan sekadar $request->validated().
+     * METHOD: store()
+     * ===============
+     * URL Contoh: POST /superadmin/sub-indikator
+     * 
+     * Keterangan:
+     * Menyimpan SUB INDIKATOR baru (misal: "Pancasila" untuk sub jenis "TWK").
+     * 
+     * Validasi: SubIndikatorRequest form request validator
+     * Data: $request->validatedWithJenisUjian()
+     *       (custom method yang auto-fill jenis_ujian_id dari sub_jenis_ujian_id)
+     * 
+     * Form: Modal di index view (POST method)
+     *       Input: nama_sub_indikator, sub_jenis_ujian_id
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('Store sub indikator', ['nama' => $request->nama_sub_indikator, 'sub_jenis_id' => $request->sub_jenis_ujian_id]);
      */
     public function store(SubIndikatorRequest $request): RedirectResponse
     {
@@ -74,7 +94,20 @@ class SubIndikatorController extends Controller
     }
 
     /**
-     * UPDATE: ubah data. Sama-sama pakai validatedWithJenisUjian().
+     * METHOD: update()
+     * ================
+     * URL Contoh: PUT /superadmin/sub-indikator/{subIndikator}
+     * 
+     * Keterangan:
+     * Mengubah SUB INDIKATOR yang sudah ada.
+     * Parameter {subIndikator} diambil via Route Model Binding.
+     * 
+     * Validasi & data: sama seperti store() (validatedWithJenisUjian())
+     * 
+     * Form: Modal di index view (PUT method)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('Update sub indikator ID '.$subIndikator->id);
      */
     public function update(SubIndikatorRequest $request, SubIndikator $subIndikator): RedirectResponse
     {
@@ -85,7 +118,19 @@ class SubIndikatorController extends Controller
     }
 
     /**
-     * DELETE: hapus data.
+     * METHOD: destroy()
+     * =================
+     * URL Contoh: DELETE /superadmin/sub-indikator/{subIndikator}
+     * 
+     * Keterangan:
+     * Menghapus SUB INDIKATOR beserta semua soal yang belong to-nya.
+     * 
+     * Cascade delete: Sub Indikator > Soal (via foreign key on_delete=cascade)
+     * 
+     * Form: Tombol delete di index view (via form DELETE method)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::critical('Delete sub indikator ID '.$subIndikator->id.' nama: '.$subIndikator->nama_sub_indikator);
      */
     public function destroy(SubIndikator $subIndikator): RedirectResponse
     {

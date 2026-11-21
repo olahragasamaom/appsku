@@ -145,6 +145,15 @@
             </div>
 
             <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <form method="POST" action="{{ route('peserta.ujian.retry', $ujian) }}" class="w-full sm:w-auto">
+                    @csrf
+                    <button type="submit" class="btn btn-warning w-full">
+                        Ujian Ulang
+                    </button>
+                </form>
+                <a href="{{ route('peserta.ujian.riwayat', $ujian) }}" class="btn btn-info w-full sm:w-auto">
+                    Lihat Riwayat
+                </a>
                 <a href="{{ route('peserta.ujian.leaderboard', $ujian) }}" class="btn btn-secondary w-full sm:w-auto">
                     Lihat Peringkat
                 </a>

@@ -55,7 +55,9 @@
                     <th class="px-6 py-3 text-left">Tipe</th>
                     <th class="px-6 py-3 text-left">Jenis Ujian</th>
                     <th class="px-6 py-3 text-center">Soal</th>
-                    <th class="px-6 py-3 text-center">Peserta</th>
+                    @if(!auth()->user()->isPembuatSoal())
+                        <th class="px-6 py-3 text-center">Peserta</th>
+                    @endif
                     <th class="px-6 py-3 text-center">Status</th>
                     <th class="px-6 py-3 text-center">Aksi</th>
                 </x-slot>
@@ -83,7 +85,12 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <a href="{{ route('superadmin.ujian.soal.index', $ujian) }}" class="inline-flex items-center justify-center font-semibold text-primary-600 hover:text-primary-700 hover:bg-primary-50 px-3 py-1.5 rounded-lg transition-colors group">
+                            @php
+                                $soalRoute = auth()->user()->isPembuatSoal() 
+                                    ? route('pembuat-soal.ujian.soal.index', $ujian)
+                                    : route('superadmin.ujian.soal.index', $ujian);
+                            @endphp
+                            <a href="{{ $soalRoute }}" class="inline-flex items-center justify-center font-semibold text-primary-600 hover:text-primary-700 hover:bg-primary-50 px-3 py-1.5 rounded-lg transition-colors group">
                                 <span class="{{ $ujian->ujian_soals_count < $ujian->jumlah_soal ? 'text-danger-600 group-hover:text-danger-700' : '' }}">
                                     {{ $ujian->ujian_soals_count }}
                                 </span>
@@ -91,6 +98,7 @@
                                 <span class="text-slate-600">{{ $ujian->jumlah_soal }}</span>
                             </a>
                         </td>
+                        @if(!auth()->user()->isPembuatSoal())
                         <td class="px-6 py-4 text-center">
                             @if($ujian->tipe_ujian === 'offline_kelas')
                                 <a href="{{ route('superadmin.ujian.peserta-offline.index', $ujian) }}" class="inline-flex items-center justify-center font-semibold text-primary-600 hover:text-primary-700 hover:bg-primary-50 px-3 py-1.5 rounded-lg transition-colors">
@@ -102,6 +110,7 @@
                                 </a>
                             @endif
                         </td>
+                        @endif
                         <td class="px-6 py-4 text-center">
                             @php
                                 $badge = match($ujian->status) {
@@ -123,7 +132,12 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center justify-end gap-1">
-                                <a href="{{ route('superadmin.ujian.edit', $ujian) }}" class="btn btn-sm bg-yellow-400 hover:bg-yellow-500 text-white border-0" title="Edit Ujian">
+                                @php
+                                    $editRoute = auth()->user()->isPembuatSoal()
+                                        ? route('pembuat-soal.ujian.edit', $ujian)
+                                        : route('superadmin.ujian.edit', $ujian);
+                                @endphp
+                                <a href="{{ $editRoute }}" class="btn btn-sm bg-yellow-400 hover:bg-yellow-500 text-white border-0" title="Edit Ujian">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>

@@ -11,10 +11,11 @@ class UjianScoringService
 {
     /**
      * Calculate the score for a single answer based on the soal's grading system.
+     * Handle randomize_opsi_tkp by reverse-mapping user display answer to original opsi.
      *
      * @return array{nilai: float, benar: bool|null}
      */
-    public function scoreAnswer(Soal $soal, ?string $jawaban): array
+    public function scoreAnswer(Soal $soal, ?string $jawaban, ?Ujian $ujian = null, ?UjianPeserta $ujianPeserta = null): array
     {
         $sistem = $soal->subIndikator?->subJenisUjian?->sistem_penilaian ?? 'benar_salah';
 
@@ -35,7 +36,17 @@ class UjianScoringService
             ];
         }
 
-        $field = 'nilai_bobot_'.strtolower($jawaban);
+        $originalOpsiKey = $jawaban;
+        if ($ujian && $ujianPeserta && $ujian->randomize_opsi_tkp) {
+            $mapping = \App\Services\OpsiRandomizer::getMappingForPeserta(
+                $ujian,
+                $ujianPeserta,
+                $soal->id
+            );
+            $originalOpsiKey = \App\Services\OpsiRandomizer::reverseMapDisplay($jawaban, $mapping);
+        }
+
+        $field = 'nilai_bobot_'.strtolower($originalOpsiKey);
         $nilai = (float) ($soal->{$field} ?? 0);
 
         return ['nilai' => $nilai, 'benar' => null];

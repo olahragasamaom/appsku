@@ -3,7 +3,7 @@
 @section('title', 'Tambah Paket Member')
 
 @section('breadcrumb')
-    <a href="{{ route('superadmin.paket.index') }}" class="text-secondary-500 hover:text-secondary-700">Paket Member</a>
+    <a href="{{ route(($routePrefix ?? 'superadmin') . '.paket.index') }}" class="text-secondary-500 hover:text-secondary-700">Paket Member</a>
     <span class="mx-2 text-secondary-400">/</span>
     <span class="text-secondary-900 font-medium">Tambah Paket</span>
 @endsection
@@ -14,14 +14,14 @@
             <h1 class="text-2xl font-bold text-secondary-900">Tambah Paket Member</h1>
             <p class="text-secondary-500 mt-1">Buat paket langganan baru untuk peserta</p>
         </div>
-        <a href="{{ route('superadmin.paket.index') }}" class="btn btn-ghost">Kembali</a>
+        <a href="{{ route(($routePrefix ?? 'superadmin') . '.paket.index') }}" class="btn btn-ghost">Kembali</a>
     </div>
 @endsection
 
 @section('content')
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('superadmin.paket.store') }}" method="POST">
+            <form action="{{ route(($routePrefix ?? 'superadmin') . '.paket.store') }}" method="POST">
                 @csrf
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

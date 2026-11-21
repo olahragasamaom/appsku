@@ -77,12 +77,29 @@ function makeUploadAdapter(loader, uploadUrl) {
  * @param {Object}      options    { value, placeholder, uploadUrl, onChange }
  * @returns {Promise<ClassicEditor>}
  */
+function decodeHtmlEntities(str) {
+    if (!str) return '';
+    const textarea = document.createElement('textarea');
+    let prev = str;
+    let decoded = str;
+    // Decode repeatedly until no more entities
+    for (let i = 0; i < 3; i++) {
+        textarea.innerHTML = decoded;
+        decoded = textarea.value;
+        if (decoded === prev) break;
+        prev = decoded;
+    }
+    return decoded;
+}
+
 window.createSoalEditor = async function (el, options) {
     const { value = '', placeholder = '', uploadUrl = '', onChange = () => {} } = options || {};
+    
+    const decodedValue = decodeHtmlEntities(value);
 
     const editor = await ClassicEditor.create(el, {
         licenseKey: 'GPL',
-        initialData: value,
+        initialData: decodedValue,
         plugins: [
             Essentials,
             Paragraph,
@@ -139,8 +156,8 @@ window.createSoalEditor = async function (el, options) {
         makeUploadAdapter(loader, uploadUrl);
 
     // Force re-render content via setData if initialData didn't apply fully
-    if (value && !editor.getData()) {
-        editor.setData(value);
+    if (decodedValue && !editor.getData()) {
+        editor.setData(decodedValue);
     }
 
     window.insertMathFormula = function (editor, valueInput, formula) {
@@ -183,7 +200,7 @@ window.createSoalEditor = async function (el, options) {
     editor.model.document.on('change:data', () => onChange(editor.getData()));
     onChange(editor.getData());
 
-    // Tab navigation: press Tab → focus next editor
+    // Tab navigation for CKEditor: press Tab → next editor (non-TKP only)
     editor.editing.view.document.on('keydown', (evt, data) => {
         if (data.keyCode === 9 && !data.shiftKey) { // Tab, no Shift
             const allEditorDivs = Array.from(document.querySelectorAll('[data-ckeditor-soal]'));

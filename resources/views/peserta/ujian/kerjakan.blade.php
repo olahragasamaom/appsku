@@ -319,15 +319,28 @@
                             </div>
                         </div>
 
-                        {{-- Button --}}
-                        <button type="button" 
-                                @click="confirmSubmit()"
-                                class="btn bg-danger-500 hover:bg-danger-600 text-white border-0 font-semibold whitespace-nowrap">
-                            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                            <span class="hidden sm:inline">Akhiri Ujian</span>
-                        </button>
+                        {{-- Buttons --}}
+                        <div class="flex items-center gap-2">
+                            <form method="POST" action="{{ route('peserta.logout') }}" class="inline">
+                                @csrf
+                                <button type="submit" 
+                                        class="btn btn-secondary whitespace-nowrap text-sm"
+                                        title="Keluar sementara, waktu tetap berjalan">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                    </svg>
+                                    <span class="hidden sm:inline">Keluar</span>
+                                </button>
+                            </form>
+                            <button type="button" 
+                                    @click="confirmSubmit()"
+                                    class="btn bg-danger-500 hover:bg-danger-600 text-white border-0 font-semibold whitespace-nowrap">
+                                <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                                <span class="hidden sm:inline">Akhiri Ujian</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -378,7 +391,7 @@
 
                                     {{-- Opsi Jawaban --}}
                                     <div class="mb-8 space-y-3">
-                                        <x-soal-options-display :ujianSoal="$ujianSoal" :jawaban="$jawaban" />
+                                        <x-soal-options-display :ujianSoal="$ujianSoal" :jawaban="$jawaban" :ujianPeserta="$peserta" />
                                     </div>
 
                                     {{-- Navigation --}}

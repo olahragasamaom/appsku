@@ -20,11 +20,24 @@ class HasilUjianController extends Controller
     ) {}
 
     /**
-     * Index: Daftar ujian yang sedang berlangsung
-     *
-     * Ujian dianggap "berlangsung" jika waktu sekarang sudah melewati
-     * tanggal_ujian dan belum melewati akhir rentang ujian (batas_keterlambatan
-     * atau tanggal_ujian + durasi_ujian, mana yang lebih akhir).
+     * METHOD: index()
+     * ===============
+     * URL Contoh: GET /superadmin/hasil-ujian
+     * 
+     * Keterangan:
+     * Menampilkan DAFTAR UJIAN yang sedang berlangsung (ongoing).
+     * Filter otomatis: status = aktif + waktu sekarang dalam rentang ujian.
+     * 
+     * Rentang berlangsung:
+     * - Mulai: tanggal_ujian
+     * - Akhir: batas_keterlambatan (jika ada) atau tanggal_ujian + durasi_ujian
+     * 
+     * Tampilkan per ujian: jumlah peserta total, sedang ujian, selesai.
+     * 
+     * Form: Tidak ada
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd($ujians->map(fn($u) => ['id' => $u->id, 'berlangsung' => $u->nama_ujian])->toArray());
      */
     public function index(): View
     {
@@ -53,7 +66,18 @@ class HasilUjianController extends Controller
     }
 
     /**
-     * Show: Dashboard hasil ujian untuk 1 ujian
+     * METHOD: show()
+     * ==============
+     * URL Contoh: GET /superadmin/hasil-ujian/{ujian} (misal: /superadmin/hasil-ujian/5)
+     * 
+     * Keterangan:
+     * Dashboard RINGKASAN hasil ujian: jumlah peserta, yang selesai, sedang ujian.
+     * Tampilkan tab navigasi ke: Live Score, Final Score, Analisis Soal, Daftar Peserta.
+     * 
+     * Form: Tidak ada
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd(['ujian' => $ujian->nama_ujian, 'total' => $ujian->peserta_count, 'selesai' => $ujian->peserta_selesai_count]);
      */
     public function show(Ujian $ujian): View
     {
@@ -77,7 +101,18 @@ class HasilUjianController extends Controller
     }
 
     /**
-     * Live Score (realtime scoring)
+     * METHOD: liveScore()
+     * ===================
+     * URL Contoh: GET /superadmin/hasil-ujian/{ujian}/live-score
+     * 
+     * Keterangan:
+     * Menampilkan RANKING REALTIME peserta yang SEDANG UJIAN.
+     * Score update otomatis via polling/websocket (jika ada frontend JS).
+     * 
+     * Form: Tidak ada
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd(['ujian_id' => $ujian->id, 'sedang_ujian' => $ujian->peserta_sedang_count]);
      */
     public function liveScore(Ujian $ujian): View
     {
@@ -85,7 +120,18 @@ class HasilUjianController extends Controller
     }
 
     /**
-     * Final Score (ranking)
+     * METHOD: finalScore()
+     * ====================
+     * URL Contoh: GET /superadmin/hasil-ujian/{ujian}/final-score
+     * 
+     * Keterangan:
+     * Menampilkan RANKING FINAL peserta yang sudah SELESAI UJIAN.
+     * Gunakan UjianScoringService::rank() untuk hitung & sort nilai.
+     * 
+     * Form: Tidak ada
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd($ranking->map(fn($r) => ['posisi' => $r['rank'], 'nama' => $r['nama'], 'nilai' => $r['total_nilai']])->toArray());
      */
     public function finalScore(Ujian $ujian): View
     {
@@ -95,7 +141,22 @@ class HasilUjianController extends Controller
     }
 
     /**
-     * Analisis Soal: statistik jawaban per soal
+     * METHOD: soalAnalysis()
+     * ======================
+     * URL Contoh: GET /superadmin/hasil-ujian/{ujian}/soal-analysis
+     * 
+     * Keterangan:
+     * ANALISIS STATISTIK per soal:
+     * - Berapa peserta yang jawab / belum jawab / salah / benar
+     * - Persentase benar per soal
+     * - Distribusi jawaban (berapa pilih A, B, C, D, E)
+     * 
+     * Gunakan untuk identifikasi soal yang sulit / terlalu mudah / bermasalah.
+     * 
+     * Form: Tidak ada
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd($statistics->map(fn($s) => ['nomor_soal' => $s['ujian_soal']['urutan'], 'persen_benar' => $s['persen_benar']])->toArray());
      */
     public function soalAnalysis(Ujian $ujian): View
     {
@@ -138,7 +199,22 @@ class HasilUjianController extends Controller
     }
 
     /**
-     * Daftar Peserta: dengan status (selesai, sedang_ujian, belum_ujian)
+     * METHOD: pesertaList()
+     * =====================
+     * URL Contoh: GET /superadmin/hasil-ujian/{ujian}/peserta
+     * 
+     * Keterangan:
+     * DAFTAR PESERTA OFFLINE per ujian dengan STATUS:
+     * - Belum Ujian: terdaftar tapi belum ada attempt
+     * - Sedang Ujian: dalam progress (status = sedang_ujian)
+     * - Selesai: sudah submit (status = selesai)
+     * 
+     * Tampilkan: nomor peserta, nama, status, waktu mulai, waktu selesai, nilai total, lulus?
+     * 
+     * Form: Tidak ada (view only)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd($pesertaOfflineList->map(fn($p) => ['nomor' => $p['nomor_peserta'], 'status' => $p['status_label']])->toArray());
      */
     public function pesertaList(Ujian $ujian): View
     {
@@ -188,7 +264,20 @@ class HasilUjianController extends Controller
     }
 
     /**
-     * Review Peserta: detail jawaban per soal
+     * METHOD: reviewPeserta()
+     * =======================
+     * URL Contoh: GET /superadmin/hasil-ujian/{ujian}/peserta/{peserta}/review
+     * 
+     * Keterangan:
+     * REVIEW DETAIL jawaban satu peserta:
+     * - Tampilkan per soal: soal text, jawaban user, jawaban benar, poin dapat, pembahasan
+     * - Breakdown per sub-jenis (TWK/TIU/TKP): nilai per kategori
+     * - Total nilai & status lulus/tidak lulus
+     * 
+     * Form: Tidak ada (view only)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd(['peserta_id' => $peserta->id, 'ujian_id' => $ujian->id, 'breakdown' => $breakdown]);
      */
     public function reviewPeserta(Ujian $ujian, UjianPeserta $peserta): View
     {
@@ -215,7 +304,20 @@ class HasilUjianController extends Controller
     }
 
     /**
-     * Force Finalize: untuk peserta yang stuck "sedang_ujian"
+     * METHOD: forceFinalize()
+     * =======================
+     * URL Contoh: POST /superadmin/hasil-ujian/{ujian}/peserta/{peserta}/force-finalize
+     * 
+     * Keterangan:
+     * Finalisasi ujian peserta SECARA PAKSA (tanpa tunggu timer habis).
+     * Gunakan jika peserta stuck "sedang_ujian" & tidak bisa submit manual.
+     * 
+     * Aksi: Update status peserta jadi "selesai", hitung skor, simpan hasil.
+     * 
+     * Form: Button di management page (POST/PATCH dengan CSRF token)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('Force finalize peserta '.$peserta->id.' ujian '.$ujian->id);
      */
     public function forceFinalize(Ujian $ujian, UjianPeserta $peserta): RedirectResponse
     {
@@ -233,7 +335,23 @@ class HasilUjianController extends Controller
     }
 
     /**
-     * Manajemen Peserta: daftar peserta sedang ujian
+     * METHOD: management()
+     * ====================
+     * URL Contoh: GET /superadmin/hasil-ujian/{ujian}/management
+     * 
+     * Keterangan:
+     * MONITORING PESERTA SEDANG UJIAN secara realtime:
+     * - Daftar peserta dengan status "sedang_ujian"
+     * - Sisa waktu ujian per peserta
+     * - Jumlah soal yang sudah dijawab
+     * - Button: Pause, Resume, Force Stop (untuk supervisor control)
+     * 
+     * Data update otomatis via AJAX polling ke getManagementData().
+     * 
+     * Form: Tidak ada (view with action buttons)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd($pesertaSedangUjian->map(fn($p) => ['nama' => $p['nama'], 'sisa_waktu' => $p['sisa_detik']])->toArray());
      */
     public function management(Ujian $ujian): View
     {
@@ -243,7 +361,27 @@ class HasilUjianController extends Controller
     }
 
     /**
-     * API: Get data peserta sedang ujian (untuk auto-refresh)
+     * METHOD: getManagementData()
+     * ===========================
+     * URL Contoh: GET /superadmin/hasil-ujian/{ujian}/management-data (AJAX)
+     * 
+     * Keterangan:
+     * API endpoint JSON untuk auto-refresh management page.
+     * Dipanggil setiap 5-10 detik via JavaScript fetch/AJAX.
+     * 
+     * Response JSON:
+     * {
+     *   "peserta": [
+     *     { id, nama, sisa_detik, jumlah_jawaban, total_soal, ... },
+     *     ...
+     *   ],
+     *   "timestamp": "2026-11-16T10:30:45Z"
+     * }
+     * 
+     * Form: Tidak ada (API only)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('Management data fetch for ujian '.$ujian->id);
      */
     public function getManagementData(Ujian $ujian): JsonResponse
     {
@@ -318,7 +456,26 @@ class HasilUjianController extends Controller
     }
 
     /**
-     * Toggle pause peserta
+     * METHOD: togglePause()
+     * =====================
+     * URL Contoh: PATCH /superadmin/hasil-ujian/{ujian}/peserta/{peserta}/toggle-pause
+     * 
+     * Keterangan:
+     * PAUSE / RESUME ujian peserta.
+     * 
+     * Jika pause:
+     * - Set is_paused = true, simpan sisa_detik_saat_pause
+     * - Logout peserta session (disconnect dari ujian)
+     * - Peserta bisa login kembali nanti untuk resume
+     * 
+     * Jika resume (is_paused sudah true):
+     * - Set is_paused = false, hapus timestamp pause
+     * 
+     * Form: Button di management page (PATCH dengan CSRF token)
+     *       Input: sisa_detik (dari JS calculation)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('Toggle pause peserta '.$peserta->id, ['is_paused' => $peserta->is_paused, 'sisa' => $peserta->sisa_detik_saat_pause]);
      */
     public function togglePause(Ujian $ujian, UjianPeserta $peserta, Request $request): RedirectResponse
     {
@@ -352,7 +509,21 @@ class HasilUjianController extends Controller
     }
 
     /**
-     * Force Stop: menyelesaikan ujian peserta secara permanen
+     * METHOD: forceStop()
+     * ===================
+     * URL Contoh: DELETE /superadmin/hasil-ujian/{ujian}/peserta/{peserta}/force-stop
+     * 
+     * Keterangan:
+     * HENTIKAN UJIAN peserta SECARA PERMANENT (tidak bisa resume).
+     * Finalisasi ujian, hitung skor, logout peserta.
+     * 
+     * Gunakan jika: peserta berlaku curang, gangguan teknis, atau inisiatif supervisor.
+     * Peserta TIDAK bisa lanjut ujian setelah ini.
+     * 
+     * Form: Button di management page (DELETE dengan CSRF token)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::critical('Force stop ujian - peserta '.$peserta->id.' ujian '.$ujian->id);
      */
     public function forceStop(Ujian $ujian, UjianPeserta $peserta): RedirectResponse
     {
@@ -376,4 +547,5 @@ class HasilUjianController extends Controller
             Cache::forget("offline_session_{$peserta->pesertaOffline->id}");
         }
     }
+
 }

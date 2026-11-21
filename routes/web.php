@@ -43,6 +43,8 @@ use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayrollItemController;
 use App\Http\Controllers\PayrollSettingController;
 use App\Http\Controllers\Pengajar\AuthController;
+use App\Http\Controllers\PembuatSoal\DashboardController as PembuatSoalDashboardController;
+use App\Http\Controllers\Keuangan\DashboardController as KeuanganDashboardController;
 use App\Http\Controllers\Peserta\AuthController as PesertaAuthController;
 use App\Http\Controllers\Peserta\DashboardController as PesertaDashboardController;
 use App\Http\Controllers\Peserta\LanggananController as PesertaLanggananController;
@@ -126,6 +128,10 @@ Route::get('/', function () {
 
         if ($user->isSuperAdmin()) {
             return redirect()->route('superadmin.dashboard');
+        } elseif ($user->isPembuatSoal()) {
+            return redirect()->route('pembuat-soal.dashboard');
+        } elseif ($user->isKeuangan()) {
+            return redirect()->route('keuangan.dashboard');
         } elseif ($user->is_peserta) {
             return redirect()->route('peserta.dashboard');
         } else {
@@ -890,6 +896,76 @@ Route::prefix('pengajar')->name('pengajar.')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| Pembuat Soal Routes
+|--------------------------------------------------------------------------
+*/
+Route::prefix('pembuat-soal')->name('pembuat-soal.')->group(function () {
+    Route::middleware('guest')->group(function () {
+        Route::get('login', [App\Http\Controllers\PembuatSoal\AuthController::class, 'showLoginForm'])->name('login');
+        Route::post('login', [App\Http\Controllers\PembuatSoal\AuthController::class, 'login']);
+    });
+
+    Route::middleware(['auth', 'pembuat_soal'])->group(function () {
+        Route::get('/', [PembuatSoalDashboardController::class, 'index'])->name('dashboard');
+        
+        Route::resource('ujian', App\Http\Controllers\PembuatSoal\UjianController::class)->except(['destroy']);
+        Route::resource('soal', App\Http\Controllers\PembuatSoal\SoalController::class)->except(['destroy']);
+        Route::get('soal/{soal}/preview', [App\Http\Controllers\PembuatSoal\SoalController::class, 'preview'])->name('soal.preview');
+        Route::get('soal/options/sub-jenis-ujian/{jenisUjian}', [App\Http\Controllers\PembuatSoal\SoalController::class, 'subJenisUjianOptions'])->name('soal.options.sub-jenis-ujian');
+        Route::get('soal/options/sub-indikator/{subJenisUjian}', [App\Http\Controllers\PembuatSoal\SoalController::class, 'subIndikatorOptions'])->name('soal.options.sub-indikator');
+        Route::post('soal/upload-gambar-editor', [App\Http\Controllers\PembuatSoal\SoalController::class, 'uploadGambarEditor'])->name('soal.upload-editor');
+        Route::get('ujian/{ujian}/soal', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'index'])->name('ujian.soal.index');
+        Route::post('ujian/{ujian}/soal', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'store'])->name('ujian.soal.store');
+        Route::post('ujian/{ujian}/soal/attach', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'attach'])->name('ujian.soal.attach');
+        Route::delete('ujian/{ujian}/soal/{ujianSoal}', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'detach'])->name('ujian.soal.detach');
+        Route::post('ujian/{ujian}/soal/{ujianSoal}/detach', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'detach'])->name('ujian.soal.detach.post');
+        Route::get('ujian/{ujian}/soal/create', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'create'])->name('ujian.soal.create');
+        Route::post('ujian/{ujian}/soal/import', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'import'])->name('ujian.soal.import');
+        Route::resource('peserta', App\Http\Controllers\PembuatSoal\PesertaController::class)->only(['index', 'show']);
+        
+        Route::get('change-password', [App\Http\Controllers\PembuatSoal\ChangePasswordController::class, 'index'])->name('change-password.index');
+        Route::put('change-password', [App\Http\Controllers\PembuatSoal\ChangePasswordController::class, 'update'])->name('change-password.update');
+        
+        Route::post('logout', function () {
+            auth()->logout();
+            return redirect()->route('pembuat-soal.login');
+        })->name('logout');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Keuangan Routes
+|--------------------------------------------------------------------------
+*/
+Route::prefix('keuangan')->name('keuangan.')->group(function () {
+    Route::middleware('guest')->group(function () {
+        Route::get('login', [App\Http\Controllers\Keuangan\AuthController::class, 'showLoginForm'])->name('login');
+        Route::post('login', [App\Http\Controllers\Keuangan\AuthController::class, 'login']);
+    });
+
+    Route::middleware(['auth', 'keuangan'])->group(function () {
+        Route::get('/', [KeuanganDashboardController::class, 'index'])->name('dashboard');
+        
+        Route::resource('peserta', App\Http\Controllers\Keuangan\PesertaController::class);
+        Route::resource('paket', App\Http\Controllers\Keuangan\PaketController::class);
+        Route::get('pembayaran', [App\Http\Controllers\Keuangan\PembayaranController::class, 'index'])->name('pembayaran.index');
+        Route::get('pembayaran/{pembayaran}', [App\Http\Controllers\Keuangan\PembayaranController::class, 'show'])->name('pembayaran.show');
+        Route::post('pembayaran/{pembayaran}/verify', [App\Http\Controllers\Keuangan\PembayaranController::class, 'verify'])->name('pembayaran.verify');
+        Route::post('pembayaran/{pembayaran}/reject', [App\Http\Controllers\Keuangan\PembayaranController::class, 'reject'])->name('pembayaran.reject');
+        
+        Route::get('change-password', [App\Http\Controllers\Keuangan\ChangePasswordController::class, 'index'])->name('change-password.index');
+        Route::put('change-password', [App\Http\Controllers\Keuangan\ChangePasswordController::class, 'update'])->name('change-password.update');
+        
+        Route::post('logout', function () {
+            auth()->logout();
+            return redirect()->route('keuangan.login');
+        })->name('logout');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
 | Peserta Ujian Routes
 |--------------------------------------------------------------------------
 */
@@ -941,5 +1017,8 @@ Route::prefix('peserta')->name('peserta.')->group(function () {
         Route::get('ujian/{ujian}/hasil', [PesertaUjianController::class, 'hasil'])->name('ujian.hasil');
         Route::get('ujian/{ujian}/pembahasan', [PesertaUjianController::class, 'pembahasan'])->name('ujian.pembahasan');
         Route::get('ujian/{ujian}/leaderboard', [PesertaUjianController::class, 'leaderboard'])->name('ujian.leaderboard');
+        Route::get('ujian/{ujian}/riwayat', [PesertaUjianController::class, 'riwayat'])->name('ujian.riwayat');
+        Route::post('ujian/{ujian}/retry', [PesertaUjianController::class, 'retry'])->name('ujian.retry');
+        Route::post('logout-temporary', [PesertaUjianController::class, 'logoutTemporary'])->name('logout');
     });
 });

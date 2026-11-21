@@ -19,6 +19,9 @@ class DatabaseSeeder extends Seeder
         // Seed the fixed superadmin module list
         $this->call(ModuleSeeder::class);
 
+        // Seed pembuat_soal user level
+        $this->call(PembatSoalUserLevelSeeder::class);
+
         // Create Super Admin (no company - team context null)
         setPermissionsTeamId(null);
         $superAdmin = User::factory()->create([

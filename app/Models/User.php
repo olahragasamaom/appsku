@@ -108,6 +108,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->is_pengajar === true;
     }
 
+    public function isPembuatSoal(): bool
+    {
+        return $this->userLevel?->slug === 'pembuat_soal' && $this->userLevel->is_active;
+    }
+
+    public function isKeuangan(): bool
+    {
+        return $this->userLevel?->slug === 'keuangan' && $this->userLevel->is_active;
+    }
+
     public function langgananAktif(): HasOne
     {
         return $this->hasOne(PesertaLangganan::class, 'user_id')

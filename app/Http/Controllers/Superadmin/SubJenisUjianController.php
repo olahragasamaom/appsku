@@ -24,18 +24,25 @@ use Illuminate\View\View;
 class SubJenisUjianController extends Controller
 {
     /**
-     * READ: tampilkan daftar, DIKELOMPOKKAN per Jenis Ujian.
-     *
-     * Di sini kita ambil semua JenisUjian, lalu untuk tiap jenis kita ikut
-     * memuat anak-anaknya (subJenisUjian) sekaligus. Ini disebut EAGER LOADING.
-     *
-     * KENAPA PENTING? Tanpa ->with(), saat view melakukan loop dan mengakses
-     * $jenis->subJenisUjian di setiap baris, Laravel akan menembak 1 query
-     * database PER baris (masalah "N+1 query" -> lambat). Dengan ->with(),
-     * semua anak diambil dalam SATU query tambahan saja -> jauh lebih efisien.
-     *
-     * Closure di dalam ->with([...]) dipakai untuk MENGURUTKAN anak-anaknya
-     * (berdasarkan 'urutan', lalu nama) saat dimuat.
+     * METHOD: index()
+     * ===============
+     * URL Contoh: GET /superadmin/sub-jenis-ujian
+     * 
+     * Keterangan:
+     * Menampilkan DAFTAR SUB JENIS UJIAN, dikelompokkan per JENIS UJIAN.
+     * Misal: Jenis "CPNS" > Sub Jenis "TWK, TIU, TKP"
+     * 
+     * Menggunakan EAGER LOADING (->with()):
+     * - Tanpa: N+1 query problem (1 query/jenis)
+     * - Dengan: Hanya 2 query total (cepat)
+     * 
+     * Relasi terurut: urutan (drag-drop), lalu nama_sub_jenis_ujian (A-Z).
+     * Anchor (#jenis-X) pada redirect untuk scroll ke grup yang diubah.
+     * 
+     * Form: Modal tambah & edit di index view
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // dd($jenisUjians->map(fn($j) => ['jenis' => $j->nama_jenis_ujian, 'sub_count' => $j->subJenisUjian->count()])->toArray());
      */
     public function index(): View
     {
@@ -50,8 +57,21 @@ class SubJenisUjianController extends Controller
     }
 
     /**
-     * CREATE: simpan sub jenis ujian baru.
-     * Validasi otomatis lewat SubJenisUjianRequest sebelum masuk sini.
+     * METHOD: store()
+     * ===============
+     * URL Contoh: POST /superadmin/sub-jenis-ujian
+     * 
+     * Keterangan:
+     * Menyimpan SUB JENIS UJIAN baru (misal: "TWK" untuk jenis "CPNS").
+     * 
+     * Validasi: SoalRequest form request validator
+     * Redirect anchor (#jenis-X) untuk auto-scroll ke grup jenis yang baru dibuat.
+     * 
+     * Form: Modal di index view (POST method)
+     *       Input: nama_sub_jenis_ujian, jenis_ujian_id, sistem_penilaian, nilai_benar, dll
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('Store sub jenis ujian', ['jenis_id' => $request->jenis_ujian_id, 'nama' => $request->nama_sub_jenis_ujian]);
      */
     public function store(SubJenisUjianRequest $request): RedirectResponse
     {
@@ -62,8 +82,20 @@ class SubJenisUjianController extends Controller
     }
 
     /**
-     * UPDATE: ubah data. $subJenisUjian dicari otomatis dari {subJenisUjian} di URL
-     * (route model binding).
+     * METHOD: update()
+     * ================
+     * URL Contoh: PUT /superadmin/sub-jenis-ujian/{subJenisUjian}
+     * 
+     * Keterangan:
+     * Mengubah data SUB JENIS UJIAN yang sudah ada.
+     * Parameter {subJenisUjian} diambil via Route Model Binding (otomatis dicari by ID).
+     * 
+     * Redirect anchor (#jenis-X) untuk auto-scroll ke grup yang diubah.
+     * 
+     * Form: Modal di index view (PUT method)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('Update sub jenis ujian ID '.$subJenisUjian->id, ['nama' => $subJenisUjian->nama_sub_jenis_ujian]);
      */
     public function update(SubJenisUjianRequest $request, SubJenisUjian $subJenisUjian): RedirectResponse
     {
@@ -74,7 +106,19 @@ class SubJenisUjianController extends Controller
     }
 
     /**
-     * DELETE: hapus data.
+     * METHOD: destroy()
+     * =================
+     * URL Contoh: DELETE /superadmin/sub-jenis-ujian/{subJenisUjian}
+     * 
+     * Keterangan:
+     * Menghapus SUB JENIS UJIAN beserta semua sub-indikator & soal yang belong to-nya.
+     * 
+     * Redirect anchor (#jenis-X) untuk auto-scroll ke grup jenis setelah delete.
+     * 
+     * Form: Tombol delete di index view (via form DELETE method)
+     * 
+     * Debug Mode (uncomment untuk trace):
+     * // \Log::info('Delete sub jenis ujian ID '.$subJenisUjian->id);
      */
     public function destroy(SubJenisUjian $subJenisUjian): RedirectResponse
     {

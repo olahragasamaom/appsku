@@ -5,6 +5,7 @@
     $currentSubIndikator = $soal?->subIndikator ?? ($subIndikator ?? null);
     $currentSubJenis = $currentSubIndikator?->subJenisUjian;
     $currentJenisUjian = $currentSubJenis?->jenisUjian ?? $currentSubIndikator?->jenisUjian;
+    $routePrefix = $routePrefix ?? 'superadmin';
 @endphp
 
 @if ($errors->any())
@@ -46,7 +47,7 @@
             
             if (!this.jenis_ujian_id) return;
             
-            const res = await fetch('{{ url('superadmin/soal/options/sub-jenis-ujian') }}/' + this.jenis_ujian_id);
+            const res = await fetch('{{ url($routePrefix . '/soal/options/sub-jenis-ujian') }}/' + this.jenis_ujian_id);
             this.subJenisOptions = await res.json();
             
             if (preserve && this.initial_sub_jenis) { 
@@ -67,7 +68,7 @@
             
             if (!this.sub_jenis_ujian_id) return;
             
-            const res = await fetch('{{ url('superadmin/soal/options/sub-indikator') }}/' + this.sub_jenis_ujian_id);
+            const res = await fetch('{{ url($routePrefix . '/soal/options/sub-indikator') }}/' + this.sub_jenis_ujian_id);
             this.subIndikatorOptions = await res.json();
             
             if (preserve && this.initial_sub_indikator) {
@@ -151,18 +152,26 @@
             </div>
 
             @foreach(['a', 'b', 'c', 'd', 'e'] as $opt)
-                <div x-show="'{{ $opt }}' !== 'e' || jumlah_opsi === 5" class="border border-secondary-200 rounded-lg p-4 space-y-3">
+                <div x-show="'{{ $opt }}' !== 'e' || jumlah_opsi === 5" class="border border-secondary-200 rounded-lg p-4 space-y-3" data-opsi-group="{{ $opt }}">
                     <div>
                         <span class="block font-semibold text-secondary-800 uppercase mb-2">Opsi {{ $opt }}</span>
-                        <x-ckeditor-soal name="opsi_{{ $opt }}" :value="old('opsi_'.$opt, $soal?->{'opsi_'.$opt})" placeholder="Tulis opsi {{ strtoupper($opt) }}..." rows="2" :error="$errors->has('opsi_'.$opt)" :tabindex="$loop->index + 2" />
+                        <template x-if="sistem_penilaian === 'tiap_jawaban_ada_poin'">
+                         <textarea name="opsi_{{ $opt }}" placeholder="Tulis opsi {{ strtoupper($opt) }}..." rows="3"
+                                   class="input w-full text-sm @error('opsi_'.$opt) border-danger-500 @enderror">{{ old('opsi_'.$opt, $soal?->{'opsi_'.$opt}) }}</textarea>
+                        </template>
+                        <template x-if="sistem_penilaian !== 'tiap_jawaban_ada_poin'">
+                            <div data-opsi-editor="{{ $opt }}">
+                                <x-ckeditor-soal name="opsi_{{ $opt }}" :value="old('opsi_'.$opt, $soal?->{'opsi_'.$opt})" placeholder="Tulis opsi {{ strtoupper($opt) }}..." rows="2" :error="$errors->has('opsi_'.$opt)" :tabindex="$loop->index + 2" />
+                            </div>
+                        </template>
                     </div>
                     @error('opsi_'.$opt)<p class="text-sm text-danger-600 mb-2">{{ $message }}</p>@enderror
 
                     <div x-show="sistem_penilaian === 'tiap_jawaban_ada_poin'">
                         <label class="block text-xs font-medium text-secondary-600 mb-1">Nilai Bobot {{ strtoupper($opt) }}</label>
-                        <input type="number" step="0.01" name="nilai_bobot_{{ $opt }}"
-                               value="{{ old('nilai_bobot_'.$opt, $soal?->{'nilai_bobot_'.$opt}) }}"
-                               class="input w-full text-sm @error('nilai_bobot_'.$opt) border-danger-500 @enderror">
+                         <input type="number" step="1" name="nilai_bobot_{{ $opt }}" data-weight-input="{{ $opt }}"
+                                value="{{ old('nilai_bobot_'.$opt, $soal?->{'nilai_bobot_'.$opt}) }}"
+                                class="input w-full text-sm @error('nilai_bobot_'.$opt) border-danger-500 @enderror">
                         @error('nilai_bobot_'.$opt)<p class="text-sm text-danger-600">{{ $message }}</p>@enderror
                     </div>
                 </div>

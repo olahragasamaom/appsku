@@ -121,7 +121,7 @@ class SimulatePesertaExamCommand extends Command
                         $jawaban = $options[array_rand($options)];
                     }
 
-                    $scoring = $scoringService->scoreAnswer($soal, $jawaban);
+                    $scoring = $scoringService->scoreAnswer($soal, $jawaban, $ujian, $attempt);
 
                     UjianJawaban::create([
                         'ujian_peserta_id' => $attempt->id,

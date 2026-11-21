@@ -3,6 +3,8 @@
 use App\Http\Middleware\CheckBlockedIp;
 use App\Http\Middleware\DetectAttack;
 use App\Http\Middleware\EnsureExamAccess;
+use App\Http\Middleware\EnsureKeuangan;
+use App\Http\Middleware\EnsurePembuatSoal;
 use App\Http\Middleware\EnsurePengajar;
 use App\Http\Middleware\EnsurePeserta;
 use App\Http\Middleware\EnsureSuperadmin;
@@ -33,6 +35,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'superadmin' => EnsureSuperadmin::class,
             'peserta' => EnsurePeserta::class,
             'pengajar' => EnsurePengajar::class,
+            'pembuat_soal' => EnsurePembuatSoal::class,
+            'keuangan' => EnsureKeuangan::class,
             'employee' => EnsureUserIsEmployee::class,
             'admin' => RedirectEmployeeToPortal::class,
             'offline.auth' => OfflineParticipantAuth::class,

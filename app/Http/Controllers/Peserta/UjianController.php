@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class UjianController extends Controller
@@ -90,6 +91,8 @@ class UjianController extends Controller
             return $peserta;
         }
 
+        \Log::info("kerjakan: peserta={$peserta?->id}, status={$peserta?->status}, ujian={$ujian->id}");
+
         if (! $peserta || $peserta->status === 'terdaftar') {
             return redirect()->route('peserta.ujian.show', $ujian);
         }
@@ -113,10 +116,6 @@ class UjianController extends Controller
             ->orderBy('urutan')
             ->orderBy('id')
             ->get();
-
-        if ($ujian->acak_soal) {
-            $ujianSoals = $ujianSoals->shuffle();
-        }
 
         $jawaban = $peserta->jawaban()->pluck('jawaban', 'ujian_soal_id');
         $sisaDetik = $this->sisaDetik($ujian, $peserta);
@@ -156,7 +155,7 @@ class UjianController extends Controller
 
         $ujianSoal = $ujian->ujianSoals()->with('soal')->findOrFail($validated['ujian_soal_id']);
 
-        $score = $this->scoring->scoreAnswer($ujianSoal->soal, $validated['jawaban'] ?? null);
+        $score = $this->scoring->scoreAnswer($ujianSoal->soal, $validated['jawaban'] ?? null, $ujian, $peserta);
 
         $peserta->jawaban()->updateOrCreate(
             ['ujian_soal_id' => $ujianSoal->id],
@@ -477,5 +476,72 @@ class UjianController extends Controller
         if ($peserta->status !== 'selesai') {
             $this->scoring->finalize($peserta);
         }
+    }
+
+    public function retry(Request $request, Ujian $ujian): RedirectResponse
+    {
+        if ($request->session()->has('offline_peserta_id')) {
+            $pesertaOfflineId = $request->session()->get('offline_peserta_id');
+            $pesertaOffline = PesertaOffline::find($pesertaOfflineId);
+
+            if ($pesertaOffline) {
+                $newAttempt = $ujian->peserta()->create([
+                    'user_id' => null,
+                    'peserta_offline_id' => $pesertaOfflineId,
+                    'status' => 'sedang_ujian',
+                    'waktu_mulai' => now(),
+                ]);
+
+                $request->session()->put([
+                    'offline_ujian_id' => $ujian->id,
+                    'offline_attempt_id' => $newAttempt->id,
+                ]);
+
+                return redirect()->route('peserta.ujian.kerjakan', $ujian);
+            }
+        }
+
+        return redirect()->route('peserta.dashboard');
+    }
+
+    public function riwayat(Request $request, Ujian $ujian): View|RedirectResponse
+    {
+        $peserta = $this->resolvePeserta($request, $ujian);
+
+        if ($peserta instanceof RedirectResponse || ! $peserta) {
+            return redirect()->route('peserta.dashboard');
+        }
+
+        $attempts = $ujian->peserta()
+            ->where(function($q) use ($peserta) {
+                if ($peserta->user_id) {
+                    $q->where('user_id', $peserta->user_id);
+                } else {
+                    $q->where('peserta_offline_id', $peserta->peserta_offline_id);
+                }
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('peserta.ujian.riwayat', compact('ujian', 'peserta', 'attempts'));
+    }
+
+    public function logoutTemporary(Request $request): RedirectResponse
+    {
+        $attemptId = $request->session()->get('offline_attempt_id');
+        $ujianId = $request->session()->get('offline_ujian_id');
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if ($attemptId && $ujianId) {
+            $request->session()->put([
+                'offline_attempt_id' => $attemptId,
+                'offline_ujian_id' => $ujianId,
+            ]);
+        }
+
+        return redirect()->route('home');
     }
 }

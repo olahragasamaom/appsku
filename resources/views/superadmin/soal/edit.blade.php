@@ -3,7 +3,7 @@
 @section('title', 'Edit Soal')
 
 @section('breadcrumb')
-    <a href="{{ route('superadmin.soal.index') }}" class="text-secondary-500 hover:text-secondary-700">Bank Soal</a>
+    <a href="{{ route(($routePrefix ?? 'superadmin') . '.soal.index') }}" class="text-secondary-500 hover:text-secondary-700">Bank Soal</a>
     <span class="mx-2 text-secondary-400">/</span>
     <span class="text-secondary-900 font-medium">Edit Soal</span>
 @endsection
@@ -13,7 +13,7 @@
 @endsection
 
 @section('content')
-    <form action="{{ route('superadmin.soal.update', $soal) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route(($routePrefix ?? 'superadmin') . '.soal.update', $soal) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         @include('superadmin.soal._form', [

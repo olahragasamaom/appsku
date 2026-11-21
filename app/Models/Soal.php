@@ -58,6 +58,7 @@ class Soal extends Model
         'gambar_pembahasan',
         'pembuat_soal_id',
         'tipe_tampil',
+        'user_updated_by',
     ];
 
     /**
@@ -77,6 +78,7 @@ class Soal extends Model
             'nilai_bobot_e' => 'decimal:2',
             'pembuat_soal_id' => 'integer',
             'tipe_tampil' => 'string',
+            'user_updated_by' => 'integer',
         ];
     }
 
@@ -98,6 +100,11 @@ class Soal extends Model
     public function pembuat(): BelongsTo
     {
         return $this->belongsTo(User::class, 'pembuat_soal_id');
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_updated_by');
     }
 
     public function hasImages(): bool

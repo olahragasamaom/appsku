@@ -393,7 +393,7 @@
 <div class="rounded-xl overflow-hidden bg-white {{ $error ? 'border border-danger-500' : 'border border-slate-300' }}">
     <div data-ckeditor-soal="{{ $editorId }}"
          data-placeholder="{{ $placeholder ?: 'Tulis teks soal di sini...' }}"
-         data-upload-url="{{ route('superadmin.soal.upload-editor') }}"
+         data-upload-url="{{ auth()->user()?->isPembuatSoal() ? route('pembuat-soal.soal.upload-editor') : route('superadmin.soal.upload-editor') }}"
          data-initial-value="{{ e($cleanValue) }}"
          {{ $tabindex ? "tabindex=\"$tabindex\"" : '' }}
          style="min-height: {{ max(6, (int) $rows) * 1.5 }}rem;"></div>
