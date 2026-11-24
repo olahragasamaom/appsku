@@ -53,7 +53,7 @@ class HasilUjianController extends Controller
                         [$now]
                     );
             })
-            ->with(['subJenisUjian', 'peserta'])
+            ->with(['jenisUjians', 'subJenisUjian', 'peserta'])
             ->withCount([
                 'peserta',
                 'peserta as peserta_selesai_count' => fn ($q) => $q->where('status', 'selesai'),
@@ -81,6 +81,7 @@ class HasilUjianController extends Controller
      */
     public function show(Ujian $ujian): View
     {
+        $ujian->load(['jenisUjians', 'subJenisUjian']);
         $ujian->loadCount([
             'peserta',
             'peserta as peserta_selesai_count' => fn ($q) => $q->where('status', 'selesai'),

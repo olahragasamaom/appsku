@@ -12,7 +12,7 @@
     <div class="flex justify-between items-center">
         <div>
             <h2 class="font-semibold text-xl text-secondary-800">{{ $ujian->nama_ujian }}</h2>
-            <p class="text-sm text-secondary-500">{{ $ujian->subJenisUjian->nama_sub_jenis_ujian ?? 'N/A' }}</p>
+            <p class="text-sm text-secondary-500">{{ $ujian->jenisUjians->pluck('nama_jenis_ujian')->join(', ') ?: ($ujian->subJenisUjian->nama_sub_jenis_ujian ?? '-') }}</p>
         </div>
         <a href="{{ route('superadmin.hasil-ujian.index') }}" class="btn btn-ghost">Kembali</a>
     </div>

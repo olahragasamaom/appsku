@@ -84,6 +84,7 @@
                  x-data="subIndikatorReorder({ url: '{{ route('superadmin.ujian.soal.reorder', $ujian) }}' })"
                  x-init="init($el)"
                  data-subindikator-reorder-list>
+                @php $nomorUrut = 1; @endphp
                 @forelse($ujianSoalsPerSubIndikator as $namaSubIndikator => $soalGroup)
                     <div class="border border-secondary-200 rounded-lg bg-secondary-50"
                          data-subindikator-group>
@@ -105,7 +106,7 @@
                                             title="Seret untuk mengurutkan soal">
                                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a1 1 0 100 2 1 1 0 000-2zM7 9a1 1 0 100 2 1 1 0 000-2zM7 14a1 1 0 100 2 1 1 0 000-2zM13 4a1 1 0 100 2 1 1 0 000-2zM13 9a1 1 0 100 2 1 1 0 000-2zM13 14a1 1 0 100 2 1 1 0 000-2z"/></svg>
                                     </button>
-                                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-secondary-100 text-secondary-600 text-xs font-semibold flex items-center justify-center" data-nomor>{{ $index + 1 }}</span>
+                                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-secondary-100 text-secondary-600 text-xs font-semibold flex items-center justify-center" data-nomor>{{ $nomorUrut++ }}</span>
                                     <p class="flex-1 text-sm text-secondary-800 line-clamp-2">{{ \Illuminate\Support\Str::limit(strip_tags($ujianSoal->soal->soal ?? ''), 120) }}</p>
                                     <a href="{{ route('superadmin.soal.preview', $ujianSoal->soal) }}" target="_blank" class="btn btn-ghost btn-sm flex-shrink-0 text-primary-600" title="Simulasi Tampilan Soal">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -129,6 +130,8 @@
             url: config.url,
             saving: false,
             init(el) {
+                this.renumberAll(el);
+                
                 if (!window.Sortable) return;
                 
                 const subIndGroups = el.querySelectorAll('[data-subindikator-group]');

@@ -67,48 +67,70 @@
             <div class="card-body space-y-5">
                 @forelse($subIndikatorGroups as $subJenis)
                     <div>
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="font-semibold text-secondary-800">{{ $subJenis->nama_sub_jenis_ujian }}</span>
-                            <span class="text-xs bg-secondary-100 text-secondary-600 px-2 py-0.5 rounded-md">
-                                {{ $subJenis->sistem_penilaian === 'benar_salah' ? 'Benar-Salah' : 'Poin per Jawaban' }}
-                            </span>
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-secondary-800">{{ $subJenis->nama_sub_jenis_ujian }}</span>
+                                <span class="text-xs bg-secondary-100 text-secondary-600 px-2 py-0.5 rounded-md">
+                                    {{ $subJenis->sistem_penilaian === 'benar_salah' ? 'Benar-Salah' : 'Poin per Jawaban' }}
+                                </span>
+                            </div>
+                            <button type="button"
+                                    @click="$dispatch('open-create-sub-indikator', {
+                                        subJenisUjianId: {{ $subJenis->id }}
+                                    })"
+                                    class="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 px-2.5 py-1 rounded-md transition-colors"
+                                    title="Tambah Sub Indikator untuk {{ $subJenis->nama_sub_jenis_ujian }}">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span>Tambah Sub Indikator</span>
+                            </button>
                         </div>
 
-                        @if($subJenis->subIndikator->isEmpty())
-                            <p class="text-sm text-secondary-400 italic ml-1">Belum ada sub indikator.</p>
-                        @else
-                            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                                @foreach($subJenis->subIndikator as $indikator)
-                                    @php $jumlahDiSubIndikator = $jumlahSoalPerSubIndikator[$indikator->id] ?? 0; @endphp
-                                    <div class="border rounded-lg py-2.5 px-4 flex items-center justify-between gap-3 shadow-sm transition-colors group {{ $jumlahDiSubIndikator === 0 ? 'border-danger-200 bg-danger-50 hover:border-danger-300' : 'border-secondary-200 bg-white hover:border-primary-300' }}">
-                                        <p class="text-sm font-medium flex-1 truncate {{ $jumlahDiSubIndikator === 0 ? 'text-danger-700' : 'text-secondary-800' }}" title="{{ $indikator->nama_sub_indikator }}">{{ $indikator->nama_sub_indikator }}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                            @foreach($subJenis->subIndikator as $indikator)
+                                @php $jumlahDiSubIndikator = $jumlahSoalPerSubIndikator[$indikator->id] ?? 0; @endphp
+                                <div class="border rounded-lg py-2.5 px-4 flex items-center justify-between gap-3 shadow-sm transition-colors group {{ $jumlahDiSubIndikator === 0 ? 'border-danger-200 bg-danger-50 hover:border-danger-300' : 'border-secondary-200 bg-white hover:border-primary-300' }}">
+                                    <p class="text-sm font-medium flex-1 truncate {{ $jumlahDiSubIndikator === 0 ? 'text-danger-700' : 'text-secondary-800' }}" title="{{ $indikator->nama_sub_indikator }}">{{ $indikator->nama_sub_indikator }}</p>
+                                    
+                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mr-2 {{ $jumlahDiSubIndikator === 0 ? 'bg-danger-100 text-danger-700' : 'bg-primary-50 text-primary-700' }}">
+                                            {{ $jumlahDiSubIndikator }} soal
+                                        </span>
                                         
-                                        <div class="flex items-center gap-1 flex-shrink-0">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mr-2 {{ $jumlahDiSubIndikator === 0 ? 'bg-danger-100 text-danger-700' : 'bg-primary-50 text-primary-700' }}">
-                                                {{ $jumlahDiSubIndikator }} soal
-                                            </span>
-                                            
-                                            <a href="{{ route($routePrefix . '.soal.create', ['sub_indikator_id' => $indikator->id, 'ujian_id' => $ujian->id]) }}"
-                                               class="p-1.5 text-secondary-400 hover:text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
-                                               title="Tambah Soal Manual">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                            </a>
-                                            
-                                            <button type="button"
-                                                    @click="$dispatch('open-import-soal', {
-                                                        subIndikatorId: {{ $indikator->id }},
-                                                        subIndikatorNama: '{{ addslashes($indikator->nama_sub_indikator) }}',
-                                                        subJenisUjianId: {{ $subJenis->id }}
-                                                    })"
-                                                    class="p-1.5 text-secondary-400 hover:text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
-                                                    title="Import Soal dari Excel">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                            </button>
-                                        </div>
+                                        <a href="{{ route($routePrefix . '.soal.create', ['sub_indikator_id' => $indikator->id, 'ujian_id' => $ujian->id]) }}"
+                                           class="p-1.5 text-secondary-400 hover:text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
+                                           title="Tambah Soal Manual">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        </a>
+                                        
+                                        <button type="button"
+                                                @click="$dispatch('open-import-soal', {
+                                                    subIndikatorId: {{ $indikator->id }},
+                                                    subIndikatorNama: '{{ addslashes($indikator->nama_sub_indikator) }}',
+                                                    subJenisUjianId: {{ $subJenis->id }}
+                                                })"
+                                                class="p-1.5 text-secondary-400 hover:text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
+                                                title="Import Soal dari Excel">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                        </button>
                                     </div>
-                                @endforeach
-                            </div>
-                        @endif
+                                </div>
+                            @endforeach
+
+                            {{-- Tombol Tambah Sub Indikator di dalam Grid --}}
+                            <button type="button"
+                                    @click="$dispatch('open-create-sub-indikator', {
+                                        subJenisUjianId: {{ $subJenis->id }}
+                                    })"
+                                    class="border border-dashed border-secondary-300 hover:border-primary-500 hover:bg-primary-50/50 rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-medium text-secondary-500 hover:text-primary-600 transition-all cursor-pointer group min-h-[46px]"
+                                    title="Tambah Sub Indikator Baru untuk {{ $subJenis->nama_sub_jenis_ujian }}">
+                                <div class="w-6 h-6 rounded-full bg-secondary-100 group-hover:bg-primary-100 text-secondary-500 group-hover:text-primary-600 flex items-center justify-center transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                </div>
+                                <span class="text-xs sm:text-sm font-medium">Tambah Sub Indikator</span>
+                            </button>
+                        </div>
                     </div>
                 @empty
                     <p class="text-sm text-secondary-500">Belum ada sub jenis ujian / sub indikator pada jenis ujian ini.</p>
@@ -197,6 +219,7 @@
 
             {{-- TAB 2: Per Sub Indikator (dikelompokkan, read-only) --}}
             <div x-show="tab === 'grup'" x-cloak class="card-body space-y-6">
+                @php $nomorUrutGrup = 1; @endphp
                 @forelse($ujianSoalsPerSubIndikator as $namaSubIndikator => $soalGroup)
                     <div>
                         <div class="flex items-center gap-2 mb-3">
@@ -208,7 +231,7 @@
                         <div class="space-y-2">
                             @foreach($soalGroup as $index => $ujianSoal)
                                  <div class="flex items-start gap-3 p-3 border border-secondary-100 rounded-lg hover:bg-secondary-50">
-                                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-secondary-100 text-secondary-600 text-xs font-semibold flex items-center justify-center">{{ $index + 1 }}</span>
+                                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-secondary-100 text-secondary-600 text-xs font-semibold flex items-center justify-center">{{ $nomorUrutGrup++ }}</span>
                                       <div class="flex-1 soal-preview-cell text-sm text-secondary-800 line-clamp-3">
                                          {!! app('App\Services\FormulaRenderer')->render($ujianSoal->soal->soal ?? '') !!}
                                       </div>
@@ -334,6 +357,63 @@
                     <div class="modal-footer flex items-center justify-end gap-3">
                         <button type="button" @click="show = false" class="btn btn-secondary">Batal</button>
                         <button type="submit" class="btn btn-primary">Tambahkan Soal Terpilih</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Modal Tambah Sub Indikator --}}
+        <div x-data="{
+                show: false,
+                subJenisUjianId: '',
+                namaSubIndikator: ''
+             }"
+             x-on:open-create-sub-indikator.window="
+                 show = true;
+                 subJenisUjianId = $event.detail.subJenisUjianId ? String($event.detail.subJenisUjianId) : '';
+                 namaSubIndikator = '';
+                 $nextTick(() => { $refs.inputNamaSubIndikator?.focus(); });
+             "
+             x-on:keydown.escape.window="show = false"
+             x-effect="document.body.style.overflow = show ? 'hidden' : ''"
+             x-show="show"
+             x-cloak
+             class="modal-backdrop">
+            <div @click.outside="show = false" x-show="show" class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">Tambah Sub Indikator</h3>
+                    <button type="button" @click="show = false" class="modal-close">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <form method="POST" action="{{ route($routePrefix . '.sub-indikator.store') }}" class="flex flex-col flex-1 min-h-0">
+                    @csrf
+                    <div class="modal-body space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Sub Jenis Ujian <span class="text-danger-500">*</span></label>
+                            <select name="sub_jenis_ujian_id" x-model="subJenisUjianId"
+                                    class="input w-full" required>
+                                <option value="">-- Pilih Sub Jenis Ujian --</option>
+                                @foreach($subIndikatorGroups as $subJenisOpt)
+                                    <option value="{{ $subJenisOpt->id }}">
+                                        {{ $jenisUjians->firstWhere('id', $activeJenisId)?->nama_jenis_ujian }} - {{ $subJenisOpt->nama_sub_jenis_ujian }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Nama Sub Indikator <span class="text-danger-500">*</span></label>
+                            <input type="text" name="nama_sub_indikator" x-ref="inputNamaSubIndikator" x-model="namaSubIndikator"
+                                   class="input w-full"
+                                   placeholder="Hukum Perdata" required>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer flex items-center justify-end gap-3">
+                        <button type="button" @click="show = false" class="btn btn-secondary">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
                     </div>
                 </form>
             </div>

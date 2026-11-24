@@ -36,7 +36,7 @@
                                         <h3 class="font-bold text-lg text-secondary-900">{{ $ujian->nama_ujian }}</h3>
                                         <x-badge type="success">Aktif</x-badge>
                                     </div>
-                                    <p class="text-sm text-secondary-500 mb-3">{{ $ujian->subJenisUjian->nama_sub_jenis_ujian ?? 'N/A' }}</p>
+                                    <p class="text-sm text-secondary-500 mb-3">{{ $ujian->jenisUjians->pluck('nama_jenis_ujian')->join(', ') ?: ($ujian->subJenisUjian->nama_sub_jenis_ujian ?? '-') }}</p>
 
                                     <div class="flex flex-wrap gap-4 text-sm text-secondary-600">
                                         @if($ujian->tanggal_ujian)

@@ -870,6 +870,7 @@ Route::prefix('pembuat-soal')->name('pembuat-soal.')->group(function () {
         Route::post('ujian/{ujian}/finalisasi', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'finalize'])->name('ujian.soal.finalize');
         Route::delete('ujian/{ujian}/finalisasi', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'unfinalize'])->name('ujian.soal.unfinalize');
         Route::post('ujian/{ujian}/soal/reorder', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'reorder'])->name('ujian.soal.reorder');
+        Route::post('sub-indikator', [App\Http\Controllers\PembuatSoal\SubIndikatorController::class, 'store'])->name('sub-indikator.store');
         Route::resource('peserta', App\Http\Controllers\PembuatSoal\PesertaController::class)->only(['index', 'show']);
 
         Route::get('change-password', [App\Http\Controllers\PembuatSoal\ChangePasswordController::class, 'index'])->name('change-password.index');

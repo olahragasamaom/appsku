@@ -89,7 +89,7 @@ class SubIndikatorController extends Controller
     {
         SubIndikator::create($request->validatedWithJenisUjian());
 
-        return redirect()->route('superadmin.sub-indikator.index')
+        return redirect()->back(fallback: route('superadmin.sub-indikator.index'))
             ->with('success', 'Sub indikator berhasil dibuat.');
     }
 

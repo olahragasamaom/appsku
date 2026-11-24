@@ -58,7 +58,15 @@ class UjianSoalController extends SuperadminUjianSoalController
     {
         $this->authorizeUjian($ujian);
 
-        return parent::finalisasi($request, $ujian);
+        $response = parent::finalisasi($request, $ujian);
+
+        if ($response instanceof View) {
+            $data = $response->getData();
+
+            return view('pembuat-soal.ujian.soal.finalisasi', $data);
+        }
+
+        return $response;
     }
 
     public function reorder(Request $request, Ujian $ujian)
@@ -72,14 +80,22 @@ class UjianSoalController extends SuperadminUjianSoalController
     {
         $this->authorizeUjian($ujian);
 
-        return parent::finalize($ujian);
+        parent::finalize($ujian);
+
+        return redirect()
+            ->route('pembuat-soal.ujian.soal.finalisasi', $ujian)
+            ->with('success', 'Ujian berhasil difinalisasi.');
     }
 
     public function unfinalize(Ujian $ujian)
     {
         $this->authorizeUjian($ujian);
 
-        return parent::unfinalize($ujian);
+        parent::unfinalize($ujian);
+
+        return redirect()
+            ->route('pembuat-soal.ujian.soal.finalisasi', $ujian)
+            ->with('success', 'Finalisasi ujian dibatalkan.');
     }
 
     private function authorizeUjian(Ujian $ujian): void

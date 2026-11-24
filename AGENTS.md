@@ -141,6 +141,79 @@ php artisan tinker
 # Query: App\Models\Soal::find(169)->only(['soal', 'opsi_a']);
 ```
 
+## System Roles & User Levels Architecture
+
+Aplikasi memisahkan peran dengan kombinasi flag `User` dan `panritta_user_levels`:
+- **Superadmin** (`is_superadmin = true`):
+  - Prefix route: `/superadmin`
+  - Akses mutlak semua modul: Master Soal, Ujian, Monitoring, Peserta Online & Offline, Pembayaran, Keamanan, System Health.
+- **Pengajar** (`is_pengajar = true`):
+  - Prefix route: `/pengajar` (login: `/pengajar/login-pengajar`)
+  - Fokus: Manajemen Bank Soal milik pengajar.
+- **Pembuat Soal** (`user_level_id` dengan `slug = pembuat_soal`):
+  - Prefix route: `/pembuat-soal` (login: `/pembuat-soal/login`)
+  - Fokus: Manajemen Soal, Perakitan Ujian, Import Excel, Finalisasi Soal Ujian.
+- **Pengawas** (`user_level_id` dengan `slug = pengawas`):
+  - Prefix route: `/pengawas` (login: `/pengawas/login`)
+  - Fokus: Absensi & Aktivasi Peserta Offline, Monitoring Ujian Live, Blokir/Unblokir, Time Extension, Reset Kode Akses.
+- **Keuangan** (`user_level_id` dengan `slug = keuangan`):
+  - Prefix route: `/keuangan` (login: `/keuangan/login`)
+  - Fokus: Manajemen Paket, Peserta, Verifikasi dan Penolakan Bukti Pembayaran Manual (`PesertaPembayaran`).
+- **Peserta**:
+  - Akses area pengerjaan via `/peserta`
+
+---
+
+## Peserta Dual-Engine Architecture (Online vs Offline)
+
+### 1. Peserta Online (`User` with `is_peserta = true`)
+- **Autentikasi**: `auth:web` via email/password atau Google OAuth (`/peserta/login`, `/peserta/register`).
+- **Flow Berlangganan**:
+  1. Pilih paket (`panritta_paket`) via `/peserta/langganan`.
+  2. Bayar via Payment Gateway atau Transfer Manual (upload bukti via `/peserta/langganan/bayar/{pembayaran}`).
+  3. Diverifikasi oleh Keuangan/Superadmin → status jadi `success` → record `PesertaLangganan` aktif dibuat.
+  4. Kuota ujian dipotong otomatis saat mulai attempt (`AttemptService::start()`).
+  5. Mengakses ujian yang terhubung ke paket via `panritta_paket_ujian`.
+
+### 2. Peserta Offline (`PesertaOffline` / `panritta_peserta_offline`)
+- **Karakteristik**: Khusus siswa kelas fisik / bimbel offline. Tanpa akun User umum.
+- **Kredensial**: `nomor_peserta` + `kode_akses` (hash di DB, plaintext di `kode_akses_plain` untuk cetak kartu).
+- **Portal**: `/peserta/ujian-offline` (`OfflinePortalController`).
+- **Anti Multi-Device**: Menggunakan `OfflineParticipantSession`. Jika peserta login di perangkat lain, sesi aktif sebelumnya otomatis di-logout (`status = logout`).
+- **Gerbang Akses (Gate Rules)**:
+  1. Harus terdaftar di ujian (`peserta_offline.ujian_id = ujian.id`).
+  2. Harus diaktifkan oleh pengawas/admin (`is_active = true` via menu Absensi).
+  3. Tidak diblokir (`is_blocked = false`).
+  4. Waktu sekarang harus dalam rentang: `tanggal_ujian <= now() <= batas_keterlambatan`.
+- **Sesi Ujian Offline**: Disimpan dalam session:
+  `offline_peserta_id`, `offline_session_token`, `offline_ujian_id`, `offline_attempt_id`.
+- **Relasi ke UjianPeserta**: `panritta_peserta_offline.ujian_peserta_id` menghubungkan ke record attempt `panritta_ujian_peserta` (di mana `user_id` bernilai `null`).
+
+---
+
+## CBT Exam Engine & Lifecycle
+
+1. **Struktur Hierarki Soal**:
+   `JenisUjian` (TWK, TIU, TKP) → `SubJenisUjian` → `SubIndikator` → `Soal` (`panritta_soal`)
+2. **Sistem Penilaian**:
+   - `benar_salah`: Nilai jika benar (bobot soal atau default sub-jenis).
+   - `tiap_jawaban_ada_poin`: Bobot per opsi A-E (misal TKP skala 1-5).
+3. **Perakitan & Finalisasi Ujian**:
+   - Pivot `panritta_ujian_soal` mencatat urutan dan kategori.
+   - Ujian harus difinalisasi (`finalized_at`) sebelum dimulai agar susunan terkunci.
+4. **Pengacakan (Randomization)**:
+   - **Soal**: `RandomSoalService::generateSoalOrder()` mengacak soal per sub-indikator (menjaga urutan sub-indikator). Urutan disimpan di `UjianPeserta.soal_order` (JSON).
+   - **Opsi TKP**: `OpsiRandomizer` mengacak opsi A-E untuk soal TKP jika `randomize_opsi_tkp = true`. Reverse-mapping otomatis saat penilaian.
+5. **Pengerjaan & Monitoring Live**:
+   - Route `peserta/ujian/{ujian}/kerjakan` diproteksi middleware `EnsureExamAccess` (menerima `auth:web` atau `OfflineParticipantAuth`).
+   - `saveAnswer()` real-time instant-scoring ke `UjianJawaban`.
+   - Heartbeat `/peserta/ujian/{ujian}/heartbeat` mengupdate `last_activity_at`.
+   - Jeda/Pause pengerjaan via `is_paused` dan `sisa_detik_saat_pause`.
+   - Perpanjangan waktu via `TimeExtension` (`panritta_time_extensions`).
+   - Endpoint detail monitoring per soal: `/superadmin/hasil-ujian/{ujian}/peserta/{peserta}/detail-pengerjaan`.
+
+---
+
 ## Known Quirks & Gotchas
 1. **Double-escaping**: Content stored escaped in DB, unescape on render via FormulaRenderer
 2. **CKEditor initialData**: Must use `data-initial-value` attribute, not raw innerHTML
@@ -272,4 +345,4 @@ php artisan tinker
 - [ ] Statistik per-soal: kesulitan, discrimination index
 
 ---
-*Last updated: 2026-11-22 | Session: Randomisasi soal + live scoring + detail monitoring*
+*Last updated: 2026-11-24 | Session: Architecture mapping & system trace documentation (Roles, Peserta Online/Offline, CBT engine)*
