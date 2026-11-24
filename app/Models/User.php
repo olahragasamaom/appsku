@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use App\Traits\LogsActivityTrait;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -56,7 +59,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Company::class);
     }
 
-    public function userLevel(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function userLevel(): BelongsTo
     {
         return $this->belongsTo(UserLevel::class, 'user_level_id');
     }
@@ -118,6 +121,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->userLevel?->slug === 'keuangan' && $this->userLevel->is_active;
     }
 
+    public function isPengawas(): bool
+    {
+        return $this->userLevel?->slug === 'pengawas' && $this->userLevel->is_active;
+    }
+
     public function langgananAktif(): HasOne
     {
         return $this->hasOne(PesertaLangganan::class, 'user_id')
@@ -136,8 +144,8 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<User>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<User>
+     * @param  Builder<User>  $query
+     * @return Builder<User>
      */
     public function scopePeserta($query)
     {
@@ -168,7 +176,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
+        $this->notify(new VerifyEmail);
         // Note: The VerifyEmail notification by default uses route('verification.verify').
         // Since we are using a custom auth flow for peserta, we can customize the VerifyEmail
         // notification in AppServiceProvider or simply rely on the default if the route name matches.

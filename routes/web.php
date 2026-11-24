@@ -81,6 +81,8 @@ Route::get('/', function () {
 
         if ($user->isSuperAdmin()) {
             return redirect()->route('superadmin.dashboard');
+        } elseif ($user->isPengawas()) {
+            return redirect()->route('pengawas.dashboard');
         } elseif ($user->isPembuatSoal()) {
             return redirect()->route('pembuat-soal.dashboard');
         } elseif ($user->isKeuangan()) {
@@ -578,7 +580,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/dashboard2', [Dashboard2Controller::class, 'index'])->name('dashboard2');
 
         // User Management
-        Route::resource('users', App\Http\Controllers\Superadmin\UserController::class)->only(['index', 'show']);
+        Route::resource('users', App\Http\Controllers\Superadmin\UserController::class)->only(['index', 'show', 'create', 'store']);
 
         // Change Password
         Route::get('change-password', [ChangePasswordController::class, 'index'])->name('change-password.index');
@@ -907,6 +909,35 @@ Route::prefix('keuangan')->name('keuangan.')->group(function () {
             auth()->logout();
 
             return redirect()->route('keuangan.login');
+        })->name('logout');
+    });
+});
+
+Route::prefix('pengawas')->name('pengawas.')->group(function () {
+    Route::middleware('guest')->group(function () {
+        Route::get('login', [App\Http\Controllers\Pengawas\AuthController::class, 'showLoginForm'])->name('login');
+        Route::post('login', [App\Http\Controllers\Pengawas\AuthController::class, 'login']);
+    });
+
+    Route::middleware(['auth', 'pengawas'])->group(function () {
+        Route::get('/', App\Http\Controllers\Pengawas\DashboardController::class)->name('dashboard');
+
+        Route::get('absensi', [App\Http\Controllers\Pengawas\AbsensiController::class, 'index'])->name('absensi.index');
+        Route::get('absensi/ujian/{ujian}/activation', [App\Http\Controllers\Pengawas\AbsensiController::class, 'activation'])->name('absensi.activation');
+        Route::patch('absensi/ujian/{ujian}/peserta/{pesertaOffline}/toggle', [App\Http\Controllers\Pengawas\AbsensiController::class, 'toggleActivation'])->name('absensi.toggle');
+        Route::post('absensi/ujian/{ujian}/bulk-toggle', [App\Http\Controllers\Pengawas\AbsensiController::class, 'bulkToggleActivation'])->name('absensi.bulk-toggle');
+
+        Route::get('hasil-ujian', [App\Http\Controllers\Pengawas\HasilUjianController::class, 'index'])->name('hasil-ujian.index');
+        Route::get('hasil-ujian/{ujian}', [App\Http\Controllers\Pengawas\HasilUjianController::class, 'show'])->name('hasil-ujian.show');
+        Route::get('hasil-ujian/{ujian}/peserta/{pesertaUjian}', [App\Http\Controllers\Pengawas\HasilUjianController::class, 'showPeserta'])->name('hasil-ujian.peserta.show');
+
+        Route::get('change-password', [App\Http\Controllers\Pengawas\ChangePasswordController::class, 'index'])->name('change-password.index');
+        Route::put('change-password', [App\Http\Controllers\Pengawas\ChangePasswordController::class, 'update'])->name('change-password.update');
+
+        Route::post('logout', function () {
+            auth()->logout();
+
+            return redirect()->route('pengawas.login');
         })->name('logout');
     });
 });

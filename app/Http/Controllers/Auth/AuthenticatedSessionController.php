@@ -17,15 +17,22 @@ class AuthenticatedSessionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'string', 'email'],
+        $loginField = filter_var($request->input('login'), FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        $credentials = [
+            $loginField => $request->input('login'),
+            'password' => $request->input('password'),
+        ];
+
+        $request->validate([
+            'login' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()->withErrors([
-                'email' => __('auth.failed'),
-            ])->onlyInput('email');
+                'login' => __('auth.failed'),
+            ])->onlyInput('login');
         }
 
         $user = Auth::user();
@@ -35,8 +42,8 @@ class AuthenticatedSessionController extends Controller
             Auth::logout();
 
             return back()->withErrors([
-                'email' => 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.',
-            ])->onlyInput('email');
+                'login' => 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.',
+            ])->onlyInput('login');
         }
 
         // Check if company is active (for non-super-admin)
@@ -44,11 +51,16 @@ class AuthenticatedSessionController extends Controller
             Auth::logout();
 
             return back()->withErrors([
-                'email' => 'Perusahaan Anda telah dinonaktifkan. Silakan hubungi administrator.',
-            ])->onlyInput('email');
+                'login' => 'Perusahaan Anda telah dinonaktifkan. Silakan hubungi administrator.',
+            ])->onlyInput('login');
         }
 
         $request->session()->regenerate();
+
+        // Redirect pengawas to pengawas dashboard
+        if ($user->isPengawas()) {
+            return redirect()->intended(route('pengawas.dashboard'));
+        }
 
         // Redirect employee to portal, admin/hr to dashboard
         if ($user->hasRole('employee') && ! $user->hasAnyRole(['admin', 'hr-manager', 'payroll-manager'])) {

@@ -115,34 +115,34 @@
                 </a>
             </div>
 
-            <!-- Header -->
-            <div class="text-center mb-8">
-                <h2 class="text-2xl lg:text-3xl font-bold text-secondary-900 mb-2">Masuk ke Akun Anda</h2>
-                <p class="text-secondary-500">Masukkan email dan password untuk melanjutkan</p>
-            </div>
+             <!-- Header -->
+             <div class="text-center mb-8">
+                 <h2 class="text-2xl lg:text-3xl font-bold text-secondary-900 mb-2">Masuk ke Akun Anda</h2>
+                 <p class="text-secondary-500">Masukkan email/username dan password untuk melanjutkan</p>
+             </div>
 
-            <!-- Login Form -->
-            <form method="POST" action="{{ route('login') }}" class="space-y-5">
-                @csrf
+             <!-- Login Form -->
+             <form method="POST" action="{{ route('login') }}" class="space-y-5">
+                 @csrf
 
-                <!-- Email -->
-                <div>
-                    <label for="email" class="block text-sm font-medium text-secondary-700 mb-2">Email</label>
-                    <div class="relative">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                        <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus
-                               class="form-input w-full @error('email') border-danger-500 @enderror"
-                               style="padding-left: 3rem;"
-                               placeholder="nama@perusahaan.com">
-                    </div>
-                    @error('email')
-                        <p class="mt-1 text-sm text-danger-500">{{ $message }}</p>
-                    @enderror
-                </div>
+                 <!-- Email/Username -->
+                 <div>
+                     <label for="login" class="block text-sm font-medium text-secondary-700 mb-2">Email atau Username</label>
+                     <div class="relative">
+                         <div class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary-400 pointer-events-none z-10">
+                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                             </svg>
+                         </div>
+                         <input type="text" id="login" name="login" value="{{ old('login') }}" required autofocus
+                                class="form-input w-full @error('login') border-danger-500 @enderror"
+                                style="padding-left: 3rem;"
+                                placeholder="nama@perusahaan.com atau username">
+                     </div>
+                     @error('login')
+                         <p class="mt-1 text-sm text-danger-500">{{ $message }}</p>
+                     @enderror
+                 </div>
 
                 <!-- Password -->
                 <div x-data="{ show: false }">

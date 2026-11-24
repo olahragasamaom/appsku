@@ -12,6 +12,12 @@
             <h1 class="text-2xl font-bold text-secondary-900">Manajemen User</h1>
             <p class="text-secondary-500 mt-1">Kelola daftar user sistem (bukan peserta ujian)</p>
         </div>
+        <a href="{{ route('superadmin.users.create') }}" class="btn btn-primary">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Tambah User
+        </a>
     </div>
 @endsection
 

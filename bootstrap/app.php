@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureExamAccess;
 use App\Http\Middleware\EnsureKeuangan;
 use App\Http\Middleware\EnsurePembuatSoal;
 use App\Http\Middleware\EnsurePengajar;
+use App\Http\Middleware\EnsurePengawas;
 use App\Http\Middleware\EnsurePeserta;
 use App\Http\Middleware\EnsureSuperadmin;
 use App\Http\Middleware\EnsureUserIsEmployee;
@@ -13,10 +14,10 @@ use App\Http\Middleware\LogRateLimitHit;
 use App\Http\Middleware\OfflineParticipantAuth;
 use App\Http\Middleware\RedirectEmployeeToPortal;
 use App\Http\Middleware\SetTenant;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Auth\AuthenticationException;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
@@ -37,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'pengajar' => EnsurePengajar::class,
             'pembuat_soal' => EnsurePembuatSoal::class,
             'keuangan' => EnsureKeuangan::class,
+            'pengawas' => EnsurePengawas::class,
             'employee' => EnsureUserIsEmployee::class,
             'admin' => RedirectEmployeeToPortal::class,
             'offline.auth' => OfflineParticipantAuth::class,
