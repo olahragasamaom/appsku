@@ -61,4 +61,21 @@ class UserController extends Controller
 
         return view('superadmin.users.show', compact('user'));
     }
+
+    public function editPassword(User $user): View
+    {
+        return view('superadmin.users.edit-password', compact('user'));
+    }
+
+    public function updatePassword(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user->update(['password' => Hash::make($validated['password'])]);
+
+        return redirect()->route('superadmin.users.show', $user)
+            ->with('success', 'Password user berhasil diubah.');
+    }
 }

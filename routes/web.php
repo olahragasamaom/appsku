@@ -581,6 +581,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 
         // User Management
         Route::resource('users', App\Http\Controllers\Superadmin\UserController::class)->only(['index', 'show', 'create', 'store']);
+        Route::get('users/{user}/edit-password', [App\Http\Controllers\Superadmin\UserController::class, 'editPassword'])->name('users.edit-password');
+        Route::put('users/{user}/update-password', [App\Http\Controllers\Superadmin\UserController::class, 'updatePassword'])->name('users.update-password');
 
         // Change Password
         Route::get('change-password', [ChangePasswordController::class, 'index'])->name('change-password.index');
