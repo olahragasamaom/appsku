@@ -178,6 +178,23 @@ describe('Ujian Edit Form', function () {
         $this->assertStringContainsString('value="'.$skd->id.'"', $response->getContent());
         $response->assertSee('SKD');
     });
+
+    it('displays online edit form with akses member checked', function () {
+        $skd = JenisUjian::factory()->create(['nama_jenis_ujian' => 'SKD']);
+
+        $ujian = Ujian::factory()->online()->create([
+            'dibuat_oleh' => $this->superadmin->id,
+            'akses_member' => ['Free', 'Pro'],
+        ]);
+        $ujian->jenisUjians()->sync([$skd->id]);
+
+        $response = $this->get("/superadmin/ujian/{$ujian->id}/edit");
+
+        $response->assertSuccessful();
+        $content = $response->getContent();
+        $this->assertStringContainsString('name="akses_member[]" value="Free"', $content);
+        $this->assertStringContainsString('name="akses_member[]" value="Pro"', $content);
+    });
 });
 
 describe('Ujian Update', function () {
@@ -214,6 +231,30 @@ describe('Ujian Update', function () {
         $this->assertDatabaseHas('panritta_ujian_jenis_ujian', [
             'ujian_id' => $ujian->id,
             'jenis_ujian_id' => $skb->id,
+        ]);
+    });
+
+    it('can update online ujian with akses member', function () {
+        $skd = JenisUjian::factory()->create(['nama_jenis_ujian' => 'SKD']);
+
+        $ujian = Ujian::factory()->online()->create(['dibuat_oleh' => $this->superadmin->id]);
+        $ujian->jenisUjians()->sync([$skd->id]);
+
+        $response = $this->put("/superadmin/ujian/{$ujian->id}", [
+            'nama_ujian' => 'Online Ujian Updated',
+            'tipe_ujian' => 'online_paket',
+            'jumlah_soal' => 150,
+            'jenis_ujian_id' => [$skd->id],
+            'akses_member' => ['Free', 'Basic', 'Pro'],
+        ]);
+
+        $response->assertRedirect('/superadmin/ujian');
+
+        $this->assertDatabaseHas('panritta_ujian', [
+            'id' => $ujian->id,
+            'nama_ujian' => 'Online Ujian Updated',
+            'tipe_ujian' => 'online_paket',
+            'akses_member' => json_encode(['Free', 'Basic', 'Pro']),
         ]);
     });
 });
