@@ -59,10 +59,8 @@
                         <td class="px-6 py-4 text-center">
                             <template x-if="row.lulus === true"><span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-success-100 text-success-700">✓ Lulus</span></template>
                             <template x-if="row.lulus === false"><span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-danger-100 text-danger-700">✕ Tidak Lulus</span></template>
-                            <template x-if="row.lulus === null">
-                                <template x-if="row.is_pass"><span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-success-100 text-success-700">✓ Lulus*</span></template>
-                                <template x-if="!row.is_pass"><span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-danger-100 text-danger-700">✕ Belum Lulus*</span></template>
-                            </template>
+                            <template x-if="row.lulus === null && row.is_pass"><span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-success-100 text-success-700">✓ Lulus*</span></template>
+                            <template x-if="row.lulus === null && !row.is_pass"><span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-danger-100 text-danger-700">✕ Belum Lulus*</span></template>
                         </td>
                     </tr>
                 </template>

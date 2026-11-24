@@ -45,6 +45,7 @@ class UjianPeserta extends Model
             'is_paused' => 'boolean',
             'paused_at' => 'datetime',
             'sisa_detik_saat_pause' => 'integer',
+            'soal_order' => 'array',
         ];
     }
 

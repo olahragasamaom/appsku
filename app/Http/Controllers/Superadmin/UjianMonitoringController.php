@@ -45,7 +45,7 @@ class UjianMonitoringController extends Controller
         }
 
         $peserta = $ujian->peserta()
-            ->with('user', 'pesertaOffline', 'jawaban')
+            ->with('user', 'pesertaOffline', 'jawaban', 'ujian.ujianJenisUjians.jenisUjian', 'ujian.subJenisUjian')
             ->get()
             ->map(function ($item) use ($totalPassingGrade) {
                 // Hitung skor real-time dari jawaban yang sudah tersimpan
@@ -55,8 +55,9 @@ class UjianMonitoringController extends Controller
                 // atau gunakan skor real-time dari jawaban yang tersimpan
                 $displayNilai = $item->total_nilai !== null ? (float) $item->total_nilai : (float) $nilaiRealtime;
 
-                // Cek apakah nilai sudah mencapai passing grade
-                $isPass = $displayNilai >= $totalPassingGrade;
+                // Cek lulus per sub-jenis (TWK/TIU/TKP) - SEMUA sub-jenis harus lulus
+                $breakdown = $this->scoring->breakdownPerSubJenis($item);
+                $isPass = ! empty($breakdown) && collect($breakdown)->every(fn ($row) => $row['lulus'] === true);
 
                 return [
                     'id' => $item->id,
@@ -140,11 +141,6 @@ class UjianMonitoringController extends Controller
             ->orderBy('urutan')
             ->orderBy('id')
             ->get();
-
-        // Acak soal jika ujian diset acak
-        if ($ujian->acak_soal) {
-            $ujianSoals = $ujianSoals->shuffle();
-        }
 
         return view('superadmin.ujian.monitoring.simulasi', compact('ujian', 'ujianSoals'));
     }

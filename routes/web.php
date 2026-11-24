@@ -14,62 +14,19 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\EmployeeExitController;
-use App\Http\Controllers\EmployeePortal\AnnouncementController as PortalAnnouncementController;
-use App\Http\Controllers\EmployeePortal\AttendanceController as PortalAttendanceController;
-use App\Http\Controllers\EmployeePortal\DashboardController as PortalDashboardController;
-use App\Http\Controllers\EmployeePortal\LeaveController as PortalLeaveController;
-use App\Http\Controllers\EmployeePortal\OvertimeController as PortalOvertimeController;
-use App\Http\Controllers\EmployeePortal\PayslipController as PortalPayslipController;
-use App\Http\Controllers\EmployeePortal\ProfileController as PortalProfileController;
-use App\Http\Controllers\EmployeePortal\ReimbursementController as PortalReimbursementController;
-use App\Http\Controllers\EmployeeSalaryController;
-use App\Http\Controllers\FaceRecognitionController;
-use App\Http\Controllers\HolidayController;
-use App\Http\Controllers\Import\DepartmentImportController;
-use App\Http\Controllers\Import\EmployeeImportController;
-use App\Http\Controllers\Import\HolidayImportController;
-use App\Http\Controllers\Import\LeaveTypeImportController;
-use App\Http\Controllers\Import\PositionImportController;
-use App\Http\Controllers\Import\WorkScheduleImportController;
-use App\Http\Controllers\LeaveBalanceController;
-use App\Http\Controllers\LeaveRequestController;
-use App\Http\Controllers\LeaveTypeController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\OfficeLocationController;
-use App\Http\Controllers\OrganizationChartController;
-use App\Http\Controllers\OvertimeRequestController;
-use App\Http\Controllers\OvertimeSettingController;
-use App\Http\Controllers\PayrollController;
-use App\Http\Controllers\PayrollItemController;
-use App\Http\Controllers\PayrollSettingController;
-use App\Http\Controllers\Pengajar\AuthController;
-use App\Http\Controllers\PembuatSoal\DashboardController as PembuatSoalDashboardController;
 use App\Http\Controllers\Keuangan\DashboardController as KeuanganDashboardController;
+use App\Http\Controllers\PembuatSoal\DashboardController as PembuatSoalDashboardController;
+use App\Http\Controllers\Pengajar\AuthController;
 use App\Http\Controllers\Peserta\AuthController as PesertaAuthController;
 use App\Http\Controllers\Peserta\DashboardController as PesertaDashboardController;
 use App\Http\Controllers\Peserta\LanggananController as PesertaLanggananController;
 use App\Http\Controllers\Peserta\OAuthController as PesertaOAuthController;
 use App\Http\Controllers\Peserta\OfflinePortalController;
 use App\Http\Controllers\Peserta\UjianController as PesertaUjianController;
-use App\Http\Controllers\PositionController;
-use App\Http\Controllers\Pph21SettingController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ReimbursementCategoryController;
-use App\Http\Controllers\ReimbursementController;
-use App\Http\Controllers\Reports\AttendanceReportController;
-use App\Http\Controllers\Reports\EmployeeReportController;
-use App\Http\Controllers\Reports\LeaveReportController;
-use App\Http\Controllers\Reports\PayrollReportController;
-use App\Http\Controllers\SalaryComponentController;
-use App\Http\Controllers\Settings\ApprovalWorkflowController;
-use App\Http\Controllers\Settings\AttendanceSettingController;
-use App\Http\Controllers\Settings\BillingController;
-use App\Http\Controllers\Settings\CompanyProfileController;
 use App\Http\Controllers\Settings\PermissionController;
 use App\Http\Controllers\Settings\RoleController;
 use App\Http\Controllers\Settings\SessionController;
 use App\Http\Controllers\Settings\UserController;
-use App\Http\Controllers\Spt1721Controller;
 use App\Http\Controllers\Superadmin\AbsensiController;
 use App\Http\Controllers\Superadmin\AuditLogController;
 use App\Http\Controllers\Superadmin\BlockedIpController;
@@ -109,10 +66,6 @@ use App\Http\Controllers\Superadmin\UjianMonitoringController;
 use App\Http\Controllers\Superadmin\UjianPesertaController;
 use App\Http\Controllers\Superadmin\UjianSoalController;
 use App\Http\Controllers\Superadmin\UserLevelController;
-use App\Http\Controllers\TaxForm1721A1Controller;
-use App\Http\Controllers\ThrController;
-use App\Http\Controllers\ThrSettingController;
-use App\Http\Controllers\WorkScheduleController;
 use App\Models\Paket;
 use Illuminate\Support\Facades\Route;
 
@@ -409,20 +362,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/{overtimeRequest}/reject', [OvertimeRequestController::class, 'reject'])->name('reject');
     });
 
-    // Reimbursement Categories
-    Route::resource('reimbursement-categories', ReimbursementCategoryController::class);
-
-    // Reimbursements
-    Route::prefix('reimbursements')->name('reimbursements.')->group(function () {
-        Route::get('/', [ReimbursementController::class, 'index'])->name('index');
-        Route::get('/create', [ReimbursementController::class, 'create'])->name('create');
-        Route::post('/', [ReimbursementController::class, 'store'])->name('store');
-        Route::get('/{reimbursement}', [ReimbursementController::class, 'show'])->name('show');
-        Route::post('/{reimbursement}/approve', [ReimbursementController::class, 'approve'])->name('approve');
-        Route::post('/{reimbursement}/reject', [ReimbursementController::class, 'reject'])->name('reject');
-        Route::post('/{reimbursement}/pay', [ReimbursementController::class, 'pay'])->name('pay');
-    });
-
     // Announcements
     Route::resource('announcements', AnnouncementController::class);
     Route::post('announcements/{announcement}/publish', [AnnouncementController::class, 'publish'])->name('announcements.publish');
@@ -717,6 +656,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
             Route::get('/{ujian}/management/data', [HasilUjianController::class, 'getManagementData'])->name('management.data');
             Route::post('/{ujian}/peserta/{peserta}/toggle-pause', [HasilUjianController::class, 'togglePause'])->name('toggle-pause');
             Route::post('/{ujian}/peserta/{peserta}/force-stop', [HasilUjianController::class, 'forceStop'])->name('force-stop');
+            Route::get('/{ujian}/peserta/{peserta}/detail-pengerjaan', [HasilUjianController::class, 'detailPengerjaan'])->name('detail-pengerjaan');
+            Route::get('/{ujian}/peserta/{peserta}/detail-pengerjaan/data', [HasilUjianController::class, 'detailPengerjaanData'])->name('detail-pengerjaan-data');
         });
 
         // absensi management (activation only, no attendance)
@@ -907,7 +848,7 @@ Route::prefix('pembuat-soal')->name('pembuat-soal.')->group(function () {
 
     Route::middleware(['auth', 'pembuat_soal'])->group(function () {
         Route::get('/', [PembuatSoalDashboardController::class, 'index'])->name('dashboard');
-        
+
         Route::resource('ujian', App\Http\Controllers\PembuatSoal\UjianController::class)->except(['destroy']);
         Route::resource('soal', App\Http\Controllers\PembuatSoal\SoalController::class)->except(['destroy']);
         Route::get('soal/{soal}/preview', [App\Http\Controllers\PembuatSoal\SoalController::class, 'preview'])->name('soal.preview');
@@ -921,13 +862,18 @@ Route::prefix('pembuat-soal')->name('pembuat-soal.')->group(function () {
         Route::post('ujian/{ujian}/soal/{ujianSoal}/detach', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'detach'])->name('ujian.soal.detach.post');
         Route::get('ujian/{ujian}/soal/create', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'create'])->name('ujian.soal.create');
         Route::post('ujian/{ujian}/soal/import', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'import'])->name('ujian.soal.import');
+        Route::get('ujian/{ujian}/finalisasi', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'finalisasi'])->name('ujian.soal.finalisasi');
+        Route::post('ujian/{ujian}/finalisasi', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'finalize'])->name('ujian.soal.finalize');
+        Route::delete('ujian/{ujian}/finalisasi', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'unfinalize'])->name('ujian.soal.unfinalize');
+        Route::post('ujian/{ujian}/soal/reorder', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'reorder'])->name('ujian.soal.reorder');
         Route::resource('peserta', App\Http\Controllers\PembuatSoal\PesertaController::class)->only(['index', 'show']);
-        
+
         Route::get('change-password', [App\Http\Controllers\PembuatSoal\ChangePasswordController::class, 'index'])->name('change-password.index');
         Route::put('change-password', [App\Http\Controllers\PembuatSoal\ChangePasswordController::class, 'update'])->name('change-password.update');
-        
+
         Route::post('logout', function () {
             auth()->logout();
+
             return redirect()->route('pembuat-soal.login');
         })->name('logout');
     });
@@ -946,19 +892,20 @@ Route::prefix('keuangan')->name('keuangan.')->group(function () {
 
     Route::middleware(['auth', 'keuangan'])->group(function () {
         Route::get('/', [KeuanganDashboardController::class, 'index'])->name('dashboard');
-        
+
         Route::resource('peserta', App\Http\Controllers\Keuangan\PesertaController::class);
         Route::resource('paket', App\Http\Controllers\Keuangan\PaketController::class);
         Route::get('pembayaran', [App\Http\Controllers\Keuangan\PembayaranController::class, 'index'])->name('pembayaran.index');
         Route::get('pembayaran/{pembayaran}', [App\Http\Controllers\Keuangan\PembayaranController::class, 'show'])->name('pembayaran.show');
         Route::post('pembayaran/{pembayaran}/verify', [App\Http\Controllers\Keuangan\PembayaranController::class, 'verify'])->name('pembayaran.verify');
         Route::post('pembayaran/{pembayaran}/reject', [App\Http\Controllers\Keuangan\PembayaranController::class, 'reject'])->name('pembayaran.reject');
-        
+
         Route::get('change-password', [App\Http\Controllers\Keuangan\ChangePasswordController::class, 'index'])->name('change-password.index');
         Route::put('change-password', [App\Http\Controllers\Keuangan\ChangePasswordController::class, 'update'])->name('change-password.update');
-        
+
         Route::post('logout', function () {
             auth()->logout();
+
             return redirect()->route('keuangan.login');
         })->name('logout');
     });

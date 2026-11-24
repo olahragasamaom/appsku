@@ -370,7 +370,11 @@
                                                  <h2 class="text-base md:text-lg font-bold text-primary-600">
                                                      {{ $soal->subIndikator?->subJenisUjian?->nama_sub_jenis_ujian ?? 'Umum' }}
                                                  </h2>
-                                                 <p class="text-sm text-slate-600 mt-1">Soal <span x-text="currentSoalIndex + 1"></span> dari <span x-text="totalSoal"></span></p>
+                                                   <p class="text-sm text-slate-600 mt-1">Soal <span x-text="currentSoalIndex + 1"></span> dari <span x-text="totalSoal"></span>
+                                                       @if($peserta->soal_order)
+                                                           <span class="text-xs text-slate-500 ml-2">({{ $soal->subIndikator?->nama_sub_indikator ?? 'Umum' }})</span>
+                                                       @endif
+                                                   </p>
                                              </div>
                                          </div>
                                     </div>
@@ -457,15 +461,15 @@
                                          <div class="grid grid-cols-5 gap-2">
                                              @foreach($items as $ujianSoal)
                                                  @php $idxNow = $navIndex; @endphp
-                                                 <button type="button" 
-                                                         @click="currentSoalIndex = {{ $idxNow }}"
-                                                         class="w-full aspect-square flex items-center justify-center rounded-lg text-xs md:text-sm font-bold transition-all border"
-                                                         :style="{
-                                                              'backgroundColor': jawaban[{{ $ujianSoal->id }}] ? 'rgb(16, 185, 129)' : (ragu[{{ $ujianSoal->id }}] ? 'rgb(250, 204, 21)' : (currentSoalIndex === {{ $idxNow }} ? 'rgb(59, 130, 246)' : 'white')),
-                                                              'color': jawaban[{{ $ujianSoal->id }}] ? 'white' : (ragu[{{ $ujianSoal->id }}] ? 'white' : (currentSoalIndex === {{ $idxNow }} ? 'white' : 'rgb(55, 65, 81)')),
-                                                              'borderWidth': currentSoalIndex === {{ $idxNow }} ? '3px' : '2px',
-                                                              'borderColor': currentSoalIndex === {{ $idxNow }} ? 'rgb(37, 99, 235)' : (ragu[{{ $ujianSoal->id }}] ? 'rgb(202, 138, 4)' : (jawaban[{{ $ujianSoal->id }}] ? 'rgb(5, 150, 105)' : 'rgb(209, 213, 219)'))
-                                                          }">
+                                                  <button type="button" 
+                                                          @click="currentSoalIndex = {{ $idxNow }}"
+                                                          class="w-full aspect-square flex items-center justify-center rounded-lg text-xs md:text-sm font-bold transition-all border"
+                                                          :style="{
+                                                               'backgroundColor': jawaban[{{ $ujianSoal->id }}] ? 'rgb(59, 130, 246)' : (ragu[{{ $ujianSoal->id }}] ? 'rgb(250, 204, 21)' : 'white'),
+                                                               'color': jawaban[{{ $ujianSoal->id }}] ? 'white' : (ragu[{{ $ujianSoal->id }}] ? 'white' : 'rgb(55, 65, 81)'),
+                                                               'borderWidth': currentSoalIndex === {{ $idxNow }} ? '3px' : '2px',
+                                                               'borderColor': currentSoalIndex === {{ $idxNow }} ? 'rgb(37, 99, 235)' : (ragu[{{ $ujianSoal->id }}] ? 'rgb(202, 138, 4)' : (jawaban[{{ $ujianSoal->id }}] ? 'rgb(29, 78, 216)' : 'rgb(209, 213, 219)'))
+                                                           }">
                                                      {{ $navIndex + 1 }}
                                                  </button>
                                                  @php $navIndex++; @endphp
@@ -501,11 +505,11 @@
                              <h4 class="font-bold text-slate-900 text-sm mb-3">Keterangan</h4>
                              <div class="space-y-2">
                                  <div class="flex items-center gap-2">
-                                     <div class="w-4 h-4 rounded" style="background-color: rgb(59, 130, 246); border: 3px solid rgb(37, 99, 235);"></div>
+                                     <div class="w-4 h-4 rounded" style="background-color: white; border: 3px solid rgb(37, 99, 235);"></div>
                                      <span class="text-xs text-slate-600">Soal Aktif</span>
                                  </div>
                                  <div class="flex items-center gap-2">
-                                     <div class="w-4 h-4 rounded" style="background-color: rgb(16, 185, 129); border: 3px solid rgb(5, 150, 105);"></div>
+                                     <div class="w-4 h-4 rounded" style="background-color: rgb(59, 130, 246); border: 2px solid rgb(29, 78, 216);"></div>
                                      <span class="text-xs text-slate-600">Sudah Dijawab</span>
                                  </div>
                                  <div class="flex items-center gap-2">

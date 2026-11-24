@@ -7,6 +7,7 @@ use App\Http\Requests\StoreJawabanRequest;
 use App\Models\PesertaOffline;
 use App\Models\Ujian;
 use App\Models\UjianPeserta;
+use App\Services\RandomSoalService;
 use App\Services\Ujian\UjianScoringService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -18,7 +19,8 @@ use Illuminate\View\View;
 class UjianController extends Controller
 {
     public function __construct(
-        private readonly UjianScoringService $scoring
+        private readonly UjianScoringService $scoring,
+        private readonly RandomSoalService $randomSoal
     ) {}
 
     public function show(Request $request, Ujian $ujian): View|RedirectResponse
@@ -32,6 +34,8 @@ class UjianController extends Controller
         if ($peserta && $peserta->status === 'selesai') {
             return redirect()->route('peserta.ujian.hasil', $ujian);
         }
+
+        \Log::info('show() - konfirmasi page', ['ujian_id' => $ujian->id, 'peserta_id' => $peserta?->id]);
 
         return view('peserta.ujian.konfirmasi', compact('ujian', 'peserta'));
     }
@@ -80,6 +84,32 @@ class UjianController extends Controller
             ]);
         }
 
+        \Log::info('start() - acak_soal check', [
+            'ujian_id' => $ujian->id,
+            'acak_soal' => $ujian->acak_soal,
+            'soal_order_exists' => ! is_null($peserta->soal_order),
+            'peserta_id' => $peserta->id,
+        ]);
+
+        if ($ujian->acak_soal && ! $peserta->soal_order) {
+            $ujian->load('ujianJenisUjians.jenisUjian');
+            $activeJenisId = (int) $request->input('jenis_ujian_id', $ujian->ujianJenisUjians->first()?->jenis_ujian_id ?? 0);
+            \Log::info('start() - determining jenis_ujian_id', [
+                'from_request' => $request->input('jenis_ujian_id'),
+                'activeJenisId' => $activeJenisId,
+                'ujian_jenis_count' => $ujian->ujianJenisUjians->count(),
+            ]);
+            if ($activeJenisId > 0) {
+                $soalOrder = $this->randomSoal->generateSoalOrder($ujian, $activeJenisId);
+                \Log::info('start() - soal_order generated', ['count' => count($soalOrder), 'order' => json_encode($soalOrder)]);
+                $this->randomSoal->saveSoalOrder($peserta, $soalOrder);
+                $peserta->refresh();
+                \Log::info('start() - soal_order saved', ['soal_order' => json_encode($peserta->soal_order)]);
+            } else {
+                \Log::warning('start() - activeJenisId is 0, skipping random generation');
+            }
+        }
+
         return redirect()->route('peserta.ujian.kerjakan', $ujian);
     }
 
@@ -101,6 +131,23 @@ class UjianController extends Controller
             return redirect()->route('peserta.ujian.hasil', $ujian);
         }
 
+        if ($ujian->acak_soal && ! $peserta->soal_order) {
+            $ujian->load('ujianJenisUjians.jenisUjian');
+            $activeJenisId = (int) $ujian->ujianJenisUjians->first()?->jenis_ujian_id ?? 0;
+            \Log::info('kerjakan() - random check', ['activeJenisId' => $activeJenisId, 'ujian_jenis_count' => $ujian->ujianJenisUjians->count()]);
+            if ($activeJenisId > 0) {
+                $soalOrder = $this->randomSoal->generateSoalOrder($ujian, $activeJenisId);
+                \Log::info('kerjakan() - soalOrder generated', ['count' => count($soalOrder), 'order' => json_encode($soalOrder)]);
+                if (! empty($soalOrder)) {
+                    $this->randomSoal->saveSoalOrder($peserta, $soalOrder);
+                    $peserta->refresh();
+                    \Log::info('kerjakan() - soal_order saved', ['soal_order' => json_encode($peserta->soal_order)]);
+                } else {
+                    \Log::warning('kerjakan() - soalOrder is empty, skipping save');
+                }
+            }
+        }
+
         if ($peserta->is_paused) {
             return redirect()->route('peserta.dashboard')->with('warning', 'Ujian Anda dihentikan sementara oleh pengawas. Silakan login kembali untuk melanjutkan.');
         }
@@ -116,6 +163,8 @@ class UjianController extends Controller
             ->orderBy('urutan')
             ->orderBy('id')
             ->get();
+
+        $ujianSoals = $this->randomSoal->reorderSoalsByList($ujianSoals, $peserta->soal_order);
 
         $jawaban = $peserta->jawaban()->pluck('jawaban', 'ujian_soal_id');
         $sisaDetik = $this->sisaDetik($ujian, $peserta);
@@ -513,7 +562,7 @@ class UjianController extends Controller
         }
 
         $attempts = $ujian->peserta()
-            ->where(function($q) use ($peserta) {
+            ->where(function ($q) use ($peserta) {
                 if ($peserta->user_id) {
                     $q->where('user_id', $peserta->user_id);
                 } else {

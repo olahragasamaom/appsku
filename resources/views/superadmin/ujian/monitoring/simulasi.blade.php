@@ -145,12 +145,13 @@
                                     <div class="grid grid-cols-5 gap-2">
                                         @foreach($items as $item)
                                             <button type="button" @click="goTo({{ $item['nomor'] - 1 }})"
-                                                    class="w-full aspect-square flex items-center justify-center rounded-lg text-sm font-bold transition-all border"
-                                                    :class="{
-                                                        'bg-primary-500 text-white border-primary-600 shadow-sm': jawaban[{{ $item['id'] }}] && indexAktif !== {{ $item['nomor'] - 1 }},
-                                                        'bg-warning-400 text-white border-warning-500': raguRagu[{{ $item['id'] }}] && !jawaban[{{ $item['id'] }}] && indexAktif !== {{ $item['nomor'] - 1 }},
-                                                        'bg-slate-800 text-white border-slate-900 ring-2 ring-offset-1 ring-slate-800': indexAktif === {{ $item['nomor'] - 1 }},
-                                                        'bg-white text-slate-600 border-slate-300 hover:bg-slate-50': !jawaban[{{ $item['id'] }}] && !raguRagu[{{ $item['id'] }}] && indexAktif !== {{ $item['nomor'] - 1 }}
+                                                    class="w-full aspect-square flex items-center justify-center rounded-lg text-sm font-bold transition-all"
+                                                    :style="{
+                                                        'backgroundColor': jawaban[{{ $item['id'] }}] ? 'rgb(59, 130, 246)' : (raguRagu[{{ $item['id'] }}] ? 'rgb(250, 204, 21)' : 'white'),
+                                                        'color': jawaban[{{ $item['id'] }}] ? 'white' : (raguRagu[{{ $item['id'] }}] ? 'white' : 'rgb(55, 65, 81)'),
+                                                        'borderWidth': indexAktif === {{ $item['nomor'] - 1 }} ? '3px' : '2px',
+                                                        'borderStyle': 'solid',
+                                                        'borderColor': indexAktif === {{ $item['nomor'] - 1 }} ? 'rgb(37, 99, 235)' : (raguRagu[{{ $item['id'] }}] ? 'rgb(202, 138, 4)' : (jawaban[{{ $item['id'] }}] ? 'rgb(29, 78, 216)' : 'rgb(209, 213, 219)'))
                                                     }">
                                                 {{ $item['nomor'] }}
                                             </button>
@@ -161,16 +162,16 @@
                         </div>
                         <div class="bg-slate-50 p-4 border-t border-slate-200 space-y-2">
                             <div class="flex items-center gap-2 text-xs font-medium text-slate-600">
-                                <span class="w-4 h-4 rounded bg-slate-800 inline-block"></span> Posisi Saat Ini
+                                <span class="w-4 h-4 rounded inline-block" style="background-color: white; border: 3px solid rgb(37, 99, 235);"></span> Soal Aktif
                             </div>
                             <div class="flex items-center gap-2 text-xs font-medium text-slate-600">
-                                <span class="w-4 h-4 rounded bg-primary-500 inline-block"></span> Sudah Dijawab
+                                <span class="w-4 h-4 rounded inline-block" style="background-color: rgb(59, 130, 246); border: 2px solid rgb(29, 78, 216);"></span> Sudah Dijawab
                             </div>
                             <div class="flex items-center gap-2 text-xs font-medium text-slate-600">
-                                <span class="w-4 h-4 rounded bg-warning-400 inline-block"></span> Ragu-ragu
+                                <span class="w-4 h-4 rounded inline-block" style="background-color: rgb(250, 204, 21); border: 2px solid rgb(202, 138, 4);"></span> Ragu-ragu
                             </div>
                             <div class="flex items-center gap-2 text-xs font-medium text-slate-600">
-                                <span class="w-4 h-4 rounded bg-white border border-slate-300 inline-block"></span> Belum Dijawab
+                                <span class="w-4 h-4 rounded inline-block" style="background-color: white; border: 2px solid rgb(209, 213, 219);"></span> Belum Dijawab
                             </div>
                         </div>
                     </div>

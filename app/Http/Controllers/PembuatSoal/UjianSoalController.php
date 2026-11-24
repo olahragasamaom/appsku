@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\PembuatSoal;
 
 use App\Http\Controllers\Superadmin\UjianSoalController as SuperadminUjianSoalController;
+use App\Models\Soal;
 use App\Models\Ujian;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class UjianSoalController extends SuperadminUjianSoalController
@@ -13,19 +14,20 @@ class UjianSoalController extends SuperadminUjianSoalController
     public function index(Request $request, Ujian $ujian): View
     {
         $response = parent::index($request, $ujian);
-        
+
         if ($response instanceof View) {
             $data = $response->getData();
+
             return view('pembuat-soal.ujian.soal.index', $data);
         }
-        
+
         return $response;
     }
 
     public function create(Request $request, Ujian $ujian): View
     {
-        $soalOptions = \App\Models\Soal::orderBy('created_at', 'desc')->get();
-        
+        $soalOptions = Soal::orderBy('created_at', 'desc')->get();
+
         return view('pembuat-soal.ujian.soal.create', [
             'ujian' => $ujian,
             'soalOptions' => $soalOptions,
@@ -42,13 +44,46 @@ class UjianSoalController extends SuperadminUjianSoalController
         return parent::destroy($ujian, $ujianSoal);
     }
 
-    public function attach(\Illuminate\Http\Request $request, Ujian $ujian): RedirectResponse
+    public function attach(Request $request, Ujian $ujian): RedirectResponse
     {
         return parent::attach($request, $ujian);
     }
 
-    public function import(\Illuminate\Http\Request $request, Ujian $ujian): RedirectResponse
+    public function import(Request $request, Ujian $ujian): RedirectResponse
     {
         return parent::import($request, $ujian);
+    }
+
+    public function finalisasi(Request $request, Ujian $ujian)
+    {
+        $this->authorizeUjian($ujian);
+
+        return parent::finalisasi($request, $ujian);
+    }
+
+    public function reorder(Request $request, Ujian $ujian)
+    {
+        $this->authorizeUjian($ujian);
+
+        return parent::reorder($request, $ujian);
+    }
+
+    public function finalize(Ujian $ujian)
+    {
+        $this->authorizeUjian($ujian);
+
+        return parent::finalize($ujian);
+    }
+
+    public function unfinalize(Ujian $ujian)
+    {
+        $this->authorizeUjian($ujian);
+
+        return parent::unfinalize($ujian);
+    }
+
+    private function authorizeUjian(Ujian $ujian): void
+    {
+        abort_unless($ujian->dibuat_oleh === auth()->id(), 403);
     }
 }

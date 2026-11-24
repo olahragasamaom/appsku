@@ -80,26 +80,29 @@
                 </div>
                 <span class="text-sm text-secondary-500">Total {{ $totalSoal }} soal</span>
             </div>
-            <div class="card-body space-y-6">
+            <div class="card-body space-y-6"
+                 x-data="subIndikatorReorder({ url: '{{ route('superadmin.ujian.soal.reorder', $ujian) }}' })"
+                 x-init="init($el)"
+                 data-subindikator-reorder-list>
                 @forelse($ujianSoalsPerSubIndikator as $namaSubIndikator => $soalGroup)
-                    <div>
-                        <div class="flex items-center gap-2 mb-3">
-                            <h3 class="font-semibold text-secondary-800">{{ $namaSubIndikator }}</h3>
+                    <div class="border border-secondary-200 rounded-lg bg-secondary-50"
+                         data-subindikator-group>
+                        <div class="subind-drag-handle flex items-center gap-2 mb-3 p-4 pb-3 cursor-grab active:cursor-grabbing hover:bg-secondary-100 transition-colors"
+                             title="Seret untuk mengurutkan sub indikator">
+                            <svg class="w-5 h-5 text-secondary-400" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a1 1 0 100 2 1 1 0 000-2zM7 9a1 1 0 100 2 1 1 0 000-2zM7 14a1 1 0 100 2 1 1 0 000-2zM13 4a1 1 0 100 2 1 1 0 000-2zM13 9a1 1 0 100 2 1 1 0 000-2zM13 14a1 1 0 100 2 1 1 0 000-2z"/></svg>
+                            <h3 class="font-semibold text-secondary-800 flex-1">{{ $namaSubIndikator }}</h3>
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-50 text-primary-700">
                                 {{ $soalGroup->count() }} soal
                             </span>
                         </div>
-                        <div
-                            x-data="soalReorder({ url: '{{ route('superadmin.ujian.soal.reorder', $ujian) }}' })"
-                            x-init="init($el)"
-                            class="space-y-2"
-                            data-reorder-list>
+                        <div class="px-4 pb-4 space-y-2"
+                             data-soal-reorder-list>
                             @foreach($soalGroup as $index => $ujianSoal)
                                 <div class="flex items-start gap-3 p-3 border border-secondary-100 rounded-lg bg-white hover:bg-secondary-50 transition-colors"
                                      data-id="{{ $ujianSoal->id }}">
                                     <button type="button"
-                                            class="drag-handle flex-shrink-0 mt-0.5 cursor-grab active:cursor-grabbing text-secondary-300 hover:text-secondary-500 touch-none"
-                                            title="Seret untuk mengurutkan">
+                                            class="soal-drag-handle flex-shrink-0 mt-0.5 cursor-grab active:cursor-grabbing text-secondary-300 hover:text-secondary-500 touch-none"
+                                            title="Seret untuk mengurutkan soal">
                                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a1 1 0 100 2 1 1 0 000-2zM7 9a1 1 0 100 2 1 1 0 000-2zM7 14a1 1 0 100 2 1 1 0 000-2zM13 4a1 1 0 100 2 1 1 0 000-2zM13 9a1 1 0 100 2 1 1 0 000-2zM13 14a1 1 0 100 2 1 1 0 000-2z"/></svg>
                                     </button>
                                     <span class="flex-shrink-0 w-6 h-6 rounded-full bg-secondary-100 text-secondary-600 text-xs font-semibold flex items-center justify-center" data-nomor>{{ $index + 1 }}</span>
@@ -121,27 +124,48 @@
 
 @push('scripts')
 <script>
-    function soalReorder(config) {
+    function subIndikatorReorder(config) {
         return {
             url: config.url,
             saving: false,
             init(el) {
                 if (!window.Sortable) return;
+                
+                const subIndGroups = el.querySelectorAll('[data-subindikator-group]');
+                
+                subIndGroups.forEach(group => {
+                    const soalList = group.querySelector('[data-soal-reorder-list]');
+                    if (soalList) {
+                        window.Sortable.create(soalList, {
+                            handle: '.soal-drag-handle',
+                            animation: 150,
+                            ghostClass: 'opacity-40',
+                            onEnd: () => this.persistSoalOrder(group),
+                        });
+                    }
+                });
+                
                 window.Sortable.create(el, {
-                    handle: '.drag-handle',
+                    handle: '.subind-drag-handle',
                     animation: 150,
                     ghostClass: 'opacity-40',
-                    onEnd: () => this.persist(el),
+                    swapThreshold: 0.65,
+                    delay: 100,
+                    delayOnTouchOnly: true,
+                    group: { name: 'subIndikator' },
+                    onEnd: () => this.persistSubIndOrder(el),
                 });
             },
-            renumber(el) {
-                el.querySelectorAll('[data-nomor]').forEach((node, i) => {
+            renumberAll(containerEl) {
+                containerEl.querySelectorAll('[data-nomor]').forEach((node, i) => {
                     node.textContent = i + 1;
                 });
             },
-            async persist(el) {
-                this.renumber(el);
-                const ids = [...el.querySelectorAll('[data-id]')].map(n => parseInt(n.dataset.id));
+            async persistSoalOrder(group) {
+                const containerEl = group.closest('[data-subindikator-reorder-list]');
+                const soalList = group.querySelector('[data-soal-reorder-list]');
+                const ids = [...soalList.querySelectorAll('[data-id]')].map(n => parseInt(n.dataset.id));
+                this.renumberAll(containerEl);
                 this.saving = true;
                 try {
                     await fetch(this.url, {
@@ -152,6 +176,26 @@
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         },
                         body: JSON.stringify({ ujian_soal_ids: ids }),
+                    });
+                } finally {
+                    this.saving = false;
+                }
+            },
+            async persistSubIndOrder(containerEl) {
+                const allSoalElements = [...containerEl.querySelectorAll('[data-id]')];
+                const allIds = allSoalElements.map(el => parseInt(el.dataset.id));
+                this.renumberAll(containerEl);
+                
+                this.saving = true;
+                try {
+                    await fetch(this.url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        },
+                        body: JSON.stringify({ ujian_soal_ids: allIds }),
                     });
                 } finally {
                     this.saving = false;

@@ -217,6 +217,48 @@ php artisan tinker
 - **Storage disk separation**: Keep `public` disk for symlink fallback; use `uploads` disk for reliable subdomain access
 - **Date filtering**: batas_keterlambatan might be epoch (1970) for legacy; always fallback to start + durasi
 
+## Recent Session (2026-11-22): Randomisasi Soal + Live Scoring + Monitoring
+
+### New Features:
+1. **Randomisasi Soal per Sub-Indikator**
+   - Triggered saat peserta klik "Mulai Ujian" (jika ujian punya `acak_soal=true`)
+   - Random soal dalam tiap sub-indikator, preserve sub-indikator order
+   - Disimpan di `UjianPeserta.soal_order` (JSON) → no re-random on refresh
+   - Per-peserta-per-attempt unique
+
+2. **Instant Scoring (Real-time)**
+   - Existing `saveAnswer()` sudah instant-score
+   - Nilai langsung saved ke `UjianJawaban` saat submit
+   - Display nomor urutan random (1-N based on soal_order)
+
+3. **Live Monitoring Detail Pengerjaan**
+   - Route: `/superadmin/hasil-ujian/{ujian}/peserta/{peserta}/detail-pengerjaan`
+   - Grid real-time (refresh 3s): Nomor | Sub Indikator | Jawaban | Status | Skor
+   - Status: Belum dijawab / Benar ✓ / Salah ✗
+   - API: `detailPengerjaanData()` JSON feed
+
+### Files Created:
+- `app/Services/RandomSoalService.php` → shuffle logic
+- `app/Helpers/UjianHelper.php` → display number helper
+- `database/migrations/2026_11_22_080053_add_soal_order_to_ujian_peserta_table.php` → soal_order column
+- `resources/views/superadmin/hasil-ujian/detail-pengerjaan.blade.php` → monitoring UI
+- `resources/views/pembuat-soal/ujian/soal/finalisasi.blade.php` → finalisasi view (dari session sebelumnya)
+
+### Files Modified:
+- `Peserta\UjianController`: start() trigger random, kerjakan() reorder by soal_order
+- `Superadmin\HasilUjianController`: detailPengerjaan() + detailPengerjaanData()
+- `routes/web.php`: +2 routes for detail-pengerjaan
+- `resources/views/peserta/ujian/kerjakan.blade.php`: display nomor acak
+
+### Database:
+- `panritta_ujian_peserta.soal_order`: JSON array [soal_id, soal_id, ...] urutan random
+
+### Key Logic:
+- **Random generation**: `RandomSoalService::generateSoalOrder()` groups by sub_indikator_id, shuffle each group, flatten
+- **Display mapping**: `index + 1` dari soal_order array position (always 1-N)
+- **Scoring**: Unchanged, cuma tampilan urutan
+- **Sub-indikator order**: Fixed via finalisasi (ujian soal reorder)
+
 ## Next Potential Work
 - [ ] HTML sanitizer (remove unsafe tags while preserving safe ones)
 - [ ] Formula preview in editor modal
@@ -225,6 +267,9 @@ php artisan tinker
 - [ ] Accessibility improvements (ARIA labels for formulas)
 - [ ] Offline exam certificate/document generation
 - [ ] Mobile app sync for offline exams
+- [ ] Randomisasi soal via browser session (localStorage backup untuk offline)
+- [ ] Advanced monitoring: heatmap jawaban peserta
+- [ ] Statistik per-soal: kesulitan, discrimination index
 
 ---
-*Last updated: 2026-10-27 | Session: Offline exam portal + storage fix + ujian management*
+*Last updated: 2026-11-22 | Session: Randomisasi soal + live scoring + detail monitoring*
