@@ -52,7 +52,6 @@ yarn-error.log
 .npm
 .yarn
 dist
-build
 
 # AI & ML Related
 *.pt
