@@ -854,12 +854,16 @@ Route::prefix('pembuat-soal')->name('pembuat-soal.')->group(function () {
         Route::get('/', [PembuatSoalDashboardController::class, 'index'])->name('dashboard');
 
         Route::resource('ujian', App\Http\Controllers\PembuatSoal\UjianController::class)->except(['destroy']);
+        Route::post('ujian/{ujian}/update-status', [App\Http\Controllers\PembuatSoal\UjianController::class, 'updateStatus'])->name('ujian.update-status');
         Route::resource('soal', App\Http\Controllers\PembuatSoal\SoalController::class)->except(['destroy']);
         Route::get('soal/{soal}/preview', [App\Http\Controllers\PembuatSoal\SoalController::class, 'preview'])->name('soal.preview');
         Route::get('soal/options/sub-jenis-ujian/{jenisUjian}', [App\Http\Controllers\PembuatSoal\SoalController::class, 'subJenisUjianOptions'])->name('soal.options.sub-jenis-ujian');
         Route::get('soal/options/sub-indikator/{subJenisUjian}', [App\Http\Controllers\PembuatSoal\SoalController::class, 'subIndikatorOptions'])->name('soal.options.sub-indikator');
+        Route::get('soal/template-import/{subJenisUjian?}/{ujian?}/{subIndikator?}', [App\Http\Controllers\PembuatSoal\SoalController::class, 'downloadTemplate'])->name('soal.template');
         Route::post('soal/upload-gambar-editor', [App\Http\Controllers\PembuatSoal\SoalController::class, 'uploadGambarEditor'])->name('soal.upload-editor');
         Route::get('ujian/{ujian}/soal', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'index'])->name('ujian.soal.index');
+        Route::get('ujian/{ujian}/remaining', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'remaining'])->name('ujian.soal.remaining');
+        Route::get('ujian/{ujian}/bank-soal-options', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'bankSoalOptions'])->name('ujian.soal.bank-options');
         Route::post('ujian/{ujian}/soal', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'store'])->name('ujian.soal.store');
         Route::post('ujian/{ujian}/soal/attach', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'attach'])->name('ujian.soal.attach');
         Route::delete('ujian/{ujian}/soal/{ujianSoal}', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'detach'])->name('ujian.soal.detach');

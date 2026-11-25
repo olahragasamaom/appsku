@@ -290,7 +290,7 @@ class UjianController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function buildData(UjianRequest $request, ?Ujian $ujian = null): array
+    protected function buildData(UjianRequest $request, ?Ujian $ujian = null): array
     {
         $data = $request->safe()->only([
             'nama_ujian',
@@ -328,7 +328,7 @@ class UjianController extends Controller
         return $data;
     }
 
-    private function syncJenisUjian(Ujian $ujian, UjianRequest $request): void
+    protected function syncJenisUjian(Ujian $ujian, UjianRequest $request): void
     {
         $passingGrades = $request->input('passing_grade', []);
         $sync = [];
@@ -346,7 +346,7 @@ class UjianController extends Controller
     /**
      * @return array<int, string>
      */
-    private function aksesMemberOptions(): array
+    protected function aksesMemberOptions(): array
     {
         return ['Free', 'Basic', 'Pro', 'Platinum'];
     }

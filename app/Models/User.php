@@ -126,6 +126,108 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->userLevel?->slug === 'pengawas' && $this->userLevel->is_active;
     }
 
+    /**
+     * Label tipe user sesuai user level dari panritta_user_levels atau role sistem.
+     */
+    public function getTipeUserAttribute(): string
+    {
+        if ($this->isSuperAdmin()) {
+            return 'Superadmin';
+        }
+
+        if ($this->userLevel) {
+            return $this->userLevel->nama;
+        }
+
+        if ($this->isPengajar()) {
+            return 'Pengajar';
+        }
+
+        if ($this->isPeserta()) {
+            return 'Peserta';
+        }
+
+        if ($this->company_id) {
+            return 'Company Admin';
+        }
+
+        if ($this->roles->isNotEmpty()) {
+            return $this->roles->first()->name;
+        }
+
+        return 'User';
+    }
+
+    /**
+     * Tipe badge badge-{type} untuk tampilan visual tipe user.
+     */
+    public function getTipeUserBadgeAttribute(): string
+    {
+        if ($this->isSuperAdmin()) {
+            return 'danger';
+        }
+
+        if ($this->userLevel) {
+            return match ($this->userLevel->slug) {
+                'pembuat_soal' => 'primary',
+                'keuangan' => 'success',
+                'pengawas' => 'info',
+                default => 'primary',
+            };
+        }
+
+        if ($this->isPengajar()) {
+            return 'warning';
+        }
+
+        if ($this->isPeserta()) {
+            return 'secondary';
+        }
+
+        if ($this->company_id) {
+            return 'info';
+        }
+
+        return 'secondary';
+    }
+
+    /**
+     * URL lengkap halaman login portal sesuai level / role user.
+     */
+    public function getLoginUrlAttribute(): string
+    {
+        if ($this->isSuperAdmin()) {
+            return url('/superadmin/login');
+        }
+
+        if ($this->userLevel) {
+            return match ($this->userLevel->slug) {
+                'pembuat_soal' => url('/pembuat-soal/login'),
+                'keuangan' => url('/keuangan/login'),
+                'pengawas' => url('/pengawas/login'),
+                default => url('/login'),
+            };
+        }
+
+        if ($this->isPengajar()) {
+            return url('/pengajar/login-pengajar');
+        }
+
+        if ($this->isPeserta()) {
+            return url('/peserta/login');
+        }
+
+        return url('/login');
+    }
+
+    /**
+     * Path URL halaman login portal (misal: /pengajar/login-pengajar).
+     */
+    public function getLoginPathAttribute(): string
+    {
+        return parse_url($this->login_url, PHP_URL_PATH) ?: '/login';
+    }
+
     public function langgananAktif(): HasOne
     {
         return $this->hasOne(PesertaLangganan::class, 'user_id')

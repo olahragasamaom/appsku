@@ -25,10 +25,11 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
-            if (!$user->isPembuatSoal()) {
+            if (! $user->isPembuatSoal() && ! $user->isPengajar() && ! $user->isSuperAdmin()) {
                 Auth::logout();
+
                 return back()->withErrors([
-                    'username' => 'Akun ini tidak memiliki akses pembuat soal.',
+                    'username' => 'Akun ini tidak memiliki akses manajemen ujian & soal.',
                 ]);
             }
 

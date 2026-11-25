@@ -12,12 +12,13 @@ class EnsurePembuatSoal
     {
         $user = $request->user();
 
-        if (!$user || !$user->isPembuatSoal()) {
+        if (! $user || (! $user->isPembuatSoal() && ! $user->isPengajar() && ! $user->isSuperAdmin())) {
             return redirect()->route('home');
         }
 
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             auth()->logout();
+
             return redirect()->route('home')->withErrors(['username' => 'Akun Anda tidak aktif.']);
         }
 

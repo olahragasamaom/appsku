@@ -12,12 +12,27 @@ use Illuminate\View\View;
 
 class UserController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $users = User::where('is_peserta', false)
+        $search = $request->query('search');
+
+        $users = User::query()
+            ->where('is_peserta', false)
+            ->where('is_superadmin', false)
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%")
+                        ->orWhereHas('userLevel', function ($ql) use ($search) {
+                            $ql->where('nama', 'like', "%{$search}%");
+                        });
+                });
+            })
             ->with(['company', 'userLevel', 'roles'])
             ->orderByDesc('created_at')
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
         return view('superadmin.users.index', compact('users'));
     }
@@ -37,6 +52,7 @@ class UserController extends Controller
             'username' => ['required', 'string', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'user_level_id' => ['nullable', 'exists:panritta_user_levels,id'],
+            'is_pengajar' => ['nullable', 'boolean'],
             'is_active' => ['boolean'],
         ]);
 
@@ -45,7 +61,8 @@ class UserController extends Controller
             'email' => $validated['email'],
             'username' => $validated['username'],
             'password' => Hash::make($validated['password']),
-            'user_level_id' => $validated['user_level_id'],
+            'user_level_id' => $validated['user_level_id'] ?: null,
+            'is_pengajar' => $request->boolean('is_pengajar'),
             'is_active' => $validated['is_active'] ?? true,
             'is_superadmin' => false,
             'is_peserta' => false,

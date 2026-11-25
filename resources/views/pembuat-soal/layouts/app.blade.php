@@ -168,12 +168,48 @@
 
             {{-- Page Content --}}
             <main class="flex-1 overflow-auto">
+                @hasSection('header')
+                    <div class="p-6 pb-0 max-w-7xl mx-auto">
+                        @yield('header')
+                    </div>
+                @endif
+
+                @if(session('success'))
+                    <div class="p-6 pb-0 max-w-7xl mx-auto">
+                        <x-alert type="success" dismissible>
+                            {{ session('success') }}
+                        </x-alert>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="p-6 pb-0 max-w-7xl mx-auto">
+                        <x-alert type="danger" dismissible>
+                            @if(is_array(session('error')))
+                                <ul class="list-disc list-inside space-y-1">
+                                    @foreach(session('error') as $err)
+                                        <li>{{ $err }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                {{ session('error') }}
+                            @endif
+                        </x-alert>
+                    </div>
+                @endif
+
                 @yield('content')
             </main>
 
         </div>
 
     </div>
+
+    {{-- Toast Container --}}
+    <x-toast />
+
+    {{-- Confirm Dialog (Global) --}}
+    <x-confirm-dialog />
 
     @stack('scripts')
 </body>

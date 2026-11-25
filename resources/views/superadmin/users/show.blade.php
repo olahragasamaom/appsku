@@ -52,13 +52,7 @@
                         <div>
                             <label class="block text-sm font-medium text-secondary-700 mb-1">Tipe User</label>
                             <div>
-                                @if($user->is_superadmin)
-                                    <x-badge type="danger">Superadmin</x-badge>
-                                @elseif($user->company_id)
-                                    <x-badge type="info">Company Admin</x-badge>
-                                @else
-                                    <x-badge type="secondary">User</x-badge>
-                                @endif
+                                <x-badge :type="$user->tipe_user_badge">{{ $user->tipe_user }}</x-badge>
                             </div>
                         </div>
                         <div>
@@ -80,7 +74,7 @@
                         @if($user->user_level_id)
                             <div>
                                 <label class="block text-sm font-medium text-secondary-700 mb-1">User Level</label>
-                                <p class="text-secondary-900">{{ $user->userLevel?->name ?? '-' }}</p>
+                                <p class="text-secondary-900">{{ $user->userLevel?->nama ?? '-' }}</p>
                             </div>
                         @endif
                         <div>
@@ -90,6 +84,31 @@
                         <div>
                             <label class="block text-sm font-medium text-secondary-700 mb-1">Terakhir Diupdate</label>
                             <p class="text-secondary-900">{{ $user->updated_at->format('d M Y H:i') }}</p>
+                        </div>
+                        <div class="sm:col-span-2 pt-4 border-t border-secondary-100" x-data="{ copied: false }">
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Akses Halaman Login</label>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <a href="{{ $user->login_url }}" target="_blank"
+                                   class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-primary-50 text-primary-700 hover:bg-primary-100 hover:text-primary-800 transition-colors border border-primary-200">
+                                    <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                    </svg>
+                                    <span class="font-mono text-xs font-semibold">{{ $user->login_url }}</span>
+                                </a>
+                                <button type="button"
+                                        @click="navigator.clipboard.writeText('{{ $user->login_url }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                        class="btn btn-secondary btn-sm inline-flex items-center gap-1.5"
+                                        title="Salin URL Login">
+                                    <svg x-show="!copied" class="w-4 h-4 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                    <svg x-show="copied" x-cloak class="w-4 h-4 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    <span x-text="copied ? 'Tersalin!' : 'Salin URL'"></span>
+                                </button>
+                            </div>
+                            <p class="text-xs text-secondary-500 mt-1.5">User dengan tipe <strong>{{ $user->tipe_user }}</strong> diarahkan login melalui portal di atas.</p>
                         </div>
                     </div>
                 </div>
@@ -119,6 +138,13 @@
                     <h3 class="card-title">Aksi</h3>
                 </div>
                 <div class="card-body space-y-3">
+                    <a href="{{ $user->login_url }}" target="_blank"
+                       class="btn btn-secondary w-full inline-flex justify-center items-center gap-2">
+                        <svg class="w-4 h-4 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                        Buka Portal Login
+                    </a>
                     <a href="{{ route('superadmin.users.edit-password', $user) }}"
                        class="btn btn-primary w-full inline-flex justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

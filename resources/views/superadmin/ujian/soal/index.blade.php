@@ -1,9 +1,9 @@
-@extends('superadmin.layouts.app')
+@extends(request()->is('pembuat-soal*') ? 'pembuat-soal.layouts.app' : 'superadmin.layouts.app')
 
 @section('title', 'Kelola Soal Ujian')
 
 @php
-    $isPembuatSoal = auth()->user()->isPembuatSoal();
+    $isPembuatSoal = request()->is('pembuat-soal*');
     $routePrefix = $isPembuatSoal ? 'pembuat-soal' : 'superadmin';
 @endphp
 
@@ -28,18 +28,17 @@
                     Final
                 </span>
             @endif
-            @if(!$isPembuatSoal)
-                <a href="{{ route('superadmin.ujian.soal.finalisasi', $ujian) }}" class="btn btn-primary">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
-                    Finalisasi &amp; Urutkan
-                </a>
-            @endif
+            <a href="{{ route($routePrefix . '.ujian.soal.finalisasi', $ujian) }}" class="btn btn-primary">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
+                Finalisasi &amp; Urutkan
+            </a>
             <a href="{{ route($routePrefix . '.ujian.edit', $ujian) }}" class="btn btn-secondary">Kembali ke Ujian</a>
         </div>
     </div>
 @endsection
 
 @section('content')
+    <div class="{{ $isPembuatSoal ? 'p-6 max-w-7xl mx-auto space-y-6' : '' }}">
     @if($jenisUjians->isEmpty())
         <div class="card">
             <div class="card-body text-center text-secondary-500">
@@ -289,8 +288,8 @@
                             <div class="flex items-center justify-between mb-2">
                                 <p class="font-medium text-secondary-700">Format kolom header (baris pertama):</p>
                                 <a :href="subJenisUjianId && subIndikatorId ? 
-                                       `/superadmin/soal/template-import/${subJenisUjianId}/{{ $ujian->id }}/${subIndikatorId}` : 
-                                       (subJenisUjianId ? `/superadmin/soal/template-import/${subJenisUjianId}` : '{{ route('superadmin.soal.template') }}')" 
+                                       `/{{ $routePrefix }}/soal/template-import/${subJenisUjianId}/{{ $ujian->id }}/${subIndikatorId}` : 
+                                       (subJenisUjianId ? `/{{ $routePrefix }}/soal/template-import/${subJenisUjianId}` : '{{ route($routePrefix . '.soal.template') }}')" 
                                    class="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 font-medium">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                     Download Template
@@ -309,7 +308,7 @@
 
         {{-- Modal Pilih dari Bank Soal --}}
         <div x-data="bankSoalPicker({
-                optionsUrl: '{{ route('superadmin.ujian.soal.bank-options', $ujian) }}',
+                optionsUrl: '{{ route($routePrefix . '.ujian.soal.bank-options', $ujian) }}',
                 jenisUjianId: {{ $activeJenisId }}
              })"
              x-on:open-bank-soal.window="open()"
@@ -419,6 +418,7 @@
             </div>
         </div>
     @endif
+    </div>
 
     <style>
         .soal-preview-cell img { max-height: 60px; width: auto; display: inline-block; vertical-align: middle; margin: 2px 4px; border-radius: 4px; }

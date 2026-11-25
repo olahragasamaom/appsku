@@ -72,6 +72,13 @@
                     @enderror
                 </div>
 
+                <!-- Pengajar Option -->
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" id="is_pengajar" name="is_pengajar" value="1" {{ old('is_pengajar') ? 'checked' : '' }}
+                           class="w-4 h-4 text-primary-600 border-secondary-300 rounded focus:ring-primary-500">
+                    <label for="is_pengajar" class="text-sm font-medium text-secondary-700">Set sebagai Akun Pengajar</label>
+                </div>
+
                 <!-- Password -->
                 <div>
                     <label for="password" class="block text-sm font-medium text-secondary-700 mb-2">Password *</label>

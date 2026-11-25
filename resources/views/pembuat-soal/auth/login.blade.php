@@ -62,11 +62,7 @@
             </div>
         </div>
 
-        <div class="mt-6 p-4 bg-white rounded-lg shadow text-center text-sm text-gray-600">
-            <p class="mb-2 font-medium">Demo Credentials:</p>
-            <p>Username: <code class="bg-gray-100 px-2 py-1 rounded">pembuat</code></p>
-            <p>Password: <code class="bg-gray-100 px-2 py-1 rounded">password123</code></p>
-        </div>
+       
     </div>
 </div>
 </body>

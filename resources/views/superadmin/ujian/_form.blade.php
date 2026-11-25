@@ -9,6 +9,7 @@
     $dbAkses = $ujian?->akses_member ?? [];
     $dbAkses = is_array($dbAkses) ? $dbAkses : (is_string($dbAkses) ? json_decode($dbAkses, true) : []);
     $selectedAkses = old('akses_member', $dbAkses);
+    $cancelUrl = $cancelUrl ?? (request()->routeIs('pembuat-soal.*') ? route('pembuat-soal.ujian.index') : route('superadmin.ujian.index'));
 @endphp
 
 @if ($errors->any())
@@ -201,7 +202,7 @@
     </div>
 
     <div class="flex items-center justify-end gap-3">
-        <a href="{{ route('superadmin.ujian.index') }}" class="btn btn-secondary">Batal</a>
+        <a href="{{ $cancelUrl }}" class="btn btn-secondary">Batal</a>
         <button type="submit" class="btn btn-primary">{{ $submitLabel ?? 'Simpan' }}</button>
     </div>
 </div>

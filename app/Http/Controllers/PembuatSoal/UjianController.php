@@ -5,7 +5,9 @@ namespace App\Http\Controllers\PembuatSoal;
 use App\Http\Controllers\Superadmin\UjianController as SuperadminUjianController;
 use App\Http\Requests\UjianRequest;
 use App\Models\Ujian;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class UjianController extends SuperadminUjianController
@@ -34,6 +36,19 @@ class UjianController extends SuperadminUjianController
         return $response;
     }
 
+    public function store(UjianRequest $request): RedirectResponse
+    {
+        $ujian = DB::transaction(function () use ($request) {
+            $ujian = Ujian::create($this->buildData($request));
+            $this->syncJenisUjian($ujian, $request);
+
+            return $ujian;
+        });
+
+        return redirect()->route('pembuat-soal.ujian.index')
+            ->with('success', 'Ujian berhasil dibuat.');
+    }
+
     public function edit(Ujian $ujian): View
     {
         $response = parent::edit($ujian);
@@ -44,5 +59,28 @@ class UjianController extends SuperadminUjianController
         }
         
         return $response;
+    }
+
+    public function update(UjianRequest $request, Ujian $ujian): RedirectResponse
+    {
+        DB::transaction(function () use ($request, $ujian) {
+            $ujian->update($this->buildData($request, $ujian));
+            $this->syncJenisUjian($ujian, $request);
+        });
+
+        return redirect()->route('pembuat-soal.ujian.index')
+            ->with('success', 'Ujian berhasil diupdate.');
+    }
+
+    public function updateStatus(Request $request, Ujian $ujian): RedirectResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'in:draft,aktif,selesai'],
+        ]);
+
+        $ujian->update(['status' => $validated['status']]);
+
+        return redirect()->route('pembuat-soal.ujian.index')
+            ->with('success', 'Status ujian berhasil diubah.');
     }
 }

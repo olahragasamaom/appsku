@@ -5,6 +5,8 @@ namespace App\Http\Controllers\PembuatSoal;
 use App\Http\Controllers\Superadmin\UjianSoalController as SuperadminUjianSoalController;
 use App\Models\Soal;
 use App\Models\Ujian;
+use App\Models\UjianSoal;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -13,15 +15,9 @@ class UjianSoalController extends SuperadminUjianSoalController
 {
     public function index(Request $request, Ujian $ujian): View
     {
-        $response = parent::index($request, $ujian);
+        $this->authorizeUjian($ujian);
 
-        if ($response instanceof View) {
-            $data = $response->getData();
-
-            return view('pembuat-soal.ujian.soal.index', $data);
-        }
-
-        return $response;
+        return parent::index($request, $ujian);
     }
 
     public function create(Request $request, Ujian $ujian): View
@@ -36,12 +32,12 @@ class UjianSoalController extends SuperadminUjianSoalController
 
     public function store(Request $request, Ujian $ujian): RedirectResponse
     {
-        return parent::store($request, $ujian);
+        return $this->attach($request, $ujian);
     }
 
-    public function detach(Ujian $ujian, $ujianSoal): RedirectResponse
+    public function detach(Ujian $ujian, UjianSoal $ujianSoal): RedirectResponse
     {
-        return parent::destroy($ujian, $ujianSoal);
+        return parent::detach($ujian, $ujianSoal);
     }
 
     public function attach(Request $request, Ujian $ujian): RedirectResponse
@@ -51,32 +47,28 @@ class UjianSoalController extends SuperadminUjianSoalController
 
     public function import(Request $request, Ujian $ujian): RedirectResponse
     {
-        return parent::import($request, $ujian);
+        return parent::importExcel($request, $ujian);
     }
 
-    public function finalisasi(Request $request, Ujian $ujian)
+    public function finalisasi(Request $request, Ujian $ujian): View
     {
         $this->authorizeUjian($ujian);
 
         $response = parent::finalisasi($request, $ujian);
 
-        if ($response instanceof View) {
-            $data = $response->getData();
+        $data = $response->getData();
 
-            return view('pembuat-soal.ujian.soal.finalisasi', $data);
-        }
-
-        return $response;
+        return view('pembuat-soal.ujian.soal.finalisasi', $data);
     }
 
-    public function reorder(Request $request, Ujian $ujian)
+    public function reorder(Request $request, Ujian $ujian): JsonResponse
     {
         $this->authorizeUjian($ujian);
 
         return parent::reorder($request, $ujian);
     }
 
-    public function finalize(Ujian $ujian)
+    public function finalize(Ujian $ujian): RedirectResponse
     {
         $this->authorizeUjian($ujian);
 
@@ -87,7 +79,7 @@ class UjianSoalController extends SuperadminUjianSoalController
             ->with('success', 'Ujian berhasil difinalisasi.');
     }
 
-    public function unfinalize(Ujian $ujian)
+    public function unfinalize(Ujian $ujian): RedirectResponse
     {
         $this->authorizeUjian($ujian);
 
@@ -100,6 +92,11 @@ class UjianSoalController extends SuperadminUjianSoalController
 
     private function authorizeUjian(Ujian $ujian): void
     {
-        abort_unless($ujian->dibuat_oleh === auth()->id(), 403);
+        $user = auth()->user();
+        if ($user && ($user->isSuperAdmin() || $user->isPembuatSoal() || $user->isPengajar() || $ujian->dibuat_oleh === $user->id)) {
+            return;
+        }
+
+        abort(403);
     }
 }
