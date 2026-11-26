@@ -59,6 +59,18 @@ class PesertaOffline extends Model
             return (bool) $this->pivot->is_active;
         }
 
+        $sessionUjianId = session('offline_ujian_id');
+        if ($sessionUjianId && $this->id) {
+            $pivotActive = \Illuminate\Support\Facades\DB::table('panritta_ujian_peserta_offline')
+                ->where('ujian_id', $sessionUjianId)
+                ->where('peserta_offline_id', $this->id)
+                ->value('is_active');
+
+            if ($pivotActive !== null) {
+                return (bool) $pivotActive;
+            }
+        }
+
         return (bool) $value;
     }
 

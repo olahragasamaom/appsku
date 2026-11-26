@@ -462,4 +462,18 @@ class UjianSoalController extends Controller
             ->route('superadmin.ujian.soal.index', ['ujian' => $ujian, 'jenis_ujian_id' => $jenisUjianId])
             ->with('success', 'Soal berhasil dihapus dari ujian.');
     }
+
+    /**
+     * Cetak seluruh soal dan kunci jawaban ujian dalam satu halaman HTML utuh.
+     */
+    public function cetak(Ujian $ujian): View
+    {
+        $ujianSoals = $ujian->ujianSoals()
+            ->with(['soal.subIndikator.subJenisUjian'])
+            ->orderBy('urutan')
+            ->orderBy('id')
+            ->get();
+
+        return view('superadmin.ujian.soal.cetak', compact('ujian', 'ujianSoals'));
+    }
 }

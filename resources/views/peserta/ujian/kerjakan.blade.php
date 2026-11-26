@@ -363,20 +363,29 @@
                             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                                 {{-- Content --}}
                                 <div class="p-6 md:p-8">
-                                    {{-- Header dengan kategori --}}
-                                    <div class="mb-6 pb-6 border-b border-slate-200">
-                                    <div class="flex items-start justify-between gap-4">
-                                             <div class="flex-1">
-                                                 <h2 class="text-base md:text-lg font-bold text-primary-600">
-                                                     {{ $soal->subIndikator?->subJenisUjian?->nama_sub_jenis_ujian ?? 'Umum' }}
-                                                 </h2>
-                                                   <p class="text-sm text-slate-600 mt-1">Soal <span x-text="currentSoalIndex + 1"></span> dari <span x-text="totalSoal"></span>
-                                                       @if($peserta->soal_order)
-                                                           <span class="text-xs text-slate-500 ml-2">({{ $soal->subIndikator?->nama_sub_indikator ?? 'Umum' }})</span>
-                                                       @endif
-                                                   </p>
-                                             </div>
-                                         </div>
+                                    {{-- Header dengan kategori & Nomor (Gaya Simulasi) --}}
+                                    <div class="flex items-center gap-3 mb-5 pb-5 border-b border-slate-100">
+                                        <span class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center text-lg border border-primary-200 shadow-sm flex-shrink-0">
+                                            {{ $index + 1 }}
+                                        </span>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            @php
+                                                $subJenis = $soal->subIndikator?->subJenisUjian;
+                                                $subJenisNama = $subJenis?->nama_sub_jenis_ujian ?? 'Umum';
+                                                $subIndikatorNama = $soal->subIndikator?->nama_sub_indikator ?? null;
+                                                $isTkp = ($subJenis?->sistem_penilaian === 'tiap_jawaban_ada_poin')
+                                                    || str_contains(strtoupper($subJenisNama), 'TKP')
+                                                    || ($soal->nilai_bobot_a > 0 && $soal->nilai_bobot_b > 0);
+                                            @endphp
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600 tracking-wide uppercase">
+                                                {{ $subJenisNama }}@if($subIndikatorNama) &mdash; {{ $subIndikatorNama }}@endif
+                                            </span>
+                                            @if($isTkp)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                                    TKP (Skala 1-5)
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
 
                                     {{-- Teks Soal --}}

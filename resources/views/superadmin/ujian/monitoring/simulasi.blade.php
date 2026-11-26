@@ -24,24 +24,66 @@
         foreach ($ujianSoals as $ujianSoal) {
             $globalIndex++;
             $soal = $ujianSoal->soal;
+            $subJenis = $soal->subIndikator?->subJenisUjian;
+            $isTkp = ($subJenis?->sistem_penilaian === 'tiap_jawaban_ada_poin')
+                || str_contains(strtoupper($subJenis?->nama_sub_jenis_ujian ?? ''), 'TKP')
+                || ($soal->nilai_bobot_a > 0 && $soal->nilai_bobot_b > 0);
+
+            $kunciJawaban = strtoupper(trim((string) ($soal->kunci_jawaban ?? '')));
+
             $opsi = [];
             foreach (['A', 'B', 'C', 'D', 'E'] as $huruf) {
                 $teks = $soal->{'opsi_'.strtolower($huruf)};
                 if ($teks !== null && $teks !== '') {
+                    $bobotVal = $soal->{'nilai_bobot_'.strtolower($huruf)};
+                    $bobot = null;
+                    if ($bobotVal !== null && $bobotVal !== '') {
+                        $floatVal = (float) $bobotVal;
+                        $bobot = ($floatVal == (int) $floatVal) ? (int) $floatVal : $floatVal;
+                    }
+
+                    $gambarOpsi = $soal->{'gambar_opsi_'.strtolower($huruf)};
+                    $gambarOpsiUrl = null;
+                    if ($gambarOpsi) {
+                        $gambarOpsiUrl = \Illuminate\Support\Facades\Storage::disk('uploads')->url($gambarOpsi);
+                    }
+
                     $opsi[] = [
                         'huruf' => $huruf,
                         'teks' => $formulaRenderer->render($formulaRenderer->stripParagraphTags($teks)),
-                        'gambar' => $soal->{'gambar_opsi_'.strtolower($huruf)} ? \Illuminate\Support\Facades\Storage::url($soal->{'gambar_opsi_'.strtolower($huruf)}) : null,
+                        'gambar' => $gambarOpsiUrl,
+                        'bobot' => $bobot,
+                        'is_kunci' => ! $isTkp && ($huruf === $kunciJawaban),
                     ];
                 }
             }
+
+            $gambarSoalUrl = null;
+            if ($soal->gambar_soal) {
+                $gambarSoalUrl = \Illuminate\Support\Facades\Storage::disk('uploads')->url($soal->gambar_soal);
+            }
+
+            $pembahasanTeks = null;
+            if (! empty($soal->pembahasan)) {
+                $pembahasanTeks = $formulaRenderer->render($soal->pembahasan);
+            }
+
+            $gambarPembahasanUrl = null;
+            if ($soal->gambar_pembahasan) {
+                $gambarPembahasanUrl = \Illuminate\Support\Facades\Storage::disk('uploads')->url($soal->gambar_pembahasan);
+            }
+
             $soalData[] = [
                 'id' => $ujianSoal->id,
                 'nomor' => $globalIndex,
-                'sub_jenis' => $soal->subIndikator?->subJenisUjian?->nama_sub_jenis_ujian ?? 'Umum',
+                'sub_jenis' => $subJenis?->nama_sub_jenis_ujian ?? 'Umum',
                 'sub_indikator' => $soal->subIndikator?->nama_sub_indikator ?? 'Tanpa Kategori',
+                'is_tkp' => $isTkp,
+                'kunci_jawaban' => $kunciJawaban,
                 'teks' => $formulaRenderer->render($soal->soal ?? ''),
-                'gambar' => $soal->gambar_soal ? \Illuminate\Support\Facades\Storage::url($soal->gambar_soal) : null,
+                'gambar' => $gambarSoalUrl,
+                'pembahasan' => $pembahasanTeks,
+                'gambar_pembahasan' => $gambarPembahasanUrl,
                 'opsi' => $opsi,
             ];
         }
@@ -84,7 +126,14 @@
                             <div class="p-6 sm:p-8">
                                 <div class="flex items-center gap-3 mb-5 pb-5 border-b border-slate-100">
                                     <span class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center text-lg border border-primary-200 shadow-sm flex-shrink-0" x-text="soalAktif.nomor"></span>
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600 tracking-wide uppercase" x-text="soalAktif.sub_jenis + ' — ' + soalAktif.sub_indikator"></span>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600 tracking-wide uppercase" x-text="soalAktif.sub_jenis + ' — ' + soalAktif.sub_indikator"></span>
+                                        <template x-if="soalAktif.is_tkp">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                                TKP (Skala 1-5)
+                                            </span>
+                                        </template>
+                                    </div>
                                 </div>
 
                                 {{-- Teks Soal --}}
@@ -96,20 +145,97 @@
                                 {{-- Opsi Jawaban --}}
                                 <div class="mt-8 space-y-3">
                                     <template x-for="op in soalAktif.opsi" :key="op.huruf">
-                                        <label class="flex items-start gap-4 p-4 border rounded-xl cursor-pointer transition-colors"
-                                               :class="jawaban[soalAktif.id] === op.huruf ? 'border-primary-500 bg-primary-50 shadow-sm ring-1 ring-primary-500' : 'border-slate-200 hover:bg-slate-50'">
+                                        <label class="flex items-start gap-4 p-4 border rounded-xl cursor-pointer transition-all duration-150 relative"
+                                               :class="{
+                                                   'bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500 shadow-xs': (!soalAktif.is_tkp && op.is_kunci) || (soalAktif.is_tkp && op.bobot === 5),
+                                                   'border-primary-500 bg-primary-50 ring-1 ring-primary-500 shadow-xs': jawaban[soalAktif.id] === op.huruf && !((!soalAktif.is_tkp && op.is_kunci) || (soalAktif.is_tkp && op.bobot === 5)),
+                                                   'border-slate-200 hover:bg-slate-50': !(jawaban[soalAktif.id] === op.huruf || (!soalAktif.is_tkp && op.is_kunci) || (soalAktif.is_tkp && op.bobot === 5))
+                                               }">
                                             <div class="flex items-center h-6">
-                                                <input type="radio" :value="op.huruf" x-model="jawaban[soalAktif.id]" class="w-5 h-5 text-primary-600 border-slate-300 focus:ring-primary-600">
+                                                <input type="radio" :value="op.huruf" x-model="jawaban[soalAktif.id]" 
+                                                       class="w-5 h-5 text-primary-600 border-slate-300 focus:ring-primary-600">
                                             </div>
-                                            <div class="flex-1 pt-0.5">
-                                                <span class="text-base font-bold mr-2" :class="jawaban[soalAktif.id] === op.huruf ? 'text-primary-700' : 'text-slate-700'" x-text="op.huruf + '.'"></span>
-                                                <span class="text-base" :class="jawaban[soalAktif.id] === op.huruf ? 'text-primary-900 font-medium' : 'text-slate-700'" x-html="op.teks"></span>
+                                            <div class="flex-1 pt-0.5 min-w-0">
+                                                <div class="flex items-start justify-between gap-3">
+                                                    <div class="flex-1 min-w-0">
+                                                        <span class="text-base font-bold mr-2" 
+                                                              :class="((!soalAktif.is_tkp && op.is_kunci) || (soalAktif.is_tkp && op.bobot === 5)) ? 'text-emerald-800' : (jawaban[soalAktif.id] === op.huruf ? 'text-primary-700' : 'text-slate-700')" 
+                                                              x-text="op.huruf + '.'"></span>
+                                                        <span class="text-base leading-relaxed" 
+                                                              :class="((!soalAktif.is_tkp && op.is_kunci) || (soalAktif.is_tkp && op.bobot === 5)) ? 'text-emerald-950 font-medium' : (jawaban[soalAktif.id] === op.huruf ? 'text-primary-900 font-medium' : 'text-slate-700')" 
+                                                              x-html="op.teks"></span>
+                                                    </div>
+
+                                                    {{-- Badges di belakang jawaban --}}
+                                                    <div class="flex-shrink-0 flex items-center gap-2 pt-0.5">
+                                                        {{-- Kunci Jawaban Non-TKP --}}
+                                                        <template x-if="!soalAktif.is_tkp && op.is_kunci">
+                                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs whitespace-nowrap">
+                                                                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                                Jawaban Benar
+                                                            </span>
+                                                        </template>
+
+                                                        {{-- Bobot TKP --}}
+                                                        <template x-if="soalAktif.is_tkp && op.bobot !== null">
+                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap shadow-2xs"
+                                                                  :class="op.bobot === 5 ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200'">
+                                                                <template x-if="op.bobot === 5">
+                                                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                                </template>
+                                                                <span>Bobot: <strong x-text="op.bobot"></strong></span>
+                                                            </span>
+                                                        </template>
+                                                    </div>
+                                                </div>
+
                                                 <template x-if="op.gambar">
                                                     <img :src="op.gambar" class="mt-3 max-h-40 rounded-lg border border-slate-200">
                                                 </template>
                                             </div>
                                         </label>
                                     </template>
+                                </div>
+
+                                {{-- Box Penjelasan / Pembahasan --}}
+                                <div class="mt-8 border rounded-2xl overflow-hidden shadow-xs"
+                                     :class="soalAktif.is_tkp ? 'bg-amber-50/40 border-amber-200' : 'bg-emerald-50/40 border-emerald-200'">
+                                    <div class="px-5 py-3 border-b flex items-center justify-between"
+                                         :class="soalAktif.is_tkp ? 'bg-amber-100/60 border-amber-200 text-amber-900' : 'bg-emerald-100/60 border-emerald-200 text-emerald-900'">
+                                        <div class="flex items-center gap-2 font-bold text-sm">
+                                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                            </svg>
+                                            <span>Penjelasan & Pembahasan</span>
+                                        </div>
+                                        <template x-if="!soalAktif.is_tkp && soalAktif.kunci_jawaban">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-600 text-white shadow-xs">
+                                                Kunci: <span x-text="soalAktif.kunci_jawaban"></span>
+                                            </span>
+                                        </template>
+                                        <template x-if="soalAktif.is_tkp">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-600 text-white shadow-xs">
+                                                Sistem Poin TKP (Skala 1-5)
+                                            </span>
+                                        </template>
+                                    </div>
+
+                                    <div class="p-5 sm:p-6 space-y-4">
+                                        <template x-if="soalAktif.pembahasan">
+                                            <div class="prose prose-slate max-w-none text-slate-800 text-sm leading-relaxed" x-html="soalAktif.pembahasan"></div>
+                                        </template>
+                                        <template x-if="!soalAktif.pembahasan">
+                                            <div class="text-xs text-slate-500 italic flex items-center gap-1.5">
+                                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                Penjelasan detail belum ditambahkan oleh pembuat soal untuk nomor ini.
+                                            </div>
+                                        </template>
+                                        <template x-if="soalAktif.gambar_pembahasan">
+                                            <img :src="soalAktif.gambar_pembahasan" alt="Gambar pembahasan" class="mt-3 max-h-72 rounded-xl border border-slate-200 shadow-sm">
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
 

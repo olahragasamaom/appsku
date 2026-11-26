@@ -636,6 +636,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 
         // kelola soal di ujian
         Route::get('ujian/{ujian}/soal', [UjianSoalController::class, 'index'])->name('ujian.soal.index');
+        Route::get('ujian/{ujian}/soal/cetak', [UjianSoalController::class, 'cetak'])->name('ujian.soal.cetak');
         Route::get('ujian/{ujian}/remaining', [UjianSoalController::class, 'remaining'])->name('ujian.soal.remaining');
         Route::get('ujian/{ujian}/bank-soal-options', [UjianSoalController::class, 'bankSoalOptions'])->name('ujian.soal.bank-options');
         Route::post('ujian/{ujian}/soal/attach', [UjianSoalController::class, 'attach'])->name('ujian.soal.attach');
@@ -885,6 +886,7 @@ Route::prefix('pembuat-soal')->name('pembuat-soal.')->group(function () {
         Route::get('soal/template-import/{subJenisUjian?}/{ujian?}/{subIndikator?}', [App\Http\Controllers\PembuatSoal\SoalController::class, 'downloadTemplate'])->name('soal.template');
         Route::post('soal/upload-gambar-editor', [App\Http\Controllers\PembuatSoal\SoalController::class, 'uploadGambarEditor'])->name('soal.upload-editor');
         Route::get('ujian/{ujian}/soal', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'index'])->name('ujian.soal.index');
+        Route::get('ujian/{ujian}/soal/cetak', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'cetak'])->name('ujian.soal.cetak');
         Route::get('ujian/{ujian}/remaining', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'remaining'])->name('ujian.soal.remaining');
         Route::get('ujian/{ujian}/bank-soal-options', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'bankSoalOptions'])->name('ujian.soal.bank-options');
         Route::post('ujian/{ujian}/soal', [App\Http\Controllers\PembuatSoal\UjianSoalController::class, 'store'])->name('ujian.soal.store');
@@ -1023,6 +1025,7 @@ Route::prefix('peserta')->name('peserta.')->group(function () {
         Route::get('ujian/{ujian}/heartbeat', [PesertaUjianController::class, 'heartbeat'])->name('ujian.heartbeat');
         Route::post('ujian/{ujian}/submit', [PesertaUjianController::class, 'submit'])->name('ujian.submit');
         Route::get('ujian/{ujian}/hasil', [PesertaUjianController::class, 'hasil'])->name('ujian.hasil');
+        Route::get('ujian/{ujian}/analisis', [PesertaUjianController::class, 'analisis'])->name('ujian.analisis');
         Route::get('ujian/{ujian}/pembahasan', [PesertaUjianController::class, 'pembahasan'])->name('ujian.pembahasan');
         Route::get('ujian/{ujian}/leaderboard', [PesertaUjianController::class, 'leaderboard'])->name('ujian.leaderboard');
         Route::get('ujian/{ujian}/riwayat', [PesertaUjianController::class, 'riwayat'])->name('ujian.riwayat');

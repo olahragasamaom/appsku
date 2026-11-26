@@ -21,6 +21,7 @@ class OfflineParticipantAuth
         $routeName = $request->route()->getName();
         $isViewResultRoute = in_array($routeName, [
             'peserta.ujian.hasil',
+            'peserta.ujian.analisis',
             'peserta.ujian.pembahasan',
             'peserta.ujian.leaderboard',
             'peserta.ujian.riwayat',
@@ -50,14 +51,18 @@ class OfflineParticipantAuth
 
             // Resolve ujianPeserta via PesertaOffline
             $pesertaOffline = \App\Models\PesertaOffline::with('ujianPeserta')->find($offlinePesertaId);
-            if (! $pesertaOffline || ! $pesertaOffline->ujianPeserta) {
+            if (! $pesertaOffline) {
                 abort(403, 'Data peserta tidak ditemukan.');
             }
 
-            // Check route ujian_id matches peserta ujian_id
+            // Check route ujian_id matches peserta ujian_id (via pivot atau legacy column)
             $routeUjian = $request->route('ujian');
             $routeUjianId = is_object($routeUjian) ? $routeUjian->id : (int) $routeUjian;
-            if ($pesertaOffline->ujian_id != $routeUjianId) {
+            
+            $isEnrolled = $pesertaOffline->ujians()->where('panritta_ujian.id', $routeUjianId)->exists()
+                || $pesertaOffline->ujian_id == $routeUjianId;
+
+            if (! $isEnrolled) {
                 abort(403, 'Akses ke ujian ini tidak diizinkan.');
             }
 
@@ -139,8 +144,16 @@ class OfflineParticipantAuth
                 abort(403, 'Akun Anda telah diblokir oleh pengawas. Alasan: '.($peserta->blocked_reason ?? 'Tidak dijelaskan'));
             }
 
+            // Cek status aktivasi peserta untuk ujian ini (via pivot panritta_ujian_peserta_offline atau fallback)
+            $pivotActive = \Illuminate\Support\Facades\DB::table('panritta_ujian_peserta_offline')
+                ->where('ujian_id', $routeUjianId)
+                ->where('peserta_offline_id', $peserta->id)
+                ->value('is_active');
+
+            $isActive = $pivotActive !== null ? (bool) $pivotActive : (bool) $peserta->is_active;
+
             // Jika admin menonaktifkan peserta mid-exam, hentikan akses ujian
-            if (! $peserta->is_active) {
+            if (! $isActive) {
                 abort(403, 'Ujian Anda dinonaktifkan oleh pengawas. Silakan hubungi pengawas.');
             }
         }

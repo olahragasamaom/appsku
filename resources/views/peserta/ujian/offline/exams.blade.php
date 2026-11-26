@@ -144,13 +144,24 @@
 
                                  <div class="flex-shrink-0">
                                       @if($sudahSelesai)
-                                          <a href="{{ route('peserta.ujian.hasil', $ujian->id) }}" class="btn btn-secondary">
-                                              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                              </svg>
-                                              Lihat Hasil
-                                          </a>
+                                          <div class="flex items-center gap-2">
+                                              <a href="{{ route('peserta.ujian.hasil', $ujian->id) }}" class="btn btn-secondary">
+                                                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                  </svg>
+                                                  Lihat Hasil
+                                              </a>
+                                              <form method="POST" action="{{ route('peserta.ujian.retry', $ujian->id) }}" onsubmit="return confirm('Mulai ujian ulang (percobaan berikutnya)? Soal akan diacak per sub-indikator.')">
+                                                  @csrf
+                                                  <button type="submit" class="btn text-white font-medium shadow-sm" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);" title="Ujian Ulang">
+                                                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                                      </svg>
+                                                      Ujian Ulang
+                                                  </button>
+                                              </form>
+                                          </div>
                                       @elseif($isPaused)
                                           <button type="button" class="btn btn-secondary" disabled>
                                               Anda Dihentikan Sementara Oleh Admin
@@ -167,6 +178,7 @@
                                           </button>
                                           <form id="examForm-{{ $ujian->id }}" method="POST" action="{{ route('peserta.offline.start', $ujian->id) }}" style="display: none;">
                                               @csrf
+                                              <input type="hidden" name="token" id="formToken-{{ $ujian->id }}">
                                           </form>
                                       @else
                                           <button type="button" class="btn btn-secondary" disabled>
@@ -230,19 +242,42 @@
                 </p>
             </div>
 
-            <label class="flex items-start gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+            <!-- Input Token Ujian -->
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2">
+                <div class="flex items-center justify-between">
+                    <label for="modalTokenInput" class="block text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                        </svg>
+                        Token Ujian <span class="text-danger-500">*</span>
+                    </label>
+                    <span class="text-[11px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Wajib Diisi</span>
+                </div>
+                <input type="text"
+                       id="modalTokenInput"
+                       placeholder="MASUKKAN TOKEN UJIAN"
+                       maxlength="30"
+                       autocomplete="off"
+                       oninput="this.value = this.value.toUpperCase(); updateSubmitButton();"
+                       class="w-full px-4 py-2.5 text-center font-mono font-bold text-xl tracking-widest border-2 border-amber-300 rounded-lg bg-white text-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:outline-none uppercase placeholder:text-slate-400 placeholder:font-medium placeholder:tracking-normal placeholder:text-xs">
+                <p class="text-[11px] text-amber-800 text-center">
+                    Minta token ujian kepada pengawas di ruangan Anda sebelum memulai.
+                </p>
+            </div>
+
+            <label class="flex items-start gap-2.5 p-3 bg-slate-50 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
                 <input type="checkbox" 
                        id="agreementCheckbox"
                        onchange="updateSubmitButton()"
                        class="w-4 h-4 mt-0.5 rounded border-slate-300 text-primary-600 focus:ring-primary-600 flex-shrink-0">
-                <span class="text-xs text-slate-700">
+                <span class="text-xs text-slate-700 leading-relaxed">
                     <strong>Saya telah membaca dan memahami</strong> semua peraturan dan informasi ujian di atas, serta bersedia mematuhi semua ketentuan yang berlaku.
                 </span>
             </label>
         </div>
 
         <!-- Footer (Fixed) -->
-        <div class="bg-slate-50 px-6 py-4 flex gap-3 justify-end border-t border-slate-200 flex-shrink-0">
+        <div class="bg-slate-50 px-6 py-4 flex gap-3 justify-end border-t border-slate-200 flex-shrink-0 rounded-b-xl">
             <button type="button" 
                     onclick="closeExamWarning()"
                     class="btn btn-ghost">
@@ -266,14 +301,24 @@
         currentUjianId = ujianId;
         document.getElementById('modalUjianNama').textContent = ujianName;
         document.getElementById('agreementCheckbox').checked = false;
+        const tokenInput = document.getElementById('modalTokenInput');
+        if (tokenInput) {
+            tokenInput.value = '';
+        }
         updateSubmitButton();
         document.getElementById('examWarningModal').classList.remove('hidden');
+        if (tokenInput) {
+            setTimeout(() => tokenInput.focus(), 150);
+        }
     }
 
     function updateSubmitButton() {
         const checkbox = document.getElementById('agreementCheckbox');
+        const tokenInput = document.getElementById('modalTokenInput');
         const submitBtn = document.getElementById('submitExamButton');
-        submitBtn.disabled = !checkbox.checked;
+        const isAgreed = checkbox && checkbox.checked;
+        const hasToken = tokenInput && tokenInput.value.trim().length > 0;
+        submitBtn.disabled = !(isAgreed && hasToken);
     }
 
     function closeExamWarning() {
@@ -282,10 +327,39 @@
     }
 
     function submitExamForm() {
+        const checkbox = document.getElementById('agreementCheckbox');
+        const tokenInput = document.getElementById('modalTokenInput');
+        if (!checkbox || !checkbox.checked) {
+            return;
+        }
+        if (!tokenInput || !tokenInput.value.trim()) {
+            tokenInput?.focus();
+            return;
+        }
         if (currentUjianId) {
+            const formToken = document.getElementById('formToken-' + currentUjianId);
+            if (formToken) {
+                formToken.value = tokenInput.value.trim().toUpperCase();
+            }
             document.getElementById('examForm-' + currentUjianId).submit();
         }
     }
+
+    // Submit on Enter key if enabled
+    document.addEventListener('DOMContentLoaded', function() {
+        const tokenInput = document.getElementById('modalTokenInput');
+        if (tokenInput) {
+            tokenInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const submitBtn = document.getElementById('submitExamButton');
+                    if (submitBtn && !submitBtn.disabled) {
+                        submitExamForm();
+                    }
+                }
+            });
+        }
+    });
 
     // Close modal when clicking outside
     document.getElementById('examWarningModal').addEventListener('click', function(e) {

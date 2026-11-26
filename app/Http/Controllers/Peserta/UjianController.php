@@ -84,29 +84,25 @@ class UjianController extends Controller
             ]);
         }
 
-        \Log::info('start() - acak_soal check', [
+        // Cek apakah ini attempt ke-2 dan seterusnya atau ujian dengan acak_soal aktif
+        $attemptCount = UjianPeserta::where('ujian_id', $ujian->id)
+            ->where('user_id', $user->id)
+            ->count();
+
+        \Log::info('start() - attempt & acak check', [
             'ujian_id' => $ujian->id,
+            'attempt_count' => $attemptCount,
             'acak_soal' => $ujian->acak_soal,
             'soal_order_exists' => ! is_null($peserta->soal_order),
             'peserta_id' => $peserta->id,
         ]);
 
-        if ($ujian->acak_soal && ! $peserta->soal_order) {
-            $ujian->load('ujianJenisUjians.jenisUjian');
-            $activeJenisId = (int) $request->input('jenis_ujian_id', $ujian->ujianJenisUjians->first()?->jenis_ujian_id ?? 0);
-            \Log::info('start() - determining jenis_ujian_id', [
-                'from_request' => $request->input('jenis_ujian_id'),
-                'activeJenisId' => $activeJenisId,
-                'ujian_jenis_count' => $ujian->ujianJenisUjians->count(),
-            ]);
-            if ($activeJenisId > 0) {
-                $soalOrder = $this->randomSoal->generateSoalOrder($ujian, $activeJenisId);
-                \Log::info('start() - soal_order generated', ['count' => count($soalOrder), 'order' => json_encode($soalOrder)]);
+        if (($attemptCount >= 2 || $ujian->acak_soal) && empty($peserta->soal_order)) {
+            $soalOrder = $this->randomSoal->generateSoalOrderForUjian($ujian);
+            if (! empty($soalOrder)) {
                 $this->randomSoal->saveSoalOrder($peserta, $soalOrder);
                 $peserta->refresh();
                 \Log::info('start() - soal_order saved', ['soal_order' => json_encode($peserta->soal_order)]);
-            } else {
-                \Log::warning('start() - activeJenisId is 0, skipping random generation');
             }
         }
 
@@ -131,20 +127,25 @@ class UjianController extends Controller
             return redirect()->route('peserta.ujian.hasil', $ujian);
         }
 
-        if ($ujian->acak_soal && ! $peserta->soal_order) {
-            $ujian->load('ujianJenisUjians.jenisUjian');
-            $activeJenisId = (int) $ujian->ujianJenisUjians->first()?->jenis_ujian_id ?? 0;
-            \Log::info('kerjakan() - random check', ['activeJenisId' => $activeJenisId, 'ujian_jenis_count' => $ujian->ujianJenisUjians->count()]);
-            if ($activeJenisId > 0) {
-                $soalOrder = $this->randomSoal->generateSoalOrder($ujian, $activeJenisId);
-                \Log::info('kerjakan() - soalOrder generated', ['count' => count($soalOrder), 'order' => json_encode($soalOrder)]);
-                if (! empty($soalOrder)) {
-                    $this->randomSoal->saveSoalOrder($peserta, $soalOrder);
-                    $peserta->refresh();
-                    \Log::info('kerjakan() - soal_order saved', ['soal_order' => json_encode($peserta->soal_order)]);
-                } else {
-                    \Log::warning('kerjakan() - soalOrder is empty, skipping save');
-                }
+        // Cek apakah ini attempt ke-2 dan seterusnya pada ujian ini
+        $attemptCount = 1;
+        if ($peserta->peserta_offline_id) {
+            $attemptCount = UjianPeserta::where('ujian_id', $ujian->id)
+                ->where('peserta_offline_id', $peserta->peserta_offline_id)
+                ->count();
+        } elseif ($peserta->user_id) {
+            $attemptCount = UjianPeserta::where('ujian_id', $ujian->id)
+                ->where('user_id', $peserta->user_id)
+                ->count();
+        }
+
+        // Pada ujian kedua dan seterusnya (atau jika acak_soal aktif), urutan soal di sub-indikator diacak
+        if (($attemptCount >= 2 || $ujian->acak_soal) && empty($peserta->soal_order)) {
+            $soalOrder = $this->randomSoal->generateSoalOrderForUjian($ujian);
+            if (! empty($soalOrder)) {
+                $this->randomSoal->saveSoalOrder($peserta, $soalOrder);
+                $peserta->refresh();
+                \Log::info('kerjakan() - attempt ' . $attemptCount . ' soal_order saved per sub-indikator', ['count' => count($soalOrder)]);
             }
         }
 
@@ -159,7 +160,7 @@ class UjianController extends Controller
         }
 
         $ujianSoals = $ujian->ujianSoals()
-            ->with('soal')
+            ->with('soal.subIndikator.subJenisUjian')
             ->orderBy('urutan')
             ->orderBy('id')
             ->get();
@@ -283,8 +284,17 @@ class UjianController extends Controller
         }
 
         // Check activation status for offline participants before submit
-        if ($peserta->pesertaOffline && ! $peserta->pesertaOffline->is_active) {
-            abort(403, 'Status aktivasi tidak valid untuk menyelesaikan ujian.');
+        if ($peserta->pesertaOffline) {
+            $pivotActive = \Illuminate\Support\Facades\DB::table('panritta_ujian_peserta_offline')
+                ->where('ujian_id', $ujian->id)
+                ->where('peserta_offline_id', $peserta->pesertaOffline->id)
+                ->value('is_active');
+
+            $isActive = $pivotActive !== null ? (bool) $pivotActive : (bool) $peserta->pesertaOffline->is_active;
+
+            if (! $isActive) {
+                abort(403, 'Status aktivasi tidak valid untuk menyelesaikan ujian.');
+            }
         }
 
         if ($peserta->status !== 'selesai') {
@@ -312,8 +322,9 @@ class UjianController extends Controller
 
                 $breakdown = $this->scoring->breakdownPerJenis($peserta);
                 $breakdownSubJenis = $this->scoring->breakdownPerSubJenis($peserta);
+                $breakdownSubIndikator = $this->scoring->breakdownPerSubIndikator($peserta);
 
-                return view('peserta.ujian.hasil', compact('ujian', 'peserta', 'breakdown', 'breakdownSubJenis'));
+                return view('peserta.ujian.hasil', compact('ujian', 'peserta', 'breakdown', 'breakdownSubJenis', 'breakdownSubIndikator'));
             }
         }
 
@@ -332,8 +343,59 @@ class UjianController extends Controller
 
         $breakdown = $this->scoring->breakdownPerJenis($peserta);
         $breakdownSubJenis = $this->scoring->breakdownPerSubJenis($peserta);
+        $breakdownSubIndikator = $this->scoring->breakdownPerSubIndikator($peserta);
 
-        return view('peserta.ujian.hasil', compact('ujian', 'peserta', 'breakdown', 'breakdownSubJenis'));
+        return view('peserta.ujian.hasil', compact('ujian', 'peserta', 'breakdown', 'breakdownSubJenis', 'breakdownSubIndikator'));
+    }
+
+    public function analisis(Request $request, Ujian $ujian): View|RedirectResponse
+    {
+        // Try offline peserta first
+        if ($request->session()->has('offline_peserta_id')) {
+            $pesertaOfflineId = $request->session()->get('offline_peserta_id');
+            $pesertaOffline = PesertaOffline::with('ujianPeserta')->find($pesertaOfflineId);
+
+            if ($pesertaOffline && $pesertaOffline->ujianPeserta) {
+                $peserta = $pesertaOffline->ujianPeserta;
+
+                if ($peserta->status !== 'selesai') {
+                    return redirect()->route('peserta.offline.exams');
+                }
+
+                if (! $ujian->tampilkan_hasil) {
+                    return redirect()->route('peserta.ujian.hasil', $ujian);
+                }
+
+                $breakdown = $this->scoring->breakdownPerJenis($peserta);
+                $breakdownSubJenis = $this->scoring->breakdownPerSubJenis($peserta);
+                $breakdownSubIndikator = $this->scoring->breakdownPerSubIndikator($peserta);
+
+                return view('peserta.ujian.analisis', compact('ujian', 'peserta', 'breakdown', 'breakdownSubJenis', 'breakdownSubIndikator'));
+            }
+        }
+
+        // Fallback: try resolve via standard logic
+        $peserta = $this->resolvePeserta($request, $ujian);
+
+        if ($peserta instanceof RedirectResponse) {
+            return $peserta;
+        }
+
+        if (! $peserta) {
+            return redirect()->route('peserta.offline.exams');
+        }
+
+        abort_unless($peserta->status === 'selesai', 404);
+
+        if (! $ujian->tampilkan_hasil) {
+            return redirect()->route('peserta.ujian.hasil', $ujian);
+        }
+
+        $breakdown = $this->scoring->breakdownPerJenis($peserta);
+        $breakdownSubJenis = $this->scoring->breakdownPerSubJenis($peserta);
+        $breakdownSubIndikator = $this->scoring->breakdownPerSubIndikator($peserta);
+
+        return view('peserta.ujian.analisis', compact('ujian', 'peserta', 'breakdown', 'breakdownSubJenis', 'breakdownSubIndikator'));
     }
 
     public function pembahasan(Request $request, Ujian $ujian): View|RedirectResponse
@@ -359,6 +421,8 @@ class UjianController extends Controller
                     ->orderBy('urutan')
                     ->orderBy('id')
                     ->get();
+
+                $ujianSoals = $this->randomSoal->reorderSoalsByList($ujianSoals, $peserta->soal_order);
 
                 $jawabanMap = $peserta->jawaban()->get()->keyBy('ujian_soal_id');
                 $breakdown = $this->scoring->breakdownPerJenis($peserta);
@@ -389,6 +453,8 @@ class UjianController extends Controller
             ->orderBy('urutan')
             ->orderBy('id')
             ->get();
+
+        $ujianSoals = $this->randomSoal->reorderSoalsByList($ujianSoals, $peserta->soal_order);
 
         $jawabanMap = $peserta->jawaban()->get()->keyBy('ujian_soal_id');
         $breakdown = $this->scoring->breakdownPerJenis($peserta);
@@ -550,16 +616,36 @@ class UjianController extends Controller
 
     public function retry(Request $request, Ujian $ujian): RedirectResponse
     {
+        // 1. Peserta offline
         if ($request->session()->has('offline_peserta_id')) {
             $pesertaOfflineId = $request->session()->get('offline_peserta_id');
             $pesertaOffline = PesertaOffline::find($pesertaOfflineId);
 
             if ($pesertaOffline) {
+                // Acak urutan soal di dalam tiap sub-indikator (urutan sub-indikator tetap)
+                $soalOrder = $this->randomSoal->generateSoalOrderForUjian($ujian);
+
                 $newAttempt = $ujian->peserta()->create([
                     'user_id' => null,
                     'peserta_offline_id' => $pesertaOfflineId,
                     'status' => 'sedang_ujian',
                     'waktu_mulai' => now(),
+                    'last_activity_at' => now(),
+                    'batas_waktu' => now()->addMinutes($ujian->durasi_ujian ?? 90),
+                    'soal_order' => ! empty($soalOrder) ? $soalOrder : null,
+                ]);
+
+                // Sync pivot panritta_ujian_peserta_offline
+                if ($pesertaOffline->ujians()->where('panritta_ujian.id', $ujian->id)->exists()) {
+                    $pesertaOffline->ujians()->updateExistingPivot($ujian->id, [
+                        'ujian_peserta_id' => $newAttempt->id,
+                    ]);
+                }
+
+                // Sync legacy column
+                $pesertaOffline->update([
+                    'ujian_peserta_id' => $newAttempt->id,
+                    'is_active' => true,
                 ]);
 
                 $request->session()->put([
@@ -569,6 +655,23 @@ class UjianController extends Controller
 
                 return redirect()->route('peserta.ujian.kerjakan', $ujian);
             }
+        }
+
+        // 2. Peserta online
+        if ($user = $request->user()) {
+            $soalOrder = $this->randomSoal->generateSoalOrderForUjian($ujian);
+
+            $newAttempt = $ujian->peserta()->create([
+                'user_id' => $user->id,
+                'peserta_offline_id' => null,
+                'status' => 'sedang_ujian',
+                'waktu_mulai' => now(),
+                'last_activity_at' => now(),
+                'batas_waktu' => now()->addMinutes($ujian->durasi_ujian ?? 90),
+                'soal_order' => ! empty($soalOrder) ? $soalOrder : null,
+            ]);
+
+            return redirect()->route('peserta.ujian.kerjakan', $ujian);
         }
 
         return redirect()->route('peserta.dashboard');

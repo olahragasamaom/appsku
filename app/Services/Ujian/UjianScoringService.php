@@ -263,6 +263,169 @@ class UjianScoringService
     }
 
     /**
+     * Breakdown nilai per Sub Indikator (misal: Pancasila, UUD 1945, Integritas, dll).
+     * Mengelompokkan dan menghitung persentase penguasaan tiap sub indikator,
+     * lalu diurutkan dari persentase tertinggi ke terendah.
+     *
+     * @return array<int, array{
+     *     sub_indikator_id: int,
+     *     nama: string,
+     *     sub_jenis_id: int|null,
+     *     sub_jenis_nama: string,
+     *     total_soal: int,
+     *     total_dijawab: int,
+     *     total_benar: int,
+     *     total_salah: int,
+     *     nilai: float,
+     *     nilai_maksimal: float,
+     *     pencapaian_persen: float,
+     *     is_kurang: bool,
+     *     status: string,
+     *     status_label: string
+     * }>
+     */
+    public function breakdownPerSubIndikator(UjianPeserta $peserta): array
+    {
+        $peserta->loadMissing(
+            'jawaban.soal.subIndikator.subJenisUjian',
+            'ujian.ujianSoals.soal.subIndikator.subJenisUjian'
+        );
+
+        $subIndikatorMap = [];
+        $jawabanMap = $peserta->jawaban->keyBy('ujian_soal_id');
+
+        foreach ($peserta->ujian->ujianSoals as $ujianSoal) {
+            $soal = $ujianSoal->soal;
+            if (! $soal) {
+                continue;
+            }
+
+            $subIndikator = $soal->subIndikator;
+            $subJenis = $subIndikator?->subJenisUjian ?? $soal->subJenisUjian;
+            $subIndikatorId = $subIndikator ? $subIndikator->id : 0;
+            $subIndikatorNama = $subIndikator ? $subIndikator->nama_sub_indikator : 'Umum / Lainnya';
+            $subJenisId = $subJenis ? $subJenis->id : null;
+            $subJenisNama = $subJenis ? ($subJenis->nama_sub_jenis_ujian ?? '-') : '-';
+            $sistem = $subJenis->sistem_penilaian ?? 'benar_salah';
+
+            if (! isset($subIndikatorMap[$subIndikatorId])) {
+                $subIndikatorMap[$subIndikatorId] = [
+                    'sub_indikator_id' => $subIndikatorId,
+                    'nama' => $subIndikatorNama,
+                    'sub_jenis_id' => $subJenisId,
+                    'sub_jenis_nama' => $subJenisNama,
+                    'total_soal' => 0,
+                    'total_dijawab' => 0,
+                    'total_benar' => 0,
+                    'total_salah' => 0,
+                    'nilai' => 0.0,
+                    'nilai_maksimal' => 0.0,
+                ];
+            }
+
+            // Hitung nilai maksimal untuk soal ini
+            if ($sistem === 'benar_salah') {
+                $nilaiMaxSoal = (float) ($soal->nilai_bobot_benar ?? $subJenis?->nilai_benar ?? 5);
+            } else {
+                $nilaiMaxSoal = max(
+                    (float) ($soal->nilai_bobot_a ?? 0),
+                    (float) ($soal->nilai_bobot_b ?? 0),
+                    (float) ($soal->nilai_bobot_c ?? 0),
+                    (float) ($soal->nilai_bobot_d ?? 0),
+                    (float) ($soal->nilai_bobot_e ?? 0),
+                );
+                if ($nilaiMaxSoal <= 0) {
+                    $nilaiMaxSoal = 5.0;
+                }
+            }
+
+            $subIndikatorMap[$subIndikatorId]['total_soal']++;
+            $subIndikatorMap[$subIndikatorId]['nilai_maksimal'] += $nilaiMaxSoal;
+
+            // Cek jawaban peserta
+            $jwb = $jawabanMap->get($ujianSoal->id);
+            if ($jwb && $jwb->jawaban !== null && $jwb->jawaban !== '') {
+                $subIndikatorMap[$subIndikatorId]['total_dijawab']++;
+                $subIndikatorMap[$subIndikatorId]['nilai'] += (float) $jwb->nilai;
+
+                // Tentukan benar / salah
+                if ($sistem === 'benar_salah') {
+                    if ($jwb->benar || (float) $jwb->nilai >= $nilaiMaxSoal) {
+                        $subIndikatorMap[$subIndikatorId]['total_benar']++;
+                    } else {
+                        $subIndikatorMap[$subIndikatorId]['total_salah']++;
+                    }
+                } else {
+                    // Sistem poin (TKP): jika dapat nilai tertinggi dianggap sempurna/benar
+                    if ((float) $jwb->nilai >= $nilaiMaxSoal) {
+                        $subIndikatorMap[$subIndikatorId]['total_benar']++;
+                    } else {
+                        $subIndikatorMap[$subIndikatorId]['total_salah']++;
+                    }
+                }
+            } else {
+                // Tidak dijawab
+                $subIndikatorMap[$subIndikatorId]['total_salah']++;
+            }
+        }
+
+        // Kalkulasi persentase dan status evaluasi
+        $result = [];
+        foreach ($subIndikatorMap as $item) {
+            $nilai = $item['nilai'];
+            $nilaiMaksimal = $item['nilai_maksimal'];
+
+            if ($nilaiMaksimal > 0) {
+                $pencapaianPersen = round(($nilai / $nilaiMaksimal) * 100, 1);
+            } elseif ($item['total_soal'] > 0) {
+                $pencapaianPersen = round(($item['total_benar'] / $item['total_soal']) * 100, 1);
+            } else {
+                $pencapaianPersen = 0.0;
+            }
+
+            $isKurang = $pencapaianPersen < 60.0;
+
+            if ($pencapaianPersen >= 80.0) {
+                $status = 'baik';
+                $statusLabel = 'Dikuasai / Tinggi';
+            } elseif ($pencapaianPersen >= 60.0) {
+                $status = 'cukup';
+                $statusLabel = 'Cukup';
+            } else {
+                $status = 'kurang';
+                $statusLabel = 'Perlu Evaluasi';
+            }
+
+            $result[] = [
+                'sub_indikator_id' => $item['sub_indikator_id'],
+                'nama' => $item['nama'],
+                'sub_jenis_id' => $item['sub_jenis_id'],
+                'sub_jenis_nama' => $item['sub_jenis_nama'],
+                'total_soal' => $item['total_soal'],
+                'total_dijawab' => $item['total_dijawab'],
+                'total_benar' => $item['total_benar'],
+                'total_salah' => $item['total_salah'],
+                'nilai' => $nilai,
+                'nilai_maksimal' => $nilaiMaksimal,
+                'pencapaian_persen' => $pencapaianPersen,
+                'is_kurang' => $isKurang,
+                'status' => $status,
+                'status_label' => $statusLabel,
+            ];
+        }
+
+        // Urutkan dari tertinggi ke terendah berdasarkan pencapaian_persen
+        usort($result, function ($a, $b) {
+            if ($b['pencapaian_persen'] == $a['pencapaian_persen']) {
+                return $b['total_soal'] <=> $a['total_soal'];
+            }
+            return $b['pencapaian_persen'] <=> $a['pencapaian_persen'];
+        });
+
+        return $result;
+    }
+
+    /**
      * Rebuild rankings for all finished peserta of an ujian (highest cumulative first).
      *
      * Urutan: nilai tertinggi lebih dulu; jika seri, penyelesaian tercepat menang.

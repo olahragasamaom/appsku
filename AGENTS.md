@@ -345,4 +345,94 @@ Aplikasi memisahkan peran dengan kombinasi flag `User` dan `panritta_user_levels
 - [ ] Statistik per-soal: kesulitan, discrimination index
 
 ---
-*Last updated: 2026-11-24 | Session: Architecture mapping & system trace documentation (Roles, Peserta Online/Offline, CBT engine)*
+*Last updated: 2026-11-26 | Session: Offline Exam Token Validation, Absensi Bulk Activation Fix, and UI Enhancements*
+
+## Recent Session (2026-11-26): Master Data Kelas, Bank Peserta Offline, and Exam Clean-up
+
+### Changes Made:
+1. **Master Data Kelas / Gelombang**
+   - Table `panritta_kelas` via migration `2026_11_25_200000_create_panritta_kelas_table.php`
+   - `KelasController` at `/superadmin/kelas` (CRUD kelas, card metrics, filter & pagination)
+   - Multi-exam & class relation on `PesertaOffline` via migration `2026_11_25_190000_update_peserta_offline_for_class_and_multi_exam.php`
+
+2. **Master Data Bank Peserta Offline (per Kelas)**
+   - `DataPesertaOfflineController` at `/superadmin/data-peserta-offline`
+   - Pre-filled kelas selection when accessed from a specific class
+   - Excel template download & import per-kelas via `KelasPesertaOfflineTemplateExport` & `KelasPesertaOfflineImport`
+   - Reset password peserta offline with modal confirmation
+
+3. **Peserta Offline $\leftrightarrow$ Ujian Decoupling**
+   - New dedicated menu & controller: `PesertaOfflineUjianController` at `/superadmin/peserta-offline-ujian`
+   - Exam participant page `/superadmin/peserta-offline-ujian/{ujian}/peserta` with modal **Bank Data Peserta** (filter per kelas, check/check-all)
+   - Auto-exclude already enrolled participants from Bank Data modal
+   - Detach ("Lepas") participant from exam without deleting master student record
+   - Removed "PESERTA" column and direct manual tambah/import from `/superadmin/ujian`
+   - Redirected legacy `/superadmin/ujian/{ujian}/peserta-offline` routes cleanly
+
+4. **Sidebar Refinement**
+   - Restored group subheaders ("Soal dan Ujian", "Peserta Offline", "Peserta Online", "Administrasi", "Keamanan") to clean static text labels without accordion chevrons
+   - Kept main desktop sidebar width toggle (`w-64` $\leftrightarrow$ `w-20`) with localStorage persistence
+
+5. **Token Ujian Peserta Offline & Absensi Bulk Activation Fix**
+   - **Token Input Modal**: Added token input field in the "Peraturan Ujian" confirmation modal (`resources/views/peserta/ujian/offline/exams.blade.php`). Submit button remains disabled until agreement is checked and token is entered.
+   - **Token Validation**: `OfflinePortalController@start` validates the entered token against `$ujian->token_ujian` (case-insensitive via `strtoupper()` and `hash_equals()`). Shows clear flash error alert if token is invalid or missing.
+   - **Token Display**: Displayed exam token badges in:
+     - `resources/views/superadmin/absensi/activation.blade.php`
+     - `resources/views/pengawas/absensi/activation.blade.php`
+     - `resources/views/superadmin/ujian/peserta-offline/index.blade.php`
+   - **Bulk Toggle Activation Fix**: Resolved SQL error `Column 'id' in where clause is ambiguous` on `bulkToggleActivation` by targeting `panritta_ujian_peserta_offline` directly in both `Superadmin\AbsensiController` and `Pengawas\AbsensiController`.
+
+6. **Simulasi Ujian Superadmin & Offline Auth Fix**
+   - **Jawaban Benar & Pembahasan Simulasi**: Pada view simulasi ujian superadmin (`superadmin/ujian/monitoring/simulasi.blade.php`), jawaban benar otomatis disorot dengan latar hijau (`bg-emerald-50 border-emerald-500`) dan badge "Jawaban Benar". Kotak "Penjelasan & Pembahasan" ditampilkan lengkap di bawah opsi dengan dukungan KaTeX dan gambar.
+   - **Soal TKP Bobot & Skor 5**: Pada soal bertipe TKP (`tiap_jawaban_ada_poin`), bobot poin (1-5) ditampilkan di belakang setiap pilihan opsi. Opsi dengan bobot maksimal 5 otomatis diberi background warna hijau.
+   - **Fix 403 Offline Kerjakan Ujian**: Memperbarui `OfflineParticipantAuth`, `PesertaOffline::getIsActiveAttribute()`, dan `UjianController@submit` agar mengecek aktivasi pada tabel pivot `panritta_ujian_peserta_offline` sesuai ujian yang sedang dikerjakan.
+
+7. **Penyelarasan Header Nomor Soal Ujian Peserta**:
+   - Menyelaraskan tampilan nomor soal di halaman pengerjaan peserta ([kerjakan.blade.php](file:///c:/laragon/www/appsku/resources/views/peserta/ujian/kerjakan.blade.php)) agar identik dengan mode simulasi: badge lingkaran nomor (`w-10 h-10 rounded-full bg-primary-100 text-primary-700`) berdampingan dengan badge kategori/sub-indikator (`SUB JENIS — SUB INDIKATOR`).
+   - Eager-loading `soal.subIndikator.subJenisUjian` di `Peserta\UjianController@kerjakan` untuk mencegah N+1 query.
+
+8. **Cetak Seluruh Soal & Kunci Jawaban Ujian (1 Halaman Utuh)**:
+   - **Tombol**: Ditambahkan di sebelah tombol "Pilih dari Bank Soal" pada halaman kelola soal ujian ([index.blade.php](file:///c:/laragon/www/appsku/resources/views/superadmin/ujian/soal/index.blade.php)).
+   - **Route**: `ujian/{ujian}/soal/cetak` (nama: `ujian.soal.cetak`) tersedia untuk Superadmin dan Pembuat Soal via `Superadmin\UjianSoalController@cetak`.
+   - **Tampilan Cetak**: View dedicated di [cetak.blade.php](file:///c:/laragon/www/appsku/resources/views/superadmin/ujian/soal/cetak.blade.php) yang merender seluruh butir soal dan opsinya secara berurutan dalam 1 halaman HTML utuh (tidak di-split per nomor).
+   - **Substitusi Gambar**: Sesuai instruksi *"kalau ada soal gambar, tulis saja (Soal Bergambar)"*, semua tag `<img>` dalam konten digantikan dengan teks `(Soal Bergambar)`, serta badge `(Soal Bergambar)` ditampilkan jika terdapat lampiran gambar pada soal.
+   - **Sorot Jawaban & Pembahasan**:
+     - Kunci jawaban benar otomatis di-highlight dengan latar hijau (`bg-emerald-50 border-emerald-400`) beserta label `✓ Kunci Jawaban`.
+     - Untuk soal TKP, bobot nilai (1-5) ditampilkan di setiap opsi dan bobot 5 diberi sorotan hijau.
+     - Kotak "Pembahasan / Penjelasan" ditampilkan di bawah opsi jika pembahasan tersedia.
+   - **Print-Ready CSS**: Dilengkapi header aksi sticky ("Cetak Sekarang" & "Tutup"), styling `@media print`, `@page { size: A4; margin: 1.5cm 1.2cm; }`, dan `page-break-inside: avoid;` agar setiap nomor soal tidak terpotong saat dicetak atau disimpan ke PDF.
+
+9. **Analisis Kemampuan & Penguasaan Materi (Sub-Indikator)**:
+   - **Styling Tombol Hasil Ujian**:
+     - Menambahkan definisi `.btn-warning` (amber), `.btn-info` (sky), dan `.btn-purple` (violet/indigo) di [app.css](file:///c:/laragon/www/appsku/resources/css/app.css) serta styling langsung di view [hasil.blade.php](file:///c:/laragon/www/appsku/resources/views/peserta/ujian/hasil.blade.php) sehingga tombol "Ujian Ulang" (amber), "Lihat Riwayat" (sky), "Analisis Kemampuan" (violet), "Lihat Peringkat" (secondary outline), dan "Lihat Pembahasan Jawaban" (blue primary) memiliki warna dan ikon yang tegas.
+   - **Service Agregasi Sub-Indikator**:
+     - Method `UjianScoringService::breakdownPerSubIndikator(UjianPeserta $peserta)` menghitung capaian setiap sub-indikator: `total_soal`, `total_dijawab`, `total_benar`, `total_salah`, `nilai`, `nilai_maksimal`, `pencapaian_persen`, dan `is_kurang` (< 60%).
+     - Diurutkan dari persentase capaian tertinggi ke terendah secara otomatis.
+   - **Route & Middleware**:
+     - Route `peserta/ujian/{ujian}/analisis` (`peserta.ujian.analisis`) via `Peserta\UjianController@analisis`.
+     - Whitelist `peserta.ujian.analisis` pada middleware `OfflineParticipantAuth`.
+   - **Halaman Analisis Dedikasi ([analisis.blade.php](file:///c:/laragon/www/appsku/resources/views/peserta/ujian/analisis.blade.php))**:
+     - Dilengkapi kartu ringkasan metrik: Total Topik, Tinggi (≥ 80% - Hijau), Cukup (60–79% - Kuning), Perlu Evaluasi (< 60% - Merah).
+     - Filter kategori (Semua, TWK, TIU, TKP) dengan pill chips berjarak lega, filter cepat "Hanya Grafik Merah (< 60%)", serta pencarian nama materi.
+     - Progress bar berbasis warna standar: **Hijau Segar** (≥ 80%), **Kuning Amber** (60–79%), dan **Grafik Merah** (< 60%) untuk bahan evaluasi mentor.
+     - Ringkasan catatan evaluasi otomatis di setiap kartu materi serta tombol print dokumen evaluasi peserta.
+   - **Preview Ringkasan di Halaman Hasil**:
+     - Menambahkan kartu ringkasan analisis materi dan cuplikan topik prioritas yang perlu dievaluasi langsung pada halaman [hasil.blade.php](file:///c:/laragon/www/appsku/resources/views/peserta/ujian/hasil.blade.php).
+
+
+
+
+
+10. **Randomisasi Soal per Sub-Indikator untuk Ujian Ulang (Attempt 2+)**:
+    - **Aturan Pengacakan**:
+      - Pada pengerjaan kedua dan seterusnya (attempt >= 2) pada ujian yang sama, susunan urutan sub-indikator (materi) TETAP terjaga sesuai urutan ujian (misal: TWK UUD 1945 $\rightarrow$ TWK Pancasila $\rightarrow$ TIU Silogisme $\rightarrow$ dst).
+      - Namun, urutan butir soal di DALAM masing-masing sub-indikator diacak (shuffled) secara independen.
+      - Tujuannya agar peserta menjawab berdasarkan pemahaman materi, bukan berdasarkan hafalan nomor soal atau urutan kunci jawaban.
+    - **Implementasi Layanan & Controller**:
+      - `RandomSoalService::generateSoalOrderForUjian(Ujian $ujian)`: Mengelompokkan soal ujian berdasarkan composite key `sub_jenis_id . '_' . sub_indikator_id`, mengacak ID soal di dalam tiap kelompok, lalu menggabungkannya kembali sehingga urutan nomor soal per sub-indikator menjadi acak namun blok materinya tetap rapi.
+      - `UjianController@retry`: Mendukung ujian ulang baik untuk peserta offline (`PesertaOffline`) maupun online (`User`), otomatis men-generate `soal_order` acak per sub-indikator saat membuat attempt baru, serta mensinkronisasi `ujian_peserta_id` pada session dan pivot `panritta_ujian_peserta_offline`.
+      - `UjianController@kerjakan`: Mendeteksi jika attempt peserta $\ge 2$ (atau jika flag `acak_soal` aktif) dan belum memiliki `soal_order`, maka otomatis meng-generate dan mengunci susunan acak per sub-indikator pada attempt tersebut.
+      - `UjianController@pembahasan`: Menyelaraskan urutan soal pada lembar pembahasan menggunakan `RandomSoalService::reorderSoalsByList($ujianSoals, $peserta->soal_order)` agar nomor soal di pembahasan persis sesuai dengan yang dikerjakan peserta pada attempt tersebut.
+      - `OfflinePortalController@start`: Jika peserta offline yang sudah berstatus `selesai` memulai ujian kembali, otomatis membuat attempt baru dengan pengacakan soal per sub-indikator.
+    - **UI/UX Peserta Offline**:
+      - Menambahkan tombol "Ujian Ulang" (amber gradient) di samping tombol "Lihat Hasil" pada kartu ujian yang sudah selesai di daftar ujian offline (`resources/views/peserta/ujian/offline/exams.blade.php`).

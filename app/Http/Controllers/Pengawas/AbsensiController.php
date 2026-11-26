@@ -7,6 +7,7 @@ use App\Models\PesertaOffline;
 use App\Models\Ujian;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class AbsensiController extends Controller
@@ -37,7 +38,7 @@ class AbsensiController extends Controller
 
     public function toggleActivation(Ujian $ujian, PesertaOffline $pesertaOffline): RedirectResponse
     {
-        $pivot = \Illuminate\Support\Facades\DB::table('panritta_ujian_peserta_offline')
+        $pivot = DB::table('panritta_ujian_peserta_offline')
             ->where('ujian_id', $ujian->id)
             ->where('peserta_offline_id', $pesertaOffline->id)
             ->first();
@@ -46,7 +47,7 @@ class AbsensiController extends Controller
 
         $newActive = $pivot ? ! $pivot->is_active : ! $pesertaOffline->is_active;
 
-        \Illuminate\Support\Facades\DB::table('panritta_ujian_peserta_offline')
+        DB::table('panritta_ujian_peserta_offline')
             ->where('ujian_id', $ujian->id)
             ->where('peserta_offline_id', $pesertaOffline->id)
             ->update(['is_active' => $newActive]);
@@ -71,17 +72,40 @@ class AbsensiController extends Controller
         ]);
 
         $isActive = $validated['action'] === 'activate';
-        $updated = \Illuminate\Support\Facades\DB::table('panritta_ujian_peserta_offline')
+
+        $existingPivotIds = DB::table('panritta_ujian_peserta_offline')
             ->where('ujian_id', $ujian->id)
             ->whereIn('peserta_offline_id', $validated['ids'])
-            ->update(['is_active' => $isActive]);
+            ->pluck('peserta_offline_id')
+            ->all();
+
+        DB::table('panritta_ujian_peserta_offline')
+            ->where('ujian_id', $ujian->id)
+            ->whereIn('peserta_offline_id', $validated['ids'])
+            ->update([
+                'is_active' => $isActive,
+                'updated_at' => now(),
+            ]);
+
+        $missingIds = array_diff($validated['ids'], $existingPivotIds);
+        if (! empty($missingIds)) {
+            $insertData = array_map(fn ($id) => [
+                'ujian_id' => $ujian->id,
+                'peserta_offline_id' => $id,
+                'is_active' => $isActive,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ], $missingIds);
+            DB::table('panritta_ujian_peserta_offline')->insert($insertData);
+        }
 
         PesertaOffline::where('ujian_id', $ujian->id)
             ->whereIn('id', $validated['ids'])
             ->update(['is_active' => $isActive]);
 
         $actionLabel = $isActive ? 'diaktifkan' : 'dinonaktifkan';
+        $totalCount = count($validated['ids']);
 
-        return back()->with('success', "{$updated} peserta berhasil {$actionLabel}.");
+        return back()->with('success', "{$totalCount} peserta berhasil {$actionLabel}.");
     }
 }

@@ -158,6 +158,16 @@ class OfflinePortalController extends Controller
             abort(403, 'Anda belum diaktifkan oleh admin. Silakan hubungi pengawas untuk aktivasi.');
         }
 
+        // Validasi 5: Token Ujian
+        $inputToken = trim((string) $request->input('token'));
+        if (empty($inputToken)) {
+            return back()->with('error', 'Token ujian wajib diisi. Silakan minta token kepada pengawas ujian.');
+        }
+
+        if (! empty($ujian->token_ujian) && ! hash_equals(strtoupper($ujian->token_ujian), strtoupper($inputToken))) {
+            return back()->with('error', 'Token ujian yang Anda masukkan salah. Silakan periksa kembali atau tanyakan kepada pengawas.');
+        }
+
         // Cek apakah ada attempt untuk ujian ini
         $attempt = null;
         if ($pivot && $pivot->ujian_peserta_id) {
@@ -175,7 +185,10 @@ class OfflinePortalController extends Controller
 
         if ($attempt && $attempt->is_paused) {
             $attempt->update(['is_paused' => false]);
-        } elseif (! $attempt) {
+        } elseif ($attempt && $attempt->status === 'selesai') {
+            // Ini adalah ujian ulang (attempt ke-2 dan seterusnya), acak soal per sub-indikator
+            $soalOrder = app(\App\Services\RandomSoalService::class)->generateSoalOrderForUjian($ujian);
+
             $attempt = UjianPeserta::create([
                 'ujian_id' => $ujian->id,
                 'user_id' => null,
@@ -184,6 +197,37 @@ class OfflinePortalController extends Controller
                 'waktu_mulai' => now(),
                 'last_activity_at' => now(),
                 'batas_waktu' => now()->addMinutes($ujian->durasi_ujian ?? 90),
+                'soal_order' => ! empty($soalOrder) ? $soalOrder : null,
+            ]);
+
+            // Sync ke pivot
+            if ($peserta->ujians()->where('panritta_ujian.id', $ujian->id)->exists()) {
+                $peserta->ujians()->updateExistingPivot($ujian->id, [
+                    'ujian_peserta_id' => $attempt->id,
+                ]);
+            }
+
+            // Sync legacy column
+            $peserta->update([
+                'ujian_id' => $ujian->id,
+                'ujian_peserta_id' => $attempt->id,
+                'is_active' => true,
+            ]);
+        } elseif (! $attempt) {
+            $soalOrder = null;
+            if ($ujian->acak_soal) {
+                $soalOrder = app(\App\Services\RandomSoalService::class)->generateSoalOrderForUjian($ujian);
+            }
+
+            $attempt = UjianPeserta::create([
+                'ujian_id' => $ujian->id,
+                'user_id' => null,
+                'peserta_offline_id' => $peserta->id,
+                'status' => 'sedang_ujian',
+                'waktu_mulai' => now(),
+                'last_activity_at' => now(),
+                'batas_waktu' => now()->addMinutes($ujian->durasi_ujian ?? 90),
+                'soal_order' => ! empty($soalOrder) ? $soalOrder : null,
             ]);
 
             // Sync ke pivot
@@ -198,6 +242,7 @@ class OfflinePortalController extends Controller
                 $peserta->update([
                     'ujian_id' => $ujian->id,
                     'ujian_peserta_id' => $attempt->id,
+                    'is_active' => true,
                 ]);
             }
         }
