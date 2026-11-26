@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ImportPesertaOfflineRequest;
 use App\Http\Requests\StorePesertaOfflineRequest;
 use App\Imports\PesertaOfflineImport;
+use App\Models\Kelas;
 use App\Models\PesertaOffline;
 use App\Models\Ujian;
 use App\Services\Ujian\OfflineParticipantService;
@@ -28,46 +29,91 @@ class PesertaOfflineController extends Controller
      * METHOD: index()
      * ===============
      * URL Contoh: GET /superadmin/ujian/{ujian}/peserta-offline
-     * 
+     *
      * Keterangan:
      * Menampilkan DAFTAR PESERTA OFFLINE yang terdaftar di ujian.
-     * 
+     *
      * Tampilkan: nomor peserta, nama, status (belum ujian/sedang ujian/selesai),
      *            waktu mulai, waktu selesai, nilai, lulus/tidak.
-     * 
+     *
      * Tombol aksi: Hapus, lihat hasil, lihat kartu peserta.
-     * 
+     *
      * Form: Tidak ada GET saja
-     * 
+     *
      * Debug Mode (uncomment untuk trace):
      * // dd($peserta->map(fn($p) => ['nomor' => $p->nomor_peserta, 'nama' => $p->nama_peserta])->toArray());
      */
     public function index(Ujian $ujian): View
     {
-        $peserta = $ujian->pesertaOffline()->latest()->get();
+        $peserta = $ujian->pesertaOffline()->orderBy('nomor_peserta')->get();
 
-        return view('superadmin.ujian.peserta-offline.index', compact('ujian', 'peserta'));
+        $enrolledIds = $peserta->pluck('id')->all();
+
+        // Bank data peserta offline yang belum dimasukkan ke ujian ini
+        $bankPeserta = PesertaOffline::whereNotIn('id', $enrolledIds)
+            ->where('is_blocked', false)
+            ->orderBy('nama_kelas')
+            ->orderBy('nomor_peserta')
+            ->get();
+
+        // Daftar nama kelas untuk filter dropdown di modal
+        $kelasList = Kelas::where('status', 'aktif')->orderBy('nama_kelas')->pluck('nama_kelas');
+        if ($kelasList->isEmpty()) {
+            $kelasList = PesertaOffline::whereNotNull('nama_kelas')
+                ->where('nama_kelas', '!=', '')
+                ->distinct()
+                ->orderBy('nama_kelas')
+                ->pluck('nama_kelas');
+        }
+
+        return view('superadmin.ujian.peserta-offline.index', compact('ujian', 'peserta', 'bankPeserta', 'kelasList'));
+    }
+
+    /**
+     * METHOD: attach()
+     * ================
+     * Menambahkan peserta offline dari BANK DATA ke ujian ini.
+     */
+    public function attach(Request $request, Ujian $ujian): RedirectResponse
+    {
+        $validated = $request->validate([
+            'peserta_ids' => ['required', 'array', 'min:1'],
+            'peserta_ids.*' => ['integer', 'exists:panritta_peserta_offline,id'],
+        ], [
+            'peserta_ids.required' => 'Pilih minimal satu peserta untuk ditambahkan ke ujian.',
+            'peserta_ids.min' => 'Pilih minimal satu peserta untuk ditambahkan ke ujian.',
+        ]);
+
+        $attachData = collect($validated['peserta_ids'])->mapWithKeys(function ($id) {
+            return [$id => ['is_active' => false]];
+        })->all();
+
+        $ujian->pesertaOffline()->syncWithoutDetaching($attachData);
+
+        $count = count($validated['peserta_ids']);
+
+        return back()->with('success', "{$count} peserta offline berhasil ditambahkan ke ujian ini.");
     }
 
     /**
      * METHOD: store()
      * ===============
      * URL Contoh: POST /superadmin/ujian/{ujian}/peserta-offline
-     * 
+     *
      * Keterangan:
      * Menambahkan PESERTA OFFLINE BARU secara manual (one-by-one).
-     * 
+     *
      * Alur (via OfflineParticipantService::create):
      * 1. Generate nomor_peserta auto-increment
      * 2. Hash password
      * 3. Buat PesertaOffline record
      * 4. Return kode akses (plain text, untuk ditampilkan ke user sekali)
-     * 
+     *
      * Form: Modal tambah peserta di index view (POST method)
      *       Input: nama_peserta, password
-     * 
+     *
      * Response: flash message + kode_akses & nomor_peserta (ditampilkan sekali saja)
-     * 
+     *
      * Debug Mode (uncomment untuk trace):
      * // \Log::info('Create peserta offline', ['ujian_id' => $ujian->id, 'nomor_peserta' => $result['peserta']->nomor_peserta]);
      */
@@ -84,44 +130,23 @@ class PesertaOfflineController extends Controller
     /**
      * METHOD: destroy()
      * =================
-     * URL Contoh: DELETE /superadmin/ujian/{ujian}/peserta-offline/{pesertaOffline}
-     * 
-     * Keterangan:
-     * Menghapus SATU peserta offline dari ujian.
-     * Jika peserta sudah ada ujian attempt: result tetap disimpan (cascade tidak delete).
-     * 
-     * Route Model Binding: {pesertaOffline} -> PesertaOffline model
-     * 
-     * Form: Tombol delete per peserta (DELETE method)
-     * 
-     * Debug Mode (uncomment untuk trace):
-     * // \Log::info('Delete peserta offline '.$pesertaOffline->id.' ujian '.$ujian->id);
+     * Melepas SATU peserta offline dari ujian ini (tanpa menghapus data master peserta).
      */
     public function destroy(Ujian $ujian, PesertaOffline $pesertaOffline): RedirectResponse
     {
-        abort_unless($pesertaOffline->ujian_id === $ujian->id, 404);
+        $ujian->pesertaOffline()->detach($pesertaOffline->id);
 
-        $pesertaOffline->delete();
+        if ($pesertaOffline->ujian_id === $ujian->id) {
+            $pesertaOffline->update(['ujian_id' => null]);
+        }
 
-        return back()->with('success', 'Peserta offline berhasil dihapus.');
+        return back()->with('success', 'Peserta offline berhasil dilepas dari ujian ini.');
     }
 
     /**
      * METHOD: bulkDestroy()
      * =====================
-     * URL Contoh: DELETE /superadmin/ujian/{ujian}/peserta-offline/bulk-destroy
-     * 
-     * Keterangan:
-     * Menghapus MULTIPLE peserta offline sekaligus (bulk delete).
-     * 
-     * Validasi: ids array, tidak boleh kosong.
-     * Efisien: query DELETE langsung (bukan loop individual delete).
-     * 
-     * Form: Checkbox list + tombol "Hapus Terpilih" (DELETE method)
-     *       Input: ids[] (array of peserta ID)
-     * 
-     * Debug Mode (uncomment untuk trace):
-     * // \Log::info('Bulk delete peserta offline ujian '.$ujian->id, ['count' => $deleted]);
+     * Melepas MULTIPLE peserta offline dari ujian ini.
      */
     public function bulkDestroy(Request $request, Ujian $ujian): RedirectResponse
     {
@@ -129,30 +154,34 @@ class PesertaOfflineController extends Controller
             'ids' => ['required', 'array'],
             'ids.*' => ['integer'],
         ], [
-            'ids.required' => 'Pilih minimal satu peserta untuk dihapus.',
+            'ids.required' => 'Pilih minimal satu peserta untuk dilepas dari ujian.',
         ]);
 
-        $deleted = $ujian->pesertaOffline()
-            ->whereIn('id', $validated['ids'])
-            ->delete();
+        $ujian->pesertaOffline()->detach($validated['ids']);
 
-        return back()->with('success', "{$deleted} peserta offline berhasil dihapus.");
+        PesertaOffline::where('ujian_id', $ujian->id)
+            ->whereIn('id', $validated['ids'])
+            ->update(['ujian_id' => null]);
+
+        $deleted = count($validated['ids']);
+
+        return back()->with('success', "{$deleted} peserta offline berhasil dilepas dari ujian ini.");
     }
 
     /**
      * METHOD: template()
      * ==================
      * URL Contoh: GET /superadmin/peserta-offline/template
-     * 
+     *
      * Keterangan:
      * Download TEMPLATE EXCEL untuk bulk import peserta offline.
-     * 
+     *
      * Template format:
      * - Kolom: nomor_peserta, nama_peserta, password, dll
      * - Contoh data: 001, "Andi Pratama", "password123"
-     * 
+     *
      * Form: Tidak ada, link download di halaman import
-     * 
+     *
      * Debug Mode (uncomment untuk trace):
      * // \Log::info('Download peserta offline template');
      */
@@ -165,15 +194,15 @@ class PesertaOfflineController extends Controller
      * METHOD: importForm()
      * ====================
      * URL Contoh: GET /superadmin/ujian/{ujian}/peserta-offline/import-form
-     * 
+     *
      * Keterangan:
      * Menampilkan FORM IMPORT peserta offline (upload Excel).
-     * 
+     *
      * Guard: Hanya jika ujian tipe offline_kelas (abort 404 jika online).
-     * 
+     *
      * Form: File upload input (POST ke import() method)
      *       Input: file (Excel format)
-     * 
+     *
      * Debug Mode (uncomment untuk trace):
      * // dd($ujian->tipe_ujian);
      */
@@ -188,23 +217,23 @@ class PesertaOfflineController extends Controller
      * METHOD: import()
      * ================
      * URL Contoh: POST /superadmin/ujian/{ujian}/peserta-offline/import
-     * 
+     *
      * Keterangan:
      * BULK IMPORT peserta offline dari file Excel.
-     * 
+     *
      * Alur:
      * 1. Validasi file (.xlsx, .xls, .csv)
      * 2. Parse Excel rows via PesertaOfflineImport class
      * 3. Create PesertaOffline records per row (via OfflineParticipantService)
      * 4. Capture errors/skips, tampilkan summary
-     * 
+     *
      * Guard: Hanya jika ujian tipe offline_kelas.
-     * 
+     *
      * Form: File upload dari importForm() (POST method)
      *       Input: file (Excel format)
-     * 
+     *
      * Response: Summary message + error list (jika ada)
-     * 
+     *
      * Debug Mode (uncomment untuk trace):
      * // \Log::info('Import peserta offline ujian '.$ujian->id, ['success' => $import->getSuccessCount(), 'skip' => $import->getSkipCount()]);
      */
@@ -238,17 +267,17 @@ class PesertaOfflineController extends Controller
      * METHOD: showPasswords()
      * =======================
      * URL Contoh: GET /superadmin/ujian/{ujian}/peserta-offline/passwords
-     * 
+     *
      * Keterangan:
      * Menampilkan DAFTAR PASSWORD peserta offline (untuk cetak/distribusi).
-     * 
+     *
      * WARNING: Screen ini sensitive! Batasi akses hanya ke admin/supervisor.
      * Password ditampilkan plain text karena untuk distribusi manual.
-     * 
+     *
      * Paginasi 15 peserta per halaman, urut nomor_peserta.
-     * 
+     *
      * Form: Tidak ada GET saja
-     * 
+     *
      * Debug Mode (uncomment untuk trace):
      * // dd($peserta->map(fn($p) => ['nomor' => $p->nomor_peserta, 'nama' => $p->nama_peserta])->toArray());
      */
@@ -263,15 +292,15 @@ class PesertaOfflineController extends Controller
      * METHOD: export()
      * ================
      * URL Contoh: GET /superadmin/ujian/{ujian}/peserta-offline/export
-     * 
+     *
      * Keterangan:
      * Download KARTU PESERTA (ID card) dalam format PDF.
      * Isi: nomor peserta, nama, password, ujian info, etc.
-     * 
+     *
      * Cocok untuk dicetak & diberikan ke setiap peserta.
-     * 
+     *
      * Form: Tidak ada, button download
-     * 
+     *
      * Debug Mode (uncomment untuk trace):
      * // \Log::info('Export kartu peserta ujian '.$ujian->id);
      */

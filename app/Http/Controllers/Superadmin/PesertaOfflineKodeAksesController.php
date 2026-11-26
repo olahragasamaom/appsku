@@ -28,7 +28,7 @@ class PesertaOfflineKodeAksesController extends Controller
     {
         $newKode = $this->participantService->resetKodeAkses($pesertaOffline, $request->user()->id);
 
-        return redirect()->route('superadmin.ujian.peserta-offline.index', $ujian->id)
+        return back()
             ->with('kode_akses', $newKode)
             ->with('nomor_peserta', $pesertaOffline->nomor_peserta)
             ->with('success', "Kode akses untuk {$pesertaOffline->nomor_peserta} berhasil di-reset.");
@@ -40,16 +40,19 @@ class PesertaOfflineKodeAksesController extends Controller
      */
     public function bulkReset(Request $request, Ujian $ujian): RedirectResponse
     {
-        $count = PesertaOffline::where('ujian_id', $ujian->id)->count();
+        $count = $ujian->pesertaOffline()->count();
 
         if ($count === 0) {
-            return redirect()->route('superadmin.ujian.peserta-offline.index', $ujian->id)
-                ->with('error', 'Belum ada peserta untuk di-reset.');
+            return back()->with('error', 'Belum ada peserta untuk di-reset.');
         }
 
         $this->participantService->bulkResetKodeAkses($ujian, $request->user()->id);
 
-        return redirect()->route('superadmin.ujian.peserta-offline.export', $ujian->id)
+        $exportRoute = $request->routeIs('superadmin.peserta-offline-ujian.*')
+            ? route('superadmin.peserta-offline-ujian.export', $ujian->id)
+            : route('superadmin.ujian.peserta-offline.export', $ujian->id);
+
+        return redirect($exportRoute)
             ->with('success', "Kode akses untuk {$count} peserta berhasil di-reset. Silakan cetak kartu peserta.");
     }
 }

@@ -14,6 +14,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\EmployeeExitController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Keuangan\DashboardController as KeuanganDashboardController;
 use App\Http\Controllers\PembuatSoal\DashboardController as PembuatSoalDashboardController;
 use App\Http\Controllers\Pengajar\AuthController;
@@ -49,6 +50,7 @@ use App\Http\Controllers\Superadmin\PengawasActionController;
 use App\Http\Controllers\Superadmin\PesertaController;
 use App\Http\Controllers\Superadmin\PesertaOfflineController;
 use App\Http\Controllers\Superadmin\PesertaOfflineKodeAksesController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Superadmin\PlanController;
 use App\Http\Controllers\Superadmin\QueueMonitorController;
 use App\Http\Controllers\Superadmin\RateLimitLogController;
@@ -670,16 +672,37 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::patch('absensi/ujian/{ujian}/peserta/{pesertaOffline}/toggle', [AbsensiController::class, 'toggleActivation'])->name('absensi.toggle');
         Route::post('absensi/ujian/{ujian}/bulk-toggle', [AbsensiController::class, 'bulkToggleActivation'])->name('absensi.bulk-toggle');
 
-        // peserta offline management
-        Route::get('ujian/{ujian}/peserta-offline/passwords', [PesertaOfflineController::class, 'showPasswords'])->name('ujian.peserta-offline.passwords');
-        Route::get('ujian/{ujian}/peserta-offline/export', [PesertaOfflineController::class, 'export'])->name('ujian.peserta-offline.export');
-        Route::get('peserta-offline/template', [PesertaOfflineController::class, 'template'])->name('ujian.peserta-offline.template');
-        Route::get('ujian/{ujian}/peserta-offline/import', [PesertaOfflineController::class, 'importForm'])->name('ujian.peserta-offline.import.form');
-        Route::post('ujian/{ujian}/peserta-offline/import', [PesertaOfflineController::class, 'import'])->name('ujian.peserta-offline.import');
-        Route::post('ujian/{ujian}/peserta-offline/bulk-destroy', [PesertaOfflineController::class, 'bulkDestroy'])->name('ujian.peserta-offline.bulk-destroy');
-        Route::resource('ujian.peserta-offline', PesertaOfflineController::class)
-            ->only(['index', 'store', 'destroy'])
-            ->parameters(['peserta-offline' => 'pesertaOffline']);
+        // legacy redirect ujian peserta-offline to subheader peserta-offline-ujian
+        Route::get('ujian/{ujian}/peserta-offline', fn(\App\Models\Ujian $ujian) => redirect()->route('superadmin.peserta-offline-ujian.peserta', $ujian))->name('ujian.peserta-offline.index');
+
+        // data kelas / gelombang peserta offline
+        Route::resource('kelas', App\Http\Controllers\Superadmin\KelasController::class)->parameters(['kelas' => 'kelas']);
+
+        // ujian peserta offline (fokus kelola peserta ujian)
+        Route::prefix('peserta-offline-ujian')->as('peserta-offline-ujian.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Superadmin\PesertaOfflineUjianController::class, 'index'])->name('index');
+            Route::get('{ujian}/peserta', [PesertaOfflineController::class, 'index'])->name('peserta');
+            Route::post('{ujian}/attach', [PesertaOfflineController::class, 'attach'])->name('attach');
+            Route::post('{ujian}/peserta/store', [PesertaOfflineController::class, 'store'])->name('store');
+            Route::delete('{ujian}/peserta/{pesertaOffline}', [PesertaOfflineController::class, 'destroy'])->name('destroy');
+            Route::post('{ujian}/peserta/bulk-destroy', [PesertaOfflineController::class, 'bulkDestroy'])->name('bulk-destroy');
+            Route::post('{ujian}/peserta/{pesertaOffline}/reset-kode', [PesertaOfflineKodeAksesController::class, 'reset'])->name('reset-kode');
+            Route::post('{ujian}/peserta/bulk-reset-kode', [PesertaOfflineKodeAksesController::class, 'bulkReset'])->name('bulk-reset-kode');
+            Route::get('{ujian}/export', [PesertaOfflineController::class, 'export'])->name('export');
+            Route::get('{ujian}/import', [PesertaOfflineController::class, 'importForm'])->name('import.form');
+            Route::post('{ujian}/import', [PesertaOfflineController::class, 'import'])->name('import');
+        });
+
+        // master data peserta offline (CRUD per kelas/gelombang)
+        Route::get('data-peserta-offline/template', [App\Http\Controllers\Superadmin\DataPesertaOfflineController::class, 'downloadTemplate'])
+            ->name('data-peserta-offline.template');
+        Route::post('data-peserta-offline/import', [App\Http\Controllers\Superadmin\DataPesertaOfflineController::class, 'import'])
+            ->name('data-peserta-offline.import');
+        Route::post('data-peserta-offline/bulk-delete', [App\Http\Controllers\Superadmin\DataPesertaOfflineController::class, 'bulkDestroy'])
+            ->name('data-peserta-offline.bulk-delete');
+        Route::match(['POST', 'DELETE'], 'data-peserta-offline/{data_peserta_offline}/reset-password', [App\Http\Controllers\Superadmin\DataPesertaOfflineController::class, 'resetPassword'])
+            ->name('data-peserta-offline.reset-password');
+        Route::resource('data-peserta-offline', App\Http\Controllers\Superadmin\DataPesertaOfflineController::class);
 
         // monitoring pengawas offline (real-time) - P8-T1
         Route::get('ujian/{ujian}/pengawas', [OfflineMonitoringController::class, 'index'])

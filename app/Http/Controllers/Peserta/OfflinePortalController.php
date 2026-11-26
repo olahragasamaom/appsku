@@ -89,14 +89,19 @@ class OfflinePortalController extends Controller
             abort(403);
         }
 
-        $peserta = PesertaOffline::with('ujianPeserta')->findOrFail($pesertaId);
+        $peserta = PesertaOffline::with(['ujianPeserta', 'ujians'])->findOrFail($pesertaId);
 
         // Get ujian offline yang peserta terdaftar di dalamnya.
         // Rentang akses: tanggal_ujian <= now() <= batas_keterlambatan
         // Jika batas_keterlambatan null, fallback ke tanggal_ujian + durasi.
         $now = now();
 
-        $ujians = Ujian::where('id', $peserta->ujian_id)
+        $enrolledUjianIds = $peserta->ujians->pluck('id')->all();
+        if ($peserta->ujian_id && ! in_array($peserta->ujian_id, $enrolledUjianIds, true)) {
+            $enrolledUjianIds[] = $peserta->ujian_id;
+        }
+
+        $ujians = Ujian::whereIn('id', $enrolledUjianIds)
             ->where('tipe_ujian', 'offline_kelas')
             ->where('status', 'aktif')
             ->where(function ($query) use ($now) {
@@ -124,7 +129,7 @@ class OfflinePortalController extends Controller
             abort(403);
         }
 
-        $peserta = PesertaOffline::findOrFail($pesertaId);
+        $peserta = PesertaOffline::with('ujians')->findOrFail($pesertaId);
 
         // Validasi 1: Ujian harus aktif
         if ($ujian->status !== 'aktif') {
@@ -140,18 +145,33 @@ class OfflinePortalController extends Controller
             abort(403, 'Ujian ini sudah berakhir (lewat batas keterlambatan).');
         }
 
-        // Validasi 3: Peserta harus terdaftar di ujian ini
-        if ($peserta->ujian_id !== $ujian->id) {
+        // Validasi 3: Peserta harus terdaftar di ujian ini (baik via pivot atau legacy column)
+        $pivot = $peserta->ujians->firstWhere('id', $ujian->id)?->pivot;
+        $isEnrolled = $pivot !== null || $peserta->ujian_id === $ujian->id;
+        if (! $isEnrolled) {
             abort(403, 'Anda tidak terdaftar di ujian ini.');
         }
 
-        // Validasi 4: Peserta harus diaktifkan oleh admin/pengawas (is_active = true)
-        if (! $peserta->is_active) {
+        // Validasi 4: Peserta harus diaktifkan oleh admin/pengawas (is_active = true pada ujian ini)
+        $isActive = $pivot ? (bool) $pivot->is_active : (bool) $peserta->is_active;
+        if (! $isActive) {
             abort(403, 'Anda belum diaktifkan oleh admin. Silakan hubungi pengawas untuk aktivasi.');
         }
 
-        // Cek apakah ada attempt paused milik peserta ini
-        $attempt = $peserta->ujianPeserta;
+        // Cek apakah ada attempt untuk ujian ini
+        $attempt = null;
+        if ($pivot && $pivot->ujian_peserta_id) {
+            $attempt = UjianPeserta::find($pivot->ujian_peserta_id);
+        }
+        if (! $attempt) {
+            $attempt = UjianPeserta::where('ujian_id', $ujian->id)
+                ->where('peserta_offline_id', $peserta->id)
+                ->latest('id')
+                ->first();
+        }
+        if (! $attempt && $peserta->ujian_id === $ujian->id) {
+            $attempt = $peserta->ujianPeserta;
+        }
 
         if ($attempt && $attempt->is_paused) {
             $attempt->update(['is_paused' => false]);
@@ -159,12 +179,27 @@ class OfflinePortalController extends Controller
             $attempt = UjianPeserta::create([
                 'ujian_id' => $ujian->id,
                 'user_id' => null,
+                'peserta_offline_id' => $peserta->id,
                 'status' => 'sedang_ujian',
                 'waktu_mulai' => now(),
                 'last_activity_at' => now(),
                 'batas_waktu' => now()->addMinutes($ujian->durasi_ujian ?? 90),
             ]);
-            $peserta->update(['ujian_peserta_id' => $attempt->id]);
+
+            // Sync ke pivot
+            if ($peserta->ujians()->where('panritta_ujian.id', $ujian->id)->exists()) {
+                $peserta->ujians()->updateExistingPivot($ujian->id, [
+                    'ujian_peserta_id' => $attempt->id,
+                ]);
+            }
+
+            // Sync legacy column jika belum ada atau sesuai
+            if ($peserta->ujian_id === $ujian->id || ! $peserta->ujian_id) {
+                $peserta->update([
+                    'ujian_id' => $ujian->id,
+                    'ujian_peserta_id' => $attempt->id,
+                ]);
+            }
         }
 
         // Update session status: peserta sekarang sedang ujian

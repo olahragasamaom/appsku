@@ -31,9 +31,6 @@
                 <th class="px-6 py-3 text-left">Tipe</th>
                 <th class="px-6 py-3 text-left">Jenis Ujian</th>
                 <th class="px-6 py-3 text-center">Soal</th>
-                @if(!auth()->user()->isPembuatSoal())
-                    <th class="px-6 py-3 text-center">Peserta</th>
-                @endif
                 <th class="px-6 py-3 text-center">Status</th>
                 <th class="px-6 py-3 text-center">Aksi</th>
             </x-slot>
@@ -74,19 +71,6 @@
                             <span class="text-slate-600">{{ $ujian->jumlah_soal }}</span>
                         </a>
                     </td>
-                    @if(!auth()->user()->isPembuatSoal())
-                    <td class="px-6 py-4 text-center">
-                        @if($ujian->tipe_ujian === 'offline_kelas')
-                            <a href="{{ route('superadmin.ujian.peserta-offline.index', $ujian) }}" class="inline-flex items-center justify-center font-semibold text-primary-600 hover:text-primary-700 hover:bg-primary-50 px-3 py-1.5 rounded-lg transition-colors">
-                                {{ $ujian->peserta_offline_count ?? 0 }}
-                            </a>
-                        @else
-                            <a href="{{ route('superadmin.ujian.peserta.index', $ujian) }}" class="inline-flex items-center justify-center font-semibold text-primary-600 hover:text-primary-700 hover:bg-primary-50 px-3 py-1.5 rounded-lg transition-colors">
-                                {{ $ujian->peserta_count ?? 0 }}
-                            </a>
-                        @endif
-                    </td>
-                    @endif
                     <td class="px-6 py-4 text-center">
                         @php
                             $badge = match($ujian->status) {
@@ -141,7 +125,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-12 text-center text-secondary-500">
+                    <td colspan="6" class="px-6 py-12 text-center text-secondary-500">
                         Belum ada ujian yang dibuat
                     </td>
                 </tr>

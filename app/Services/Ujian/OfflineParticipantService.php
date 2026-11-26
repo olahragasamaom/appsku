@@ -23,15 +23,34 @@ class OfflineParticipantService
     {
         $this->assertOffline($ujian);
 
-        $plaintext = $this->generateKodeAkses();
+        $plaintext = ! empty($data['password']) ? $data['password'] : $this->generateKodeAkses();
 
-        $peserta = PesertaOffline::create([
-            'ujian_id' => $ujian->id,
-            'nomor_peserta' => $data['nomor_peserta'],
-            'nama_peserta' => $data['nama_peserta'],
-            'kode_akses' => Hash::make($plaintext),
-            'kode_akses_plain' => $plaintext,
-            'is_active' => false,
+        // Cari apakah peserta sudah ada di master peserta offline berdasarkan nomor_peserta
+        $peserta = PesertaOffline::where('nomor_peserta', $data['nomor_peserta'])->first();
+
+        if ($peserta) {
+            $peserta->update([
+                'nama_peserta' => $data['nama_peserta'] ?: $peserta->nama_peserta,
+                'nama_kelas' => $data['nama_kelas'] ?? $peserta->nama_kelas,
+                'nomor_hp' => $data['nomor_hp'] ?? $peserta->nomor_hp,
+            ]);
+            $plaintext = $peserta->kode_akses_plain ?? '••••••';
+        } else {
+            $peserta = PesertaOffline::create([
+                'ujian_id' => $ujian->id,
+                'nomor_peserta' => $data['nomor_peserta'],
+                'nama_peserta' => $data['nama_peserta'],
+                'nama_kelas' => $data['nama_kelas'] ?? $ujian->nama_ujian,
+                'nomor_hp' => $data['nomor_hp'] ?? null,
+                'kode_akses' => Hash::make($plaintext),
+                'kode_akses_plain' => $plaintext,
+                'is_active' => false,
+            ]);
+        }
+
+        // Daftarkan ke pivot ujian_peserta_offline
+        $ujian->pesertaOffline()->syncWithoutDetaching([
+            $peserta->id => ['is_active' => false],
         ]);
 
         return ['peserta' => $peserta, 'kode_akses' => $plaintext];

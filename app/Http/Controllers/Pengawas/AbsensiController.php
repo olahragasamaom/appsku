@@ -37,13 +37,25 @@ class AbsensiController extends Controller
 
     public function toggleActivation(Ujian $ujian, PesertaOffline $pesertaOffline): RedirectResponse
     {
-        abort_unless($pesertaOffline->ujian_id === $ujian->id, 404);
+        $pivot = \Illuminate\Support\Facades\DB::table('panritta_ujian_peserta_offline')
+            ->where('ujian_id', $ujian->id)
+            ->where('peserta_offline_id', $pesertaOffline->id)
+            ->first();
 
-        $pesertaOffline->update([
-            'is_active' => ! $pesertaOffline->is_active,
-        ]);
+        abort_unless($pivot || $pesertaOffline->ujian_id === $ujian->id, 404);
 
-        $status = $pesertaOffline->is_active ? 'diaktifkan' : 'dinonaktifkan';
+        $newActive = $pivot ? ! $pivot->is_active : ! $pesertaOffline->is_active;
+
+        \Illuminate\Support\Facades\DB::table('panritta_ujian_peserta_offline')
+            ->where('ujian_id', $ujian->id)
+            ->where('peserta_offline_id', $pesertaOffline->id)
+            ->update(['is_active' => $newActive]);
+
+        if ($pesertaOffline->ujian_id === $ujian->id) {
+            $pesertaOffline->update(['is_active' => $newActive]);
+        }
+
+        $status = $newActive ? 'diaktifkan' : 'dinonaktifkan';
 
         return back()->with('success', "Peserta {$pesertaOffline->nama_peserta} berhasil {$status}.");
     }
@@ -59,7 +71,12 @@ class AbsensiController extends Controller
         ]);
 
         $isActive = $validated['action'] === 'activate';
-        $updated = $ujian->pesertaOffline()
+        $updated = \Illuminate\Support\Facades\DB::table('panritta_ujian_peserta_offline')
+            ->where('ujian_id', $ujian->id)
+            ->whereIn('peserta_offline_id', $validated['ids'])
+            ->update(['is_active' => $isActive]);
+
+        PesertaOffline::where('ujian_id', $ujian->id)
             ->whereIn('id', $validated['ids'])
             ->update(['is_active' => $isActive]);
 

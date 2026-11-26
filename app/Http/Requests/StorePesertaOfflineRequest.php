@@ -23,15 +23,11 @@ class StorePesertaOfflineRequest extends FormRequest
      */
     public function rules(): array
     {
-        $ujianId = $this->route('ujian')?->id;
-
         return [
-            'nomor_peserta' => [
-                'required', 'string', 'max:50',
-                Rule::unique('panritta_peserta_offline', 'nomor_peserta')
-                    ->where(fn ($query) => $query->where('ujian_id', $ujianId)),
-            ],
+            'nomor_peserta' => ['required', 'string', 'max:50'],
             'nama_peserta' => ['required', 'string', 'max:255'],
+            'nama_kelas' => ['nullable', 'string', 'max:255'],
+            'nomor_hp' => ['nullable', 'string', 'max:50'],
         ];
     }
 
@@ -42,7 +38,6 @@ class StorePesertaOfflineRequest extends FormRequest
     {
         return [
             'nomor_peserta.required' => 'Nomor peserta wajib diisi.',
-            'nomor_peserta.unique' => 'Nomor peserta sudah digunakan pada ujian ini.',
             'nama_peserta.required' => 'Nama peserta wajib diisi.',
         ];
     }

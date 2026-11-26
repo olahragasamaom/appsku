@@ -2,10 +2,20 @@
 
 @section('title', 'Impor Peserta Offline')
 
+@php
+    $isOfflineUjianFlow = request()->routeIs('superadmin.peserta-offline-ujian.*');
+    $pesertaListRoute = $isOfflineUjianFlow
+        ? route('superadmin.peserta-offline-ujian.peserta', $ujian)
+        : route('superadmin.ujian.peserta-offline.index', $ujian);
+    $importPostRoute = $isOfflineUjianFlow
+        ? route('superadmin.peserta-offline-ujian.import', $ujian)
+        : route('superadmin.ujian.peserta-offline.import', $ujian);
+@endphp
+
 @section('breadcrumb')
-    <a href="{{ route('superadmin.ujian.index') }}" class="text-secondary-500 hover:text-secondary-700">Manajemen Ujian</a>
+    <a href="{{ $isOfflineUjianFlow ? route('superadmin.peserta-offline-ujian.index') : route('superadmin.ujian.index') }}" class="text-secondary-500 hover:text-secondary-700">Ujian</a>
     <span class="mx-2 text-secondary-400">/</span>
-    <a href="{{ route('superadmin.ujian.peserta-offline.index', $ujian) }}" class="text-secondary-500 hover:text-secondary-700">Peserta Offline</a>
+    <a href="{{ $pesertaListRoute }}" class="text-secondary-500 hover:text-secondary-700">Peserta: {{ $ujian->nama_ujian }}</a>
     <span class="mx-2 text-secondary-400">/</span>
     <span class="text-secondary-900 font-medium">Impor Peserta</span>
 @endsection
@@ -16,7 +26,7 @@
             <h2 class="font-semibold text-xl text-secondary-800">Impor Peserta dari Excel</h2>
             <p class="text-sm text-secondary-500">{{ $ujian->nama_ujian }}</p>
         </div>
-        <a href="{{ route('superadmin.ujian.peserta-offline.index', $ujian) }}" class="btn btn-ghost">Kembali</a>
+        <a href="{{ $pesertaListRoute }}" class="btn btn-ghost">Kembali</a>
     </div>
 @endsection
 
@@ -54,7 +64,7 @@
                     </p>
                 </div>
 
-                <form action="{{ route('superadmin.ujian.peserta-offline.import', $ujian) }}" method="POST"
+                <form action="{{ $importPostRoute }}" method="POST"
                       enctype="multipart/form-data" class="space-y-4">
                     @csrf
 

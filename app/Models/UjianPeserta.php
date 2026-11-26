@@ -14,6 +14,7 @@ class UjianPeserta extends Model
     protected $fillable = [
         'ujian_id',
         'user_id',
+        'peserta_offline_id',
         'langganan_id',
         'status',
         'waktu_mulai',

@@ -485,8 +485,29 @@ class UjianController extends Controller
             $pesertaOfflineId = $request->session()->get('offline_peserta_id');
             $pesertaOffline = PesertaOffline::find($pesertaOfflineId);
 
-            if ($pesertaOffline && $pesertaOffline->ujianPeserta) {
-                return $pesertaOffline->ujianPeserta;
+            if ($pesertaOffline) {
+                // Cek pivot ujian peserta offline untuk ujian ini
+                $pivot = $pesertaOffline->ujians()->where('panritta_ujian.id', $ujian->id)->first()?->pivot;
+                if ($pivot && $pivot->ujian_peserta_id) {
+                    $attempt = UjianPeserta::find($pivot->ujian_peserta_id);
+                    if ($attempt) {
+                        return $attempt;
+                    }
+                }
+
+                // Cek attempt yang memiliki peserta_offline_id
+                $attempt = UjianPeserta::where('ujian_id', $ujian->id)
+                    ->where('peserta_offline_id', $pesertaOffline->id)
+                    ->latest('id')
+                    ->first();
+                if ($attempt) {
+                    return $attempt;
+                }
+
+                // Fallback legacy
+                if ($pesertaOffline->ujian_id === $ujian->id && $pesertaOffline->ujianPeserta) {
+                    return $pesertaOffline->ujianPeserta;
+                }
             }
         }
 

@@ -149,11 +149,13 @@ class Ujian extends Model
     }
 
     /**
-     * RELASI (One-to-Many): Data kredensial peserta offline (hanya untuk tipe offline).
+     * RELASI (Belongs-to-Many): Data peserta offline yang terdaftar di ujian ini.
      */
-    public function pesertaOffline(): HasMany
+    public function pesertaOffline(): BelongsToMany
     {
-        return $this->hasMany(PesertaOffline::class, 'ujian_id');
+        return $this->belongsToMany(PesertaOffline::class, 'panritta_ujian_peserta_offline', 'ujian_id', 'peserta_offline_id')
+            ->withPivot(['id', 'is_active', 'ujian_peserta_id'])
+            ->withTimestamps();
     }
 
     /**

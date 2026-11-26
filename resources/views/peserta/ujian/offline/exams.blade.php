@@ -59,9 +59,22 @@
             <div class="grid grid-cols-1 gap-4">
                 @foreach($ujians as $ujian)
                     @php
+                        $pivot = $peserta->ujians->firstWhere('id', $ujian->id)?->pivot;
                         $isUjianAktif = $ujian->status === 'aktif';
-                        $isPesertaAktif = (bool) $peserta->is_active;
-                        $ujianPeserta = $peserta->ujianPeserta;
+                        $isPesertaAktif = $pivot ? (bool) $pivot->is_active : (bool) $peserta->is_active;
+
+                        // Cari attempt untuk ujian spesifik ini
+                        $ujianPeserta = null;
+                        if ($pivot && $pivot->ujian_peserta_id) {
+                            $ujianPeserta = \App\Models\UjianPeserta::find($pivot->ujian_peserta_id);
+                        }
+                        if (! $ujianPeserta) {
+                            $ujianPeserta = \App\Models\UjianPeserta::where('ujian_id', $ujian->id)
+                                ->where('peserta_offline_id', $peserta->id)
+                                ->latest('id')
+                                ->first() ?? ($peserta->ujian_id == $ujian->id ? $peserta->ujianPeserta : null);
+                        }
+
                         $sudahSelesai = $ujianPeserta && $ujianPeserta->status === 'selesai';
                         $isPaused = $ujianPeserta && $ujianPeserta->is_paused;
                         $canStart = $isUjianAktif && $isPesertaAktif && !$sudahSelesai && !$isPaused;
