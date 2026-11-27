@@ -302,8 +302,29 @@ class UjianController extends Controller
             $this->scoring->finalize($peserta);
         }
 
-        return redirect()->route('peserta.ujian.hasil', $ujian)
+        return redirect()->route('peserta.ujian.hasil-summary', $ujian)
             ->with('success', 'Ujian berhasil diselesaikan.');
+    }
+
+    public function hasilSummary(Request $request, Ujian $ujian): View|RedirectResponse
+    {
+        $peserta = $this->resolvePeserta($request, $ujian);
+
+        if ($peserta instanceof RedirectResponse) {
+            return $peserta;
+        }
+
+        if (! $peserta) {
+            return redirect()->route('peserta.offline.exams');
+        }
+
+        abort_unless($peserta->status === 'selesai', 404);
+
+        $breakdown = $this->scoring->breakdownPerJenis($peserta);
+        $breakdownSubJenis = $this->scoring->breakdownPerSubJenis($peserta);
+        $ranking = $this->scoring->positionOfFirstAttempt($peserta);
+
+        return view('peserta.ujian.hasil-summary', compact('ujian', 'peserta', 'breakdown', 'breakdownSubJenis', 'ranking'));
     }
 
     public function hasil(Request $request, Ujian $ujian): View|RedirectResponse

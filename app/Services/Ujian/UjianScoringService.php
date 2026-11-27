@@ -6,6 +6,8 @@ use App\Models\Soal;
 use App\Models\Ujian;
 use App\Models\UjianPeserta;
 use App\Models\UjianPesertaKategori;
+use App\Services\OpsiRandomizer;
+use Illuminate\Support\Collection;
 
 class UjianScoringService
 {
@@ -38,12 +40,12 @@ class UjianScoringService
 
         $originalOpsiKey = $jawaban;
         if ($ujian && $ujianPeserta && $ujian->randomize_opsi_tkp) {
-            $mapping = \App\Services\OpsiRandomizer::getMappingForPeserta(
+            $mapping = OpsiRandomizer::getMappingForPeserta(
                 $ujian,
                 $ujianPeserta,
                 $soal->id
             );
-            $originalOpsiKey = \App\Services\OpsiRandomizer::reverseMapDisplay($jawaban, $mapping);
+            $originalOpsiKey = OpsiRandomizer::reverseMapDisplay($jawaban, $mapping);
         }
 
         $field = 'nilai_bobot_'.strtolower($originalOpsiKey);
@@ -419,6 +421,7 @@ class UjianScoringService
             if ($b['pencapaian_persen'] == $a['pencapaian_persen']) {
                 return $b['total_soal'] <=> $a['total_soal'];
             }
+
             return $b['pencapaian_persen'] <=> $a['pencapaian_persen'];
         });
 
@@ -430,7 +433,7 @@ class UjianScoringService
      *
      * Urutan: nilai tertinggi lebih dulu; jika seri, penyelesaian tercepat menang.
      */
-    public function rank(Ujian $ujian): \Illuminate\Support\Collection
+    public function rank(Ujian $ujian): Collection
     {
         return $ujian->peserta()
             ->with('user', 'pesertaOffline')
@@ -439,6 +442,52 @@ class UjianScoringService
             ->orderBy('waktu_selesai')
             ->get()
             ->values();
+    }
+
+    /**
+     * Calculate ranking based on first attempt only (attempt 1 for each participant).
+     * Only includes participants with status 'selesai'.
+     * Returns ranking ordered by total_nilai DESC, then waktu_selesai ASC.
+     */
+    public function rankFirstAttemptOnly(Ujian $ujian): Collection
+    {
+        return \DB::table('panritta_ujian_peserta')
+            ->select('panritta_ujian_peserta.*')
+            ->where('panritta_ujian_peserta.ujian_id', $ujian->id)
+            ->where('panritta_ujian_peserta.status', 'selesai')
+            ->whereRaw(
+                'panritta_ujian_peserta.id = (
+                    SELECT MIN(id)
+                    FROM panritta_ujian_peserta p2
+                    WHERE p2.ujian_id = ? AND (
+                        (p2.user_id = panritta_ujian_peserta.user_id AND p2.user_id IS NOT NULL) OR
+                        (p2.peserta_offline_id = panritta_ujian_peserta.peserta_offline_id AND p2.peserta_offline_id IS NOT NULL)
+                    )
+                )',
+                [$ujian->id]
+            )
+            ->orderByDesc('panritta_ujian_peserta.total_nilai')
+            ->orderBy('panritta_ujian_peserta.waktu_selesai')
+            ->get()
+            ->values();
+    }
+
+    /**
+     * Calculate ranking position for first attempt.
+     * Only includes participants with status 'selesai' on their first attempt.
+     *
+     * @return array{rank: int|null, total: int}
+     */
+    public function positionOfFirstAttempt(UjianPeserta $peserta): array
+    {
+        $ranking = $this->rankFirstAttemptOnly($peserta->ujian);
+
+        $index = $ranking->search(fn ($item) => $item->id === $peserta->id);
+
+        return [
+            'rank' => $index === false ? null : $index + 1,
+            'total' => $ranking->count(),
+        ];
     }
 
     /**

@@ -346,10 +346,10 @@
             </div>
         </header>
 
-        <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="max-w-5xl mx-auto px-4 py-6 pb-20">
+            <div class="flex flex-col lg:flex-row gap-2 items-start relative">
                 {{-- Main Content (Soal) --}}
-                <div class="lg:col-span-2 space-y-4">
+                <div class="flex-1 w-full space-y-3">
                     @php 
                         $soalArray = $ujianSoals->all();
                         $globalIndex = 1;
@@ -360,12 +360,12 @@
                              x-show="currentSoalIndex === {{ $index }}"
                              x-transition:enter="transition ease-in-out duration-300"
                              x-transition:leave="transition ease-in-out duration-300">
-                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                                 {{-- Content --}}
-                                <div class="p-6 md:p-8">
+                                <div class="p-3 sm:p-4">
                                     {{-- Header dengan kategori & Nomor (Gaya Simulasi) --}}
-                                    <div class="flex items-center gap-3 mb-5 pb-5 border-b border-slate-100">
-                                        <span class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center text-lg border border-primary-200 shadow-sm flex-shrink-0">
+                                    <div class="flex items-center gap-1.5 mb-3 pb-2.5 border-b border-slate-100">
+                                        <span class="w-8 h-8 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center text-sm border border-primary-200 shadow-sm flex-shrink-0">
                                             {{ $index + 1 }}
                                         </span>
                                         <div class="flex items-center gap-2 flex-wrap">
@@ -377,11 +377,11 @@
                                                     || str_contains(strtoupper($subJenisNama), 'TKP')
                                                     || ($soal->nilai_bobot_a > 0 && $soal->nilai_bobot_b > 0);
                                             @endphp
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600 tracking-wide uppercase">
-                                                {{ $subJenisNama }}@if($subIndikatorNama) &mdash; {{ $subIndikatorNama }}@endif
-                                            </span>
-                                            @if($isTkp)
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-semibold bg-slate-100 text-slate-600 tracking-wide uppercase">
+                                            {{ $subJenisNama }}@if($subIndikatorNama) &mdash; {{ $subIndikatorNama }}@endif
+                                        </span>
+                                        @if($isTkp)
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                                                     TKP (Skala 1-5)
                                                 </span>
                                             @endif
@@ -389,9 +389,9 @@
                                     </div>
 
                                     {{-- Teks Soal --}}
-                                    <div class="mb-6">
+                                    <div class="mb-4">
                                         @if($soal->soal)
-                                            <div class="prose prose-sm md:prose-base prose-slate max-w-none text-slate-800 leading-relaxed">
+                                            <div class="prose prose-sm prose-slate max-w-none text-slate-800 leading-relaxed text-base">
                                                 {!! app('App\Services\FormulaRenderer')->render($soal->soal) !!}
                                             </div>
                                         @endif
@@ -403,12 +403,12 @@
                                     </div>
 
                                     {{-- Opsi Jawaban --}}
-                                    <div class="mb-8 space-y-3">
+                                    <div class="mt-4 space-y-1.5">
                                         <x-soal-options-display :ujianSoal="$ujianSoal" :jawaban="$jawaban" :ujianPeserta="$peserta" />
                                     </div>
 
                                     {{-- Navigation --}}
-                                    <div class="flex flex-col sm:flex-row gap-3 justify-between pt-6 border-t border-slate-200">
+                                    <div class="flex flex-col sm:flex-row gap-2 justify-between pt-4 border-t border-slate-100 mt-4">
                                         <button type="button" 
                                                 @click="currentSoalIndex = Math.max(0, currentSoalIndex - 1)"
                                                 :disabled="currentSoalIndex === 0"
@@ -448,11 +448,11 @@
                 </div>
 
                 {{-- Sidebar Navigation --}}
-                <div class="lg:col-span-1">
-                    <div class="sticky top-20 space-y-4">
+                <div class="w-full lg:w-64 flex-shrink-0 lg:sticky lg:top-24 z-10 order-first lg:order-last mb-6 lg:mb-0">
+                    <div class="space-y-3">
                         {{-- Navigation Panel --}}
-                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                             <div class="bg-gradient-to-r from-slate-800 to-slate-700 px-5 py-4">
+                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                             <div class="bg-gradient-to-r from-slate-800 to-slate-700 py-3 px-5 border-b border-slate-200">
                                  <h3 class="font-bold text-white text-sm flex items-center gap-2">
                                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
@@ -460,19 +460,19 @@
                                      Navigasi Soal
                                  </h3>
                              </div>
-                             <div class="p-4 max-h-80 overflow-y-auto space-y-4">
+                             <div class="p-4 h-[48vh] overflow-y-auto">
                                  @php 
                                      $navIndex = 0;
                                  @endphp
                                  @foreach($soalGroups as $groupName => $items)
-                                     <div>
-                                         <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{{ $groupName }}</h4>
-                                         <div class="grid grid-cols-5 gap-2">
+                                     <div class="mb-5 last:mb-0">
+                                         <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">{{ $groupName }}</h4>
+                                         <div class="grid grid-cols-5 gap-0.5">
                                              @foreach($items as $ujianSoal)
                                                  @php $idxNow = $navIndex; @endphp
                                                   <button type="button" 
                                                           @click="currentSoalIndex = {{ $idxNow }}"
-                                                          class="w-full aspect-square flex items-center justify-center rounded-lg text-xs md:text-sm font-bold transition-all border"
+                                                          class="w-full aspect-square flex items-center justify-center rounded text-[7px] font-bold transition-all"
                                                           :style="{
                                                                'backgroundColor': jawaban[{{ $ujianSoal->id }}] ? 'rgb(59, 130, 246)' : (ragu[{{ $ujianSoal->id }}] ? 'rgb(250, 204, 21)' : 'white'),
                                                                'color': jawaban[{{ $ujianSoal->id }}] ? 'white' : (ragu[{{ $ujianSoal->id }}] ? 'white' : 'rgb(55, 65, 81)'),

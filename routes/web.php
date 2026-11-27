@@ -14,8 +14,8 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\EmployeeExitController;
-use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Keuangan\DashboardController as KeuanganDashboardController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PembuatSoal\DashboardController as PembuatSoalDashboardController;
 use App\Http\Controllers\Pengajar\AuthController;
 use App\Http\Controllers\Peserta\AuthController as PesertaAuthController;
@@ -24,6 +24,7 @@ use App\Http\Controllers\Peserta\LanggananController as PesertaLanggananControll
 use App\Http\Controllers\Peserta\OAuthController as PesertaOAuthController;
 use App\Http\Controllers\Peserta\OfflinePortalController;
 use App\Http\Controllers\Peserta\UjianController as PesertaUjianController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Settings\PermissionController;
 use App\Http\Controllers\Settings\RoleController;
 use App\Http\Controllers\Settings\SessionController;
@@ -34,9 +35,11 @@ use App\Http\Controllers\Superadmin\BlockedIpController;
 use App\Http\Controllers\Superadmin\ChangePasswordController;
 use App\Http\Controllers\Superadmin\CompanyController;
 use App\Http\Controllers\Superadmin\Dashboard2Controller;
+use App\Http\Controllers\Superadmin\DataPesertaOfflineController;
 use App\Http\Controllers\Superadmin\EmailLogController;
 use App\Http\Controllers\Superadmin\HasilUjianController;
 use App\Http\Controllers\Superadmin\JenisUjianController;
+use App\Http\Controllers\Superadmin\KelasController;
 use App\Http\Controllers\Superadmin\LatihanDetailController;
 use App\Http\Controllers\Superadmin\LatihanSederhanaController;
 use App\Http\Controllers\Superadmin\NotificationLogController;
@@ -50,7 +53,7 @@ use App\Http\Controllers\Superadmin\PengawasActionController;
 use App\Http\Controllers\Superadmin\PesertaController;
 use App\Http\Controllers\Superadmin\PesertaOfflineController;
 use App\Http\Controllers\Superadmin\PesertaOfflineKodeAksesController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Superadmin\PesertaOfflineUjianController;
 use App\Http\Controllers\Superadmin\PlanController;
 use App\Http\Controllers\Superadmin\QueueMonitorController;
 use App\Http\Controllers\Superadmin\RateLimitLogController;
@@ -69,6 +72,7 @@ use App\Http\Controllers\Superadmin\UjianPesertaController;
 use App\Http\Controllers\Superadmin\UjianSoalController;
 use App\Http\Controllers\Superadmin\UserLevelController;
 use App\Models\Paket;
+use App\Models\Ujian;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -674,14 +678,14 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('absensi/ujian/{ujian}/bulk-toggle', [AbsensiController::class, 'bulkToggleActivation'])->name('absensi.bulk-toggle');
 
         // legacy redirect ujian peserta-offline to subheader peserta-offline-ujian
-        Route::get('ujian/{ujian}/peserta-offline', fn(\App\Models\Ujian $ujian) => redirect()->route('superadmin.peserta-offline-ujian.peserta', $ujian))->name('ujian.peserta-offline.index');
+        Route::get('ujian/{ujian}/peserta-offline', fn (Ujian $ujian) => redirect()->route('superadmin.peserta-offline-ujian.peserta', $ujian))->name('ujian.peserta-offline.index');
 
         // data kelas / gelombang peserta offline
-        Route::resource('kelas', App\Http\Controllers\Superadmin\KelasController::class)->parameters(['kelas' => 'kelas']);
+        Route::resource('kelas', KelasController::class)->parameters(['kelas' => 'kelas']);
 
         // ujian peserta offline (fokus kelola peserta ujian)
         Route::prefix('peserta-offline-ujian')->as('peserta-offline-ujian.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Superadmin\PesertaOfflineUjianController::class, 'index'])->name('index');
+            Route::get('/', [PesertaOfflineUjianController::class, 'index'])->name('index');
             Route::get('{ujian}/peserta', [PesertaOfflineController::class, 'index'])->name('peserta');
             Route::post('{ujian}/attach', [PesertaOfflineController::class, 'attach'])->name('attach');
             Route::post('{ujian}/peserta/store', [PesertaOfflineController::class, 'store'])->name('store');
@@ -695,15 +699,15 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         });
 
         // master data peserta offline (CRUD per kelas/gelombang)
-        Route::get('data-peserta-offline/template', [App\Http\Controllers\Superadmin\DataPesertaOfflineController::class, 'downloadTemplate'])
+        Route::get('data-peserta-offline/template', [DataPesertaOfflineController::class, 'downloadTemplate'])
             ->name('data-peserta-offline.template');
-        Route::post('data-peserta-offline/import', [App\Http\Controllers\Superadmin\DataPesertaOfflineController::class, 'import'])
+        Route::post('data-peserta-offline/import', [DataPesertaOfflineController::class, 'import'])
             ->name('data-peserta-offline.import');
-        Route::post('data-peserta-offline/bulk-delete', [App\Http\Controllers\Superadmin\DataPesertaOfflineController::class, 'bulkDestroy'])
+        Route::post('data-peserta-offline/bulk-delete', [DataPesertaOfflineController::class, 'bulkDestroy'])
             ->name('data-peserta-offline.bulk-delete');
-        Route::match(['POST', 'DELETE'], 'data-peserta-offline/{data_peserta_offline}/reset-password', [App\Http\Controllers\Superadmin\DataPesertaOfflineController::class, 'resetPassword'])
+        Route::match(['POST', 'DELETE'], 'data-peserta-offline/{data_peserta_offline}/reset-password', [DataPesertaOfflineController::class, 'resetPassword'])
             ->name('data-peserta-offline.reset-password');
-        Route::resource('data-peserta-offline', App\Http\Controllers\Superadmin\DataPesertaOfflineController::class);
+        Route::resource('data-peserta-offline', DataPesertaOfflineController::class);
 
         // monitoring pengawas offline (real-time) - P8-T1
         Route::get('ujian/{ujian}/pengawas', [OfflineMonitoringController::class, 'index'])
@@ -1024,6 +1028,7 @@ Route::prefix('peserta')->name('peserta.')->group(function () {
         Route::post('ujian/{ujian}/jawaban', [PesertaUjianController::class, 'saveAnswer'])->name('ujian.jawaban');
         Route::get('ujian/{ujian}/heartbeat', [PesertaUjianController::class, 'heartbeat'])->name('ujian.heartbeat');
         Route::post('ujian/{ujian}/submit', [PesertaUjianController::class, 'submit'])->name('ujian.submit');
+        Route::get('ujian/{ujian}/hasil-summary', [PesertaUjianController::class, 'hasilSummary'])->name('ujian.hasil-summary');
         Route::get('ujian/{ujian}/hasil', [PesertaUjianController::class, 'hasil'])->name('ujian.hasil');
         Route::get('ujian/{ujian}/analisis', [PesertaUjianController::class, 'analisis'])->name('ujian.analisis');
         Route::get('ujian/{ujian}/pembahasan', [PesertaUjianController::class, 'pembahasan'])->name('ujian.pembahasan');
