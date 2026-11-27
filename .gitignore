@@ -60,7 +60,6 @@ dist
 *.joblib
 *.h5
 *.hdf5
-models/
 __pycache__/
 *.pyc
 .python-version
