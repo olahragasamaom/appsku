@@ -38,6 +38,10 @@ class PesertaOffline extends Model
         'kode_akses',
     ];
 
+    function testing() {
+        
+    }
+
     protected function casts(): array
     {
         return [
