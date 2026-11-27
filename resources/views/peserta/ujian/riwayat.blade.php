@@ -60,7 +60,7 @@
                                         </td>
                                         <td class="py-3 px-4 text-center">
                                             @if($attempt->status === 'selesai')
-                                                <a href="{{ route('peserta.ujian.pembahasan', $ujian) }}" class="text-primary-600 hover:text-primary-700 font-medium text-sm">
+                                                <a href="{{ route('peserta.ujian.pembahasan', [$ujian, 'attempt' => $attempt->id]) }}" class="text-primary-600 hover:text-primary-700 font-medium text-sm">
                                                     Lihat
                                                 </a>
                                             @else

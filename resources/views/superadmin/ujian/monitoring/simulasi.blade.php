@@ -118,12 +118,12 @@
                 </div>
             </div>
 
-            <div class="flex flex-col lg:flex-row gap-6 items-start relative">
+            <div class="flex flex-col lg:flex-row gap-3 items-start relative">
                 {{-- Bagian Kiri: Area 1 Soal --}}
                 <div class="flex-1 w-full">
                     <template x-if="soalAktif">
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                            <div class="p-6 sm:p-8">
+                            <div class="p-5 sm:p-6">
                                 <div class="flex items-center gap-3 mb-5 pb-5 border-b border-slate-100">
                                     <span class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center text-lg border border-primary-200 shadow-sm flex-shrink-0" x-text="soalAktif.nomor"></span>
                                     <div class="flex items-center gap-2 flex-wrap">
@@ -145,11 +145,12 @@
                                 {{-- Opsi Jawaban --}}
                                 <div class="mt-8 space-y-3">
                                     <template x-for="op in soalAktif.opsi" :key="op.huruf">
-                                        <label class="flex items-start gap-4 p-4 border rounded-xl cursor-pointer transition-all duration-150 relative"
-                                               :class="{
-                                                   'bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500 shadow-xs': (!soalAktif.is_tkp && op.is_kunci) || (soalAktif.is_tkp && op.bobot === 5),
-                                                   'border-primary-500 bg-primary-50 ring-1 ring-primary-500 shadow-xs': jawaban[soalAktif.id] === op.huruf && !((!soalAktif.is_tkp && op.is_kunci) || (soalAktif.is_tkp && op.bobot === 5)),
-                                                   'border-slate-200 hover:bg-slate-50': !(jawaban[soalAktif.id] === op.huruf || (!soalAktif.is_tkp && op.is_kunci) || (soalAktif.is_tkp && op.bobot === 5))
+                                        <label class="flex items-start gap-4 p-4 rounded-xl cursor-pointer transition-all duration-150 relative"
+                                               :style="{
+                                                   'backgroundColor': ((!soalAktif.is_tkp && op.is_kunci) || (soalAktif.is_tkp && op.bobot === 5)) ? 'rgb(209, 250, 229)' : (jawaban[soalAktif.id] === op.huruf ? 'rgb(240, 249, 255)' : 'white'),
+                                                   'borderWidth': '2px',
+                                                   'borderColor': ((!soalAktif.is_tkp && op.is_kunci) || (soalAktif.is_tkp && op.bobot === 5)) ? 'rgb(5, 150, 105)' : (jawaban[soalAktif.id] === op.huruf ? 'rgb(59, 130, 246)' : 'rgb(203, 213, 225)'),
+                                                   'boxShadow': ((!soalAktif.is_tkp && op.is_kunci) || (soalAktif.is_tkp && op.bobot === 5)) ? '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
                                                }">
                                             <div class="flex items-center h-6">
                                                 <input type="radio" :value="op.huruf" x-model="jawaban[soalAktif.id]" 
@@ -198,11 +199,9 @@
                                 </div>
 
                                 {{-- Box Penjelasan / Pembahasan --}}
-                                <div class="mt-8 border rounded-2xl overflow-hidden shadow-xs"
-                                     :class="soalAktif.is_tkp ? 'bg-amber-50/40 border-amber-200' : 'bg-emerald-50/40 border-emerald-200'">
-                                    <div class="px-5 py-3 border-b flex items-center justify-between"
-                                         :class="soalAktif.is_tkp ? 'bg-amber-100/60 border-amber-200 text-amber-900' : 'bg-emerald-100/60 border-emerald-200 text-emerald-900'">
-                                        <div class="flex items-center gap-2 font-bold text-sm">
+                                 <div class="mt-8 border border-yellow-300 rounded-2xl overflow-hidden shadow-xs bg-yellow-50">
+                                    <div class="px-5 py-3 border-b border-yellow-300 flex items-center justify-between bg-yellow-100 text-yellow-900">
+                                         <div class="flex items-center gap-2 font-bold text-sm">
                                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                                             </svg>
@@ -256,7 +255,7 @@
                 </div>
 
                 {{-- Bagian Kanan: Navigasi Nomor --}}
-                <div class="w-full lg:w-72 xl:w-80 flex-shrink-0 lg:sticky lg:top-24 z-10 order-first lg:order-last mb-6 lg:mb-0">
+                <div class="w-full lg:w-64 flex-shrink-0 lg:sticky lg:top-24 z-10 order-first lg:order-last mb-6 lg:mb-0">
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                         <div class="bg-gradient-to-r from-slate-800 to-slate-700 py-3 px-5 border-b border-slate-200">
                             <h3 class="font-bold text-white text-sm flex items-center gap-2">
@@ -268,21 +267,21 @@
                             @foreach($navGroups as $groupName => $items)
                                 <div class="mb-5 last:mb-0">
                                     <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">{{ $groupName }}</h4>
-                                    <div class="grid grid-cols-5 gap-2">
-                                        @foreach($items as $item)
-                                            <button type="button" @click="goTo({{ $item['nomor'] - 1 }})"
-                                                    class="w-full aspect-square flex items-center justify-center rounded-lg text-sm font-bold transition-all"
-                                                    :style="{
-                                                        'backgroundColor': jawaban[{{ $item['id'] }}] ? 'rgb(59, 130, 246)' : (raguRagu[{{ $item['id'] }}] ? 'rgb(250, 204, 21)' : 'white'),
-                                                        'color': jawaban[{{ $item['id'] }}] ? 'white' : (raguRagu[{{ $item['id'] }}] ? 'white' : 'rgb(55, 65, 81)'),
-                                                        'borderWidth': indexAktif === {{ $item['nomor'] - 1 }} ? '3px' : '2px',
-                                                        'borderStyle': 'solid',
-                                                        'borderColor': indexAktif === {{ $item['nomor'] - 1 }} ? 'rgb(37, 99, 235)' : (raguRagu[{{ $item['id'] }}] ? 'rgb(202, 138, 4)' : (jawaban[{{ $item['id'] }}] ? 'rgb(29, 78, 216)' : 'rgb(209, 213, 219)'))
-                                                    }">
-                                                {{ $item['nomor'] }}
-                                            </button>
-                                        @endforeach
-                                    </div>
+                                    <div class="grid grid-cols-5 gap-0.5">
+                                         @foreach($items as $item)
+                                             <button type="button" @click="goTo({{ $item['nomor'] - 1 }})"
+                                                     class="w-full aspect-square flex items-center justify-center rounded text-[7px] font-bold transition-all"
+                                                     :style="{
+                                                         'backgroundColor': jawaban[{{ $item['id'] }}] ? 'rgb(59, 130, 246)' : (raguRagu[{{ $item['id'] }}] ? 'rgb(250, 204, 21)' : 'white'),
+                                                         'color': jawaban[{{ $item['id'] }}] ? 'white' : (raguRagu[{{ $item['id'] }}] ? 'white' : 'rgb(55, 65, 81)'),
+                                                         'borderWidth': indexAktif === {{ $item['nomor'] - 1 }} ? '3px' : '2px',
+                                                         'borderStyle': 'solid',
+                                                         'borderColor': indexAktif === {{ $item['nomor'] - 1 }} ? 'rgb(37, 99, 235)' : (raguRagu[{{ $item['id'] }}] ? 'rgb(202, 138, 4)' : (jawaban[{{ $item['id'] }}] ? 'rgb(29, 78, 216)' : 'rgb(209, 213, 219)'))
+                                                     }">
+                                                 {{ $item['nomor'] }}
+                                             </button>
+                                         @endforeach
+                                     </div>
                                 </div>
                             @endforeach
                         </div>

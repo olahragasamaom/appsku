@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class UjianController extends Controller
@@ -145,7 +146,7 @@ class UjianController extends Controller
             if (! empty($soalOrder)) {
                 $this->randomSoal->saveSoalOrder($peserta, $soalOrder);
                 $peserta->refresh();
-                \Log::info('kerjakan() - attempt ' . $attemptCount . ' soal_order saved per sub-indikator', ['count' => count($soalOrder)]);
+                \Log::info('kerjakan() - attempt '.$attemptCount.' soal_order saved per sub-indikator', ['count' => count($soalOrder)]);
             }
         }
 
@@ -285,7 +286,7 @@ class UjianController extends Controller
 
         // Check activation status for offline participants before submit
         if ($peserta->pesertaOffline) {
-            $pivotActive = \Illuminate\Support\Facades\DB::table('panritta_ujian_peserta_offline')
+            $pivotActive = DB::table('panritta_ujian_peserta_offline')
                 ->where('ujian_id', $ujian->id)
                 ->where('peserta_offline_id', $peserta->pesertaOffline->id)
                 ->value('is_active');
@@ -400,46 +401,51 @@ class UjianController extends Controller
 
     public function pembahasan(Request $request, Ujian $ujian): View|RedirectResponse
     {
-        // Try offline peserta first
-        if ($request->session()->has('offline_peserta_id')) {
-            $pesertaOfflineId = $request->session()->get('offline_peserta_id');
-            $pesertaOffline = PesertaOffline::with('ujianPeserta')->find($pesertaOfflineId);
+        // Check if specific attempt requested
+        $attemptId = $request->query('attempt');
 
-            if ($pesertaOffline && $pesertaOffline->ujianPeserta) {
-                $peserta = $pesertaOffline->ujianPeserta;
+        if ($attemptId) {
+            $peserta = UjianPeserta::findOrFail($attemptId);
 
-                if ($peserta->status !== 'selesai') {
+            if ($peserta->ujian_id !== $ujian->id) {
+                return redirect()->route('peserta.offline.exams');
+            }
+
+            // Verify ownership
+            if (Auth::check() && $peserta->user_id !== Auth::id()) {
+                abort(403);
+            }
+
+            if ($request->session()->has('offline_peserta_id')) {
+                $pesertaOfflineId = $request->session()->get('offline_peserta_id');
+                $pesertaOffline = PesertaOffline::find($pesertaOfflineId);
+                if (! $pesertaOffline || $peserta->peserta_offline_id !== $pesertaOffline->id) {
+                    abort(403);
+                }
+            }
+        } else {
+            // Try offline peserta first
+            if ($request->session()->has('offline_peserta_id')) {
+                $pesertaOfflineId = $request->session()->get('offline_peserta_id');
+                $pesertaOffline = PesertaOffline::with('ujianPeserta')->find($pesertaOfflineId);
+
+                if ($pesertaOffline && $pesertaOffline->ujianPeserta) {
+                    $peserta = $pesertaOffline->ujianPeserta;
+                } else {
                     return redirect()->route('peserta.offline.exams');
                 }
+            } else {
+                // Fallback
+                $peserta = $this->resolvePeserta($request, $ujian);
 
-                if (! $ujian->tampilkan_hasil) {
-                    return redirect()->route('peserta.ujian.hasil', $ujian);
+                if ($peserta instanceof RedirectResponse) {
+                    return $peserta;
                 }
 
-                $ujianSoals = $ujian->ujianSoals()
-                    ->with('soal.subIndikator.subJenisUjian', 'jenisUjian')
-                    ->orderBy('urutan')
-                    ->orderBy('id')
-                    ->get();
-
-                $ujianSoals = $this->randomSoal->reorderSoalsByList($ujianSoals, $peserta->soal_order);
-
-                $jawabanMap = $peserta->jawaban()->get()->keyBy('ujian_soal_id');
-                $breakdown = $this->scoring->breakdownPerJenis($peserta);
-
-                return view('peserta.ujian.pembahasan', compact('ujian', 'peserta', 'ujianSoals', 'jawabanMap', 'breakdown'));
+                if (! $peserta) {
+                    return redirect()->route('peserta.offline.exams');
+                }
             }
-        }
-
-        // Fallback
-        $peserta = $this->resolvePeserta($request, $ujian);
-
-        if ($peserta instanceof RedirectResponse) {
-            return $peserta;
-        }
-
-        if (! $peserta) {
-            return redirect()->route('peserta.offline.exams');
         }
 
         abort_unless($peserta->status === 'selesai', 404);
